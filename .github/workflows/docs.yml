@@ -1,4 +1,4 @@
-name: panvimdoc
+name: docs
 
 on:
   push:
@@ -9,13 +9,12 @@ permissions:
 
 jobs:
   docs:
-    runs-on: ubuntu-latest
-    name: pandoc to vimdoc
     steps:
       - uses: actions/checkout@v2
-      - run: |
-        make prepare
-        make docs
+      - name: Generate docs
+        run: |
+          make prepare
+          make docs
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: "Auto generate docs"
