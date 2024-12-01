@@ -64,6 +64,16 @@ function main() {
     docs.push(...getDocs(entry.path));
   }
 
+  docs.sort((a, b) => {
+    if (a.category !== b.category) {
+      return a.category.localeCompare(b.category);
+    }
+    if (a.name.length !== b.name.length) {
+      return a.name.length - b.name.length;
+    }
+    return a.name.localeCompare(b.name);
+  });
+
   let texts = new TextDecoder().decode(
     Deno.readFileSync(join(rootDir, "README.md")),
   ).split("\n");
