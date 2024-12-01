@@ -84,7 +84,7 @@ do
       Open `item.data.filename` or `item.data.bufnr`.\n
       Open at the recently normal window.
     """
-  ]]
+  ]=]
   action.open = create_open_action('open', {})
   --[=[@doc
     category = "action"
@@ -93,7 +93,7 @@ do
       Open `item.data.filename` or `item.data.bufnr`.\n
       But keep the deck window and cursor.
     """
-  ]]
+  ]=]
   action.open_keep = create_open_action('open_keep', { keep = true })
   --[=[@doc
     category = "action"
@@ -102,7 +102,7 @@ do
       Open `item.data.filename` or `item.data.bufnr`.\n
       Open at the recently normal window with split.
     """
-  ]]
+  ]=]
   action.open_split = create_open_action('open_split', { split = 'horizontal' })
   --[=[@doc
     category = "action"
@@ -111,7 +111,7 @@ do
       Open `item.data.filename` or `item.data.bufnr`.\n
       Open at the recently normal window with vsplit.
     """
-  ]]
+  ]=]
   action.open_vsplit = create_open_action('open_vsplit', { split = 'vertical' })
 end
 
