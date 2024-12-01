@@ -221,48 +221,6 @@ Show git launcher.
 <
 
 
-GIT ~
-
-Show git remotes.
-
-  Name   Type     Default   Description
-  ------ -------- --------- ------------------
-  cwd    string             Target git root.
->lua
-    deck.start(require('deck.builtin.source.git.remote')({
-      cwd = vim.fn.getcwd(),
-    }))
-<
-
-
-GIT ~
-
-Show git status.
-
-  Name   Type     Default   Description
-  ------ -------- --------- ------------------
-  cwd    string             Target git root.
->lua
-    deck.start(require('deck.builtin.source.git.status')({
-      cwd = vim.fn.getcwd(),
-    }))
-<
-
-
-GIT ~
-
-Show git log.
-
-  Name   Type     Default   Description
-  ------ -------- --------- ------------------
-  cwd    string             Target git root.
->lua
-    deck.start(require('deck.builtin.source.git.log')({
-      cwd = vim.fn.getcwd(),
-    }))
-<
-
-
 GREP ~
 
 Grep files under specified root directory. (required `ripgrep`)
@@ -341,6 +299,20 @@ Show buffers.
 <
 
 
+GIT.LOG ~
+
+Show git log.
+
+  Name   Type     Default   Description
+  ------ -------- --------- ------------------
+  cwd    string             Target git root.
+>lua
+    deck.start(require('deck.builtin.source.git.log')({
+      cwd = vim.fn.getcwd(),
+    }))
+<
+
+
 HELPGREP ~
 
 Live grep all helptags. (required `ripgrep`)
@@ -362,6 +334,34 @@ Show git branches
 >lua
     deck.start(require('deck.builtin.source.git.branch')({
       cwd = vim.fn.getcwd() 
+    }))
+<
+
+
+GIT.REMOTE ~
+
+Show git remotes.
+
+  Name   Type     Default   Description
+  ------ -------- --------- ------------------
+  cwd    string             Target git root.
+>lua
+    deck.start(require('deck.builtin.source.git.remote')({
+      cwd = vim.fn.getcwd(),
+    }))
+<
+
+
+GIT.STATUS ~
+
+Show git status.
+
+  Name   Type     Default   Description
+  ------ -------- --------- ------------------
+  cwd    string             Target git root.
+>lua
+    deck.start(require('deck.builtin.source.git.status')({
+      cwd = vim.fn.getcwd(),
     }))
 <
 

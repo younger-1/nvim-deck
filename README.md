@@ -190,48 +190,6 @@ deck.start(require('deck.builtin.source.git.changeset')({
 }))
 ```
 
-### git
-
-Show git remotes.
-
-| Name | Type   | Default | Description      |
-| ---- | ------ | ------- | ---------------- |
-| cwd  | string |         | Target git root. |
-
-```lua
-deck.start(require('deck.builtin.source.git.remote')({
-  cwd = vim.fn.getcwd(),
-}))
-```
-
-### git
-
-Show git status.
-
-| Name | Type   | Default | Description      |
-| ---- | ------ | ------- | ---------------- |
-| cwd  | string |         | Target git root. |
-
-```lua
-deck.start(require('deck.builtin.source.git.status')({
-  cwd = vim.fn.getcwd(),
-}))
-```
-
-### git
-
-Show git log.
-
-| Name | Type   | Default | Description      |
-| ---- | ------ | ------- | ---------------- |
-| cwd  | string |         | Target git root. |
-
-```lua
-deck.start(require('deck.builtin.source.git.log')({
-  cwd = vim.fn.getcwd(),
-}))
-```
-
 ### grep
 
 Grep files under specified root directory. (required `ripgrep`)
@@ -299,6 +257,20 @@ deck.start(require('deck.builtin.source.buffers')({
 }))
 ```
 
+### git.log
+
+Show git log.
+
+| Name | Type   | Default | Description      |
+| ---- | ------ | ------- | ---------------- |
+| cwd  | string |         | Target git root. |
+
+```lua
+deck.start(require('deck.builtin.source.git.log')({
+  cwd = vim.fn.getcwd(),
+}))
+```
+
 ### helpgrep
 
 Live grep all helptags. (required `ripgrep`)
@@ -320,6 +292,34 @@ Show git branches
 ```lua
 deck.start(require('deck.builtin.source.git.branch')({
   cwd = vim.fn.getcwd() 
+}))
+```
+
+### git.remote
+
+Show git remotes.
+
+| Name | Type   | Default | Description      |
+| ---- | ------ | ------- | ---------------- |
+| cwd  | string |         | Target git root. |
+
+```lua
+deck.start(require('deck.builtin.source.git.remote')({
+  cwd = vim.fn.getcwd(),
+}))
+```
+
+### git.status
+
+Show git status.
+
+| Name | Type   | Default | Description      |
+| ---- | ------ | ------- | ---------------- |
+| cwd  | string |         | Target git root. |
+
+```lua
+deck.start(require('deck.builtin.source.git.status')({
+  cwd = vim.fn.getcwd(),
 }))
 ```
 
