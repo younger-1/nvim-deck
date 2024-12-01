@@ -185,37 +185,44 @@ require('deck').register_decorator({
 
 <!-- auto-generate-s:source -->
 
-### git
+### buffers
 
-Show git launcher.
+Show buffers.
 
-| Name | Type   | Default | Description      |
-| ---- | ------ | ------- | ---------------- |
-| cwd  | string |         | Target git root. |
+| Name         | Type      | Default                | Description                                                         |
+| ------------ | --------- | ---------------------- | ------------------------------------------------------------------- |
+| ignore_paths | string[]? | [vim.fn.expand('%:p')] | Ignore paths. The default value is intented to hide current buffer. |
+| nofile       | boolean?  | false                  | Ignore nofile buffers.                                              |
 
 ```lua
-deck.start(require('deck.builtin.source.git.changeset')({
-  cwd = vim.fn.getcwd(),
+deck.start(require('deck.builtin.source.buffers')({
+  ignore_paths = { vim.fn.expand('%:p'):gsub('/$', '') },
+  nofile = false,
 }))
 ```
 
-### grep
+### deck.actions
 
-Grep files under specified root directory. (required `ripgrep`)
+Show available actions from |deck.Context|
 
-| Name         | Type      | Default | Description                                                                                   |
-| ------------ | --------- | ------- | --------------------------------------------------------------------------------------------- |
-| root_dir     | string    |         | Target root directory.                                                                        |
-| pattern      | string?   |         | Grep pattern. If you omit this option, you must set `dynamic` option to true.                 |
-| dynamic      | boolean?  | false   | If true, use dynamic pattern. If you set this option to false, you must set `pattern` option. |
-| ignore_globs | string[]? | []      | Ignore glob patterns.                                                                         |
+| Name    | Type             | Default | Description |
+| ------- | ---------------- | ------- | ----------- |
+| context | \|deck.Context\| |         |             |
 
 ```lua
-deck.start(require('deck.builtin.source.grep')({
-  root_dir = vim.fn.getcwd(),
-  pattern = vim.fn.input('grep: '),
-  ignore_globs = { '**/node_modules/', '**/.git/' },
+deck.start(require('deck.builtin.source.deck.actions')({
+  context = context
 }))
+```
+
+### deck.history
+
+Show deck.start history.
+
+_No options_
+
+```lua
+deck.start(require('deck.builtin.source.deck.history')())
 ```
 
 ### files
@@ -234,35 +241,49 @@ deck.start(require('deck.builtin.source.files')({
 }))
 ```
 
-### items
+### git
 
-Listing any provided items.
+Show git launcher.
 
-| Name  | Type                           | Default | Description    |
-| ----- | ------------------------------ | ------- | -------------- |
-| items | string[]\|deck.ItemSpecifier[] |         | Items to list. |
+| Name | Type   | Default | Description      |
+| ---- | ------ | ------- | ---------------- |
+| cwd  | string |         | Target git root. |
 
 ```lua
-deck.start(require('deck.builtin.source.items')({
-  items = vim.iter(vim.api.nvim_list_bufs()):map(function(buf)
-    return ('#%s'):format(buf)
-  end):totable()
+deck.start(require('deck.builtin.source.git.changeset')({
+  cwd = vim.fn.getcwd(),
 }))
 ```
 
-### buffers
+### git.branch
 
-Show buffers.
+Show git branches
 
-| Name         | Type      | Default                | Description                                                         |
-| ------------ | --------- | ---------------------- | ------------------------------------------------------------------- |
-| ignore_paths | string[]? | [vim.fn.expand('%:p')] | Ignore paths. The default value is intented to hide current buffer. |
-| nofile       | boolean?  | false                  | Ignore nofile buffers.                                              |
+| Name | Type   | Default | Description      |
+| ---- | ------ | ------- | ---------------- |
+| cwd  | string |         | Target git root. |
 
 ```lua
-deck.start(require('deck.builtin.source.buffers')({
-  ignore_paths = { vim.fn.expand('%:p'):gsub('/$', '') },
-  nofile = false,
+deck.start(require('deck.builtin.source.git.branch')({
+  cwd = vim.fn.getcwd() 
+}))
+```
+
+### git.changeset
+
+Show git changeset for specified revision.
+
+| Name     | Type    | Default | Description                                            |
+| -------- | ------- | ------- | ------------------------------------------------------ |
+| cwd      | string  |         | Target git root.                                       |
+| from_rev | string  |         | From revision.                                         |
+| to_rev   | string? |         | To revision. If you omit this option, it will be HEAD. |
+
+```lua
+deck.start(require('deck.builtin.source.git.changeset')({
+  cwd = vim.fn.getcwd(),
+  from_rev = 'HEAD~3',
+  to_rev = 'HEAD'
 }))
 ```
 
@@ -277,30 +298,6 @@ Show git log.
 ```lua
 deck.start(require('deck.builtin.source.git.log')({
   cwd = vim.fn.getcwd(),
-}))
-```
-
-### helpgrep
-
-Live grep all helptags. (required `ripgrep`)
-
-_No options_
-
-```lua
-deck.start(require('deck.builtin.source.helpgrep')())
-```
-
-### git.branch
-
-Show git branches
-
-| Name | Type   | Default | Description      |
-| ---- | ------ | ------- | ---------------- |
-| cwd  | string |         | Target git root. |
-
-```lua
-deck.start(require('deck.builtin.source.git.branch')({
-  cwd = vim.fn.getcwd() 
 }))
 ```
 
@@ -332,6 +329,51 @@ deck.start(require('deck.builtin.source.git.status')({
 }))
 ```
 
+### grep
+
+Grep files under specified root directory. (required `ripgrep`)
+
+| Name         | Type      | Default | Description                                                                                   |
+| ------------ | --------- | ------- | --------------------------------------------------------------------------------------------- |
+| root_dir     | string    |         | Target root directory.                                                                        |
+| pattern      | string?   |         | Grep pattern. If you omit this option, you must set `dynamic` option to true.                 |
+| dynamic      | boolean?  | false   | If true, use dynamic pattern. If you set this option to false, you must set `pattern` option. |
+| ignore_globs | string[]? | []      | Ignore glob patterns.                                                                         |
+
+```lua
+deck.start(require('deck.builtin.source.grep')({
+  root_dir = vim.fn.getcwd(),
+  pattern = vim.fn.input('grep: '),
+  ignore_globs = { '**/node_modules/', '**/.git/' },
+}))
+```
+
+### helpgrep
+
+Live grep all helptags. (required `ripgrep`)
+
+_No options_
+
+```lua
+deck.start(require('deck.builtin.source.helpgrep')())
+```
+
+### items
+
+Listing any provided items.
+
+| Name  | Type                           | Default | Description    |
+| ----- | ------------------------------ | ------- | -------------- |
+| items | string[]\|deck.ItemSpecifier[] |         | Items to list. |
+
+```lua
+deck.start(require('deck.builtin.source.items')({
+  items = vim.iter(vim.api.nvim_list_bufs()):map(function(buf)
+    return ('#%s'):format(buf)
+  end):totable()
+}))
+```
+
 ### recent_dirs
 
 List recent directories.
@@ -344,30 +386,6 @@ List recent directories.
 deck.start(require('deck.builtin.source.recent_dirs')({
   ignore_paths = { '**/node_modules/', '**/.git/' },
 }))
-```
-
-### deck.actions
-
-Show available actions from |deck.Context|
-
-| Name    | Type             | Default | Description |
-| ------- | ---------------- | ------- | ----------- |
-| context | \|deck.Context\| |         |             |
-
-```lua
-deck.start(require('deck.builtin.source.deck.actions')({
-  context = context
-}))
-```
-
-### deck.history
-
-Show deck.start history.
-
-_No options_
-
-```lua
-deck.start(require('deck.builtin.source.deck.history')())
 ```
 
 ### recent_files
@@ -384,43 +402,22 @@ deck.start(require('deck.builtin.source.recent_dirs')({
 }))
 ```
 
-### git.changeset
-
-Show git changeset for specified revision.
-
-| Name     | Type    | Default | Description                                            |
-| -------- | ------- | ------- | ------------------------------------------------------ |
-| cwd      | string  |         | Target git root.                                       |
-| from_rev | string  |         | From revision.                                         |
-| to_rev   | string? |         | To revision. If you omit this option, it will be HEAD. |
-
-```lua
-deck.start(require('deck.builtin.source.git.changeset')({
-  cwd = vim.fn.getcwd(),
-  from_rev = 'HEAD~3',
-  to_rev = 'HEAD'
-}))
-```
-
 <!-- auto-generate-e:source -->
 
 ## Actions
 
 <!-- auto-generate-s:action -->
 
+- `choose_action`
+  - Open action source.
+
+    The actions listed are filtered by whether they are valid in the current
+    context.
+
 - `open`
   - Open `item.data.filename` or `item.data.bufnr`.
 
     Open at the recently normal window.
-
-- `yank`
-  - Yank item.display_text field to default register.
-
-- `prompt`
-  - Open filtering prompt
-
-- `refresh`
-  - Re-execute source. (it can be used to refresh the items)
 
 - `open_keep`
   - Open `item.data.filename` or `item.data.bufnr`.
@@ -432,6 +429,23 @@ deck.start(require('deck.builtin.source.git.changeset')({
 
     Open at the recently normal window with split.
 
+- `open_vsplit`
+  - Open `item.data.filename` or `item.data.bufnr`.
+
+    Open at the recently normal window with vsplit.
+
+- `prompt`
+  - Open filtering prompt
+
+- `refresh`
+  - Re-execute source. (it can be used to refresh the items)
+
+- `scroll_preview_down`
+  - Scroll preview window down.
+
+- `scroll_preview_up`
+  - Scroll preview window up.
+
 - `substitute`
   - Open substitute buffer with selected items (`item.data.filename` and
     `item.data.lnum` are required).
@@ -439,31 +453,17 @@ deck.start(require('deck.builtin.source.git.changeset')({
     You can modify and save the buffer to reflect the changes to the original
     files.
 
-- `open_vsplit`
-  - Open `item.data.filename` or `item.data.bufnr`.
-
-    Open at the recently normal window with vsplit.
-
-- `choose_action`
-  - Open action source.
-
-    The actions listed are filtered by whether they are valid in the current
-    context.
+- `toggle_preview_mode`
+  - Toggle preview mode
 
 - `toggle_select`
   - Toggle selected state of the cursor item.
 
-- `scroll_preview_up`
-  - Scroll preview window up.
-
 - `toggle_select_all`
   - Toggle selected state of all items.
 
-- `scroll_preview_down`
-  - Scroll preview window down.
-
-- `toggle_preview_mode`
-  - Toggle preview mode
+- `yank`
+  - Yank item.display_text field to default register.
 
 <!-- auto-generate-e:action -->
 
@@ -483,21 +483,98 @@ deck.start(require('deck.builtin.source.git.changeset')({
 
 <!-- auto-generate-s:api -->
 
-<!-- panvimdoc-include-comment deck.setup(config) ~ -->
+<!-- panvimdoc-include-comment deck.action_mapping(mapping): fun(ctx: |deck.Context|) ~ -->
 
 <!-- panvimdoc-ignore-start -->
 
-### deck.setup(config)
+### deck.action_mapping(mapping): fun(ctx: |deck.Context|)
 
 <!-- panvimdoc-ignore-end -->
 
-Setup deck globally.
+Create action mapping function for ctx.keymap.
 
-| Name   | Type                 | Description               |
-| ------ | -------------------- | ------------------------- |
-| config | deck.ConfigSpecifier | Setup deck configuration. |
+| Name         | Type              | Description                                      |
+| ------------ | ----------------- | ------------------------------------------------ |
+| action_names | string\\|string[] | action name or action names to use for mappings. |
 
 &nbsp;
+
+<!-- panvimdoc-include-comment deck.alias_action(alias_name, alias_action_name): |deck.Action| ~ -->
+
+<!-- panvimdoc-ignore-start -->
+
+### deck.alias_action(alias_name, alias_action_name): |deck.Action|
+
+<!-- panvimdoc-ignore-end -->
+
+Create alias action.
+
+| Name              | Type   | Description           |
+| ----------------- | ------ | --------------------- |
+| alias_name        | string | new action name.      |
+| alias_action_name | string | existing action name. |
+
+&nbsp;
+
+<!-- panvimdoc-include-comment deck.get_actions(): |deck.Action|[] ~ -->
+
+<!-- panvimdoc-ignore-start -->
+
+### deck.get_actions(): |deck.Action|[]
+
+<!-- panvimdoc-ignore-end -->
+
+Get all registered actions.
+
+_No arguments_ &nbsp;
+
+<!-- panvimdoc-include-comment deck.get_decorators(): |deck.Decorator|[] ~ -->
+
+<!-- panvimdoc-ignore-start -->
+
+### deck.get_decorators(): |deck.Decorator|[]
+
+<!-- panvimdoc-ignore-end -->
+
+Get all registered decorators.
+
+_No arguments_ &nbsp;
+
+<!-- panvimdoc-include-comment deck.get_history(): |deck.Context|[] ~ -->
+
+<!-- panvimdoc-ignore-start -->
+
+### deck.get_history(): |deck.Context|[]
+
+<!-- panvimdoc-ignore-end -->
+
+Get all history (first history is latest).
+
+_No arguments_ &nbsp;
+
+<!-- panvimdoc-include-comment deck.get_previewers(): |deck.Previewer|[] ~ -->
+
+<!-- panvimdoc-ignore-start -->
+
+### deck.get_previewers(): |deck.Previewer|[]
+
+<!-- panvimdoc-ignore-end -->
+
+Get all registered previewers.
+
+_No arguments_ &nbsp;
+
+<!-- panvimdoc-include-comment deck.get_start_presets(): |deck.StartPreset|[] ~ -->
+
+<!-- panvimdoc-ignore-start -->
+
+### deck.get_start_presets(): |deck.StartPreset|[]
+
+<!-- panvimdoc-ignore-end -->
+
+Get all registered start presets.
+
+_No arguments_ &nbsp;
 
 <!-- panvimdoc-include-comment deck.register_action(action) ~ -->
 
@@ -512,6 +589,71 @@ Register action.
 | Name   | Type            | Description         |
 | ------ | --------------- | ------------------- |
 | action | \|deck.Action\| | action to register. |
+
+&nbsp;
+
+<!-- panvimdoc-include-comment deck.register_decorator(decorator) ~ -->
+
+<!-- panvimdoc-ignore-start -->
+
+### deck.register_decorator(decorator)
+
+<!-- panvimdoc-ignore-end -->
+
+Register decorator.
+
+| Name      | Type               | Description            |
+| --------- | ------------------ | ---------------------- |
+| decorator | \|deck.Decorator\| | decorator to register. |
+
+&nbsp;
+
+<!-- panvimdoc-include-comment deck.register_previewer(previewer) ~ -->
+
+<!-- panvimdoc-ignore-start -->
+
+### deck.register_previewer(previewer)
+
+<!-- panvimdoc-ignore-end -->
+
+Register previewer.
+
+| Name      | Type               | Description            |
+| --------- | ------------------ | ---------------------- |
+| previewer | \|deck.Previewer\| | previewer to register. |
+
+&nbsp;
+
+<!-- panvimdoc-include-comment deck.register_start_preset(name, start_fn) ~ -->
+
+<!-- panvimdoc-ignore-start -->
+
+### deck.register_start_preset(name, start_fn)
+
+<!-- panvimdoc-ignore-end -->
+
+Register start_preset.
+
+| Name     | Type   | Description     |
+| -------- | ------ | --------------- |
+| name     | string | preset name.    |
+| start_fn | fun()  | Start function. |
+
+&nbsp;
+
+<!-- panvimdoc-include-comment deck.register_start_preset(start_preset) ~ -->
+
+<!-- panvimdoc-ignore-start -->
+
+### deck.register_start_preset(start_preset)
+
+<!-- panvimdoc-ignore-end -->
+
+Register start_preset.
+
+| Name         | Type             | Description          |
+| ------------ | ---------------- | -------------------- |
+| start_preset | deck.StartPreset | \|deck.StartPreset\| |
 
 &nbsp;
 
@@ -563,62 +705,6 @@ Remove previewer.
 
 &nbsp;
 
-<!-- panvimdoc-include-comment deck.register_decorator(decorator) ~ -->
-
-<!-- panvimdoc-ignore-start -->
-
-### deck.register_decorator(decorator)
-
-<!-- panvimdoc-ignore-end -->
-
-Register decorator.
-
-| Name      | Type               | Description            |
-| --------- | ------------------ | ---------------------- |
-| decorator | \|deck.Decorator\| | decorator to register. |
-
-&nbsp;
-
-<!-- panvimdoc-include-comment deck.register_previewer(previewer) ~ -->
-
-<!-- panvimdoc-ignore-start -->
-
-### deck.register_previewer(previewer)
-
-<!-- panvimdoc-ignore-end -->
-
-Register previewer.
-
-| Name      | Type               | Description            |
-| --------- | ------------------ | ---------------------- |
-| previewer | \|deck.Previewer\| | previewer to register. |
-
-&nbsp;
-
-<!-- panvimdoc-include-comment deck.get_actions(): |deck.Action|[] ~ -->
-
-<!-- panvimdoc-ignore-start -->
-
-### deck.get_actions(): |deck.Action|[]
-
-<!-- panvimdoc-ignore-end -->
-
-Get all registered actions.
-
-_No arguments_ &nbsp;
-
-<!-- panvimdoc-include-comment deck.get_history(): |deck.Context|[] ~ -->
-
-<!-- panvimdoc-ignore-start -->
-
-### deck.get_history(): |deck.Context|[]
-
-<!-- panvimdoc-ignore-end -->
-
-Get all history (first history is latest).
-
-_No arguments_ &nbsp;
-
 <!-- panvimdoc-include-comment deck.remove_start_presets(predicate) ~ -->
 
 <!-- panvimdoc-ignore-start -->
@@ -635,74 +721,21 @@ Remove specific start_preset.
 
 &nbsp;
 
-<!-- panvimdoc-include-comment deck.register_start_preset(start_preset) ~ -->
+<!-- panvimdoc-include-comment deck.setup(config) ~ -->
 
 <!-- panvimdoc-ignore-start -->
 
-### deck.register_start_preset(start_preset)
+### deck.setup(config)
 
 <!-- panvimdoc-ignore-end -->
 
-Register start_preset.
+Setup deck globally.
 
-| Name         | Type             | Description          |
-| ------------ | ---------------- | -------------------- |
-| start_preset | deck.StartPreset | \|deck.StartPreset\| |
+| Name   | Type                 | Description               |
+| ------ | -------------------- | ------------------------- |
+| config | deck.ConfigSpecifier | Setup deck configuration. |
 
 &nbsp;
-
-<!-- panvimdoc-include-comment deck.get_decorators(): |deck.Decorator|[] ~ -->
-
-<!-- panvimdoc-ignore-start -->
-
-### deck.get_decorators(): |deck.Decorator|[]
-
-<!-- panvimdoc-ignore-end -->
-
-Get all registered decorators.
-
-_No arguments_ &nbsp;
-
-<!-- panvimdoc-include-comment deck.get_previewers(): |deck.Previewer|[] ~ -->
-
-<!-- panvimdoc-ignore-start -->
-
-### deck.get_previewers(): |deck.Previewer|[]
-
-<!-- panvimdoc-ignore-end -->
-
-Get all registered previewers.
-
-_No arguments_ &nbsp;
-
-<!-- panvimdoc-include-comment deck.register_start_preset(name, start_fn) ~ -->
-
-<!-- panvimdoc-ignore-start -->
-
-### deck.register_start_preset(name, start_fn)
-
-<!-- panvimdoc-ignore-end -->
-
-Register start_preset.
-
-| Name     | Type   | Description     |
-| -------- | ------ | --------------- |
-| name     | string | preset name.    |
-| start_fn | fun()  | Start function. |
-
-&nbsp;
-
-<!-- panvimdoc-include-comment deck.get_start_presets(): |deck.StartPreset|[] ~ -->
-
-<!-- panvimdoc-ignore-start -->
-
-### deck.get_start_presets(): |deck.StartPreset|[]
-
-<!-- panvimdoc-ignore-end -->
-
-Get all registered start presets.
-
-_No arguments_ &nbsp;
 
 <!-- panvimdoc-include-comment deck.start(sources, start_config): |deck.Context| ~ -->
 
@@ -721,69 +754,11 @@ Start deck with given sources.
 
 &nbsp;
 
-<!-- panvimdoc-include-comment deck.action_mapping(mapping): fun(ctx: |deck.Context|) ~ -->
-
-<!-- panvimdoc-ignore-start -->
-
-### deck.action_mapping(mapping): fun(ctx: |deck.Context|)
-
-<!-- panvimdoc-ignore-end -->
-
-Create action mapping function for ctx.keymap.
-
-| Name         | Type              | Description                                      |
-| ------------ | ----------------- | ------------------------------------------------ |
-| action_names | string\\|string[] | action name or action names to use for mappings. |
-
-&nbsp;
-
-<!-- panvimdoc-include-comment deck.alias_action(alias_name, alias_action_name): |deck.Action| ~ -->
-
-<!-- panvimdoc-ignore-start -->
-
-### deck.alias_action(alias_name, alias_action_name): |deck.Action|
-
-<!-- panvimdoc-ignore-end -->
-
-Create alias action.
-
-| Name              | Type   | Description           |
-| ----------------- | ------ | --------------------- |
-| alias_name        | string | new action name.      |
-| alias_action_name | string | existing action name. |
-
-&nbsp;
-
 <!-- auto-generate-e:api -->
 
 # Type
 
 <!-- auto-generate-s:type -->
-
-```vimdoc
-*deck.Item*
-```
-
-```lua
----@class deck.Item: deck.ItemSpecifier
----@field public display_text string
----@field public data table
-```
-
-```vimdoc
-*deck.View*
-```
-
-```lua
----@class deck.View
----@field public get_win fun(): integer?
----@field public is_visible fun(ctx: deck.Context): boolean
----@field public show fun(ctx: deck.Context)
----@field public hide fun(ctx: deck.Context)
----@field public prompt fun(ctx: deck.Context)
----@field public scroll_preview fun(ctx: deck.Context, delta: integer)
----@field public render fun(ctx: deck.Context)
-```
 
 ```vimdoc
 *deck.Action*
@@ -811,19 +786,13 @@ Create alias action.
 ```
 
 ```vimdoc
-*deck.Source*
+*deck.ConfigSpecifier*
 ```
 
 ```lua
----@class deck.Source
----@field public name string
----@field public dynamic? boolean
----@field public events? { Start?: fun(ctx: deck.Context), BufWinEnter?: fun(ctx: deck.Context) }
----@field public execute deck.SourceExecuteFunction
----@field public actions? deck.Action[]
----@field public decorators? deck.Decorator[]
----@field public previewers? deck.Previewer[]
----@alias deck.SourceExecuteFunction fun(ctx: deck.ExecuteContext)
+---@class deck.ConfigSpecifier
+---@field public max_history_size? integer
+---@field public default_start_config? deck.StartConfigSpecifier
 ```
 
 ```vimdoc
@@ -885,6 +854,41 @@ Create alias action.
 ```
 
 ```vimdoc
+*deck.ExecuteContext*
+```
+
+```lua
+---@class deck.ExecuteContext
+---@field public item fun(item: deck.ItemSpecifier)
+---@field public done fun( )
+---@field public get_query fun(): string
+---@field public aborted fun(): boolean
+---@field public on_abort fun(callback: fun())
+```
+
+```vimdoc
+*deck.Item*
+```
+
+```lua
+---@class deck.Item: deck.ItemSpecifier
+---@field public display_text string
+---@field public data table
+```
+
+```vimdoc
+*deck.ItemSpecifier*
+```
+
+```lua
+---@class deck.ItemSpecifier
+---@field public display_text string|(deck.VirtualText[])
+---@field public highlights? deck.Highlight[]
+---@field public filter_text? string
+---@field public data? table
+```
+
+```vimdoc
 *deck.Previewer*
 ```
 
@@ -895,6 +899,22 @@ Create alias action.
 ---@field public preview deck.PreviewerPreviewFunction
 ---@alias deck.PreviewerResolveFunction fun(ctx: deck.Context): any
 ---@alias deck.PreviewerPreviewFunction fun(ctx: deck.Context, env: { win: integer })
+```
+
+```vimdoc
+*deck.Source*
+```
+
+```lua
+---@class deck.Source
+---@field public name string
+---@field public dynamic? boolean
+---@field public events? { Start?: fun(ctx: deck.Context), BufWinEnter?: fun(ctx: deck.Context) }
+---@field public execute deck.SourceExecuteFunction
+---@field public actions? deck.Action[]
+---@field public decorators? deck.Decorator[]
+---@field public previewers? deck.Previewer[]
+---@alias deck.SourceExecuteFunction fun(ctx: deck.ExecuteContext)
 ```
 
 ```vimdoc
@@ -911,6 +931,19 @@ Create alias action.
 ```
 
 ```vimdoc
+*deck.StartConfigSpecifier*
+```
+
+```lua
+---@class deck.StartConfigSpecifier
+---@field public name? string
+---@field public view? fun(): deck.View
+---@field public matcher? deck.Matcher
+---@field public history? boolean
+---@field public performance? { interrupt_interval: integer, interrupt_timeout: integer }
+```
+
+```vimdoc
 *deck.StartPreset*
 ```
 
@@ -922,51 +955,18 @@ Create alias action.
 ```
 
 ```vimdoc
-*deck.ItemSpecifier*
+*deck.View*
 ```
 
 ```lua
----@class deck.ItemSpecifier
----@field public display_text string|(deck.VirtualText[])
----@field public highlights? deck.Highlight[]
----@field public filter_text? string
----@field public data? table
-```
-
-```vimdoc
-*deck.ExecuteContext*
-```
-
-```lua
----@class deck.ExecuteContext
----@field public item fun(item: deck.ItemSpecifier)
----@field public done fun( )
----@field public get_query fun(): string
----@field public aborted fun(): boolean
----@field public on_abort fun(callback: fun())
-```
-
-```vimdoc
-*deck.ConfigSpecifier*
-```
-
-```lua
----@class deck.ConfigSpecifier
----@field public max_history_size? integer
----@field public default_start_config? deck.StartConfigSpecifier
-```
-
-```vimdoc
-*deck.StartConfigSpecifier*
-```
-
-```lua
----@class deck.StartConfigSpecifier
----@field public name? string
----@field public view? fun(): deck.View
----@field public matcher? deck.Matcher
----@field public history? boolean
----@field public performance? { interrupt_interval: integer, interrupt_timeout: integer }
+---@class deck.View
+---@field public get_win fun(): integer?
+---@field public is_visible fun(ctx: deck.Context): boolean
+---@field public show fun(ctx: deck.Context)
+---@field public hide fun(ctx: deck.Context)
+---@field public prompt fun(ctx: deck.Context)
+---@field public scroll_preview fun(ctx: deck.Context, delta: integer)
+---@field public render fun(ctx: deck.Context)
 ```
 
 <!-- auto-generate-e:type -->
