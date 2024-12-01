@@ -1,30 +1,40 @@
 local notify = require('deck.notify')
 local System = require('deck.kit.System')
 
---[[@doc
+--[=[@doc
   category = "source"
   name = "grep"
   desc = "Grep files under specified root directory. (required `ripgrep`)"
-  options = [{
-    name = "root_dir",
-    type = "string",
-    desc = "Target root directory."
-  }, {
-    name = "pattern",
-    type = "string?",
-    desc = "Grep pattern. If you omit this option, you must set `dynamic` option to true."
-  }, {
-    name = "dynamic",
-    type = "boolean?",
-    default = "false",
-    desc = "If true, use dynamic pattern. If you set this option to false, you must set `pattern` option."
-  }, {
-    name = "ignore_globs",
-    type = "string[]?",
-    default = "[]",
-    desc = "Ignore glob patterns."
-  }]
-]]
+  example = """
+    deck.start(require('deck.builtin.source.grep')({
+      root_dir = vim.fn.getcwd(),
+      pattern = vim.fn.input('grep: '),
+      ignore_globs = { '**/node_modules/', '**/.git/' },
+    }))
+  """
+
+  [[options]]
+  name = "root_dir"
+  type = "string"
+  desc = "Target root directory."
+
+  [[options]]
+  name = "pattern"
+  type = "string?"
+  desc = "Grep pattern. If you omit this option, you must set `dynamic` option to true."
+
+  [[options]]
+  name = "dynamic"
+  type = "boolean?"
+  default = "false"
+  desc = "If true, use dynamic pattern. If you set this option to false, you must set `pattern` option."
+
+  [[options]]
+  name = "ignore_globs"
+  type = "string[]?"
+  default = "[]"
+  desc = "Ignore glob patterns."
+]=]
 ---@class deck.builtin.source.grep.Option
 ---@field root_dir string
 ---@field pattern? string

@@ -23,12 +23,13 @@ const DocSchema = union([
     category: literal("source"),
     name: string(),
     desc: string(),
-    options: array(object({
+    options: optional(array(object({
       name: string(),
       type: string(),
       default: optional(string()),
       desc: optional(string()),
-    })),
+    }))),
+    example: optional(string()),
   }),
   object({
     category: literal("action"),
@@ -43,11 +44,11 @@ const DocSchema = union([
   object({
     category: literal("api"),
     name: string(),
-    args: array(object({
+    args: optional(array(object({
       name: string(),
       type: string(),
       desc: string(),
-    })),
+    }))),
     desc: string(),
   }),
 ]);
@@ -145,7 +146,7 @@ function renderActionDoc(doc: Doc & { category: "action" }) {
  */
 function renderSourceDoc(doc: Doc & { category: "source" }) {
   let options = "_No options_";
-  if (doc.options.length > 0) {
+  if (doc.options && doc.options.length > 0) {
     options = dedent`
     | Name | Type | Default |Description|
     |------|------|---------|-----------|
@@ -159,12 +160,23 @@ function renderSourceDoc(doc: Doc & { category: "source" }) {
     `;
   }
 
+  let example = "";
+  if (doc.example) {
+    example = dedent`
+    \`\`\`lua
+    ${doc.example}
+    \`\`\`
+    `;
+  }
+
   return dedent`
   ### ${doc.name}
 
   ${doc.desc}
 
   ${options}
+
+  ${example}
   `;
 }
 
@@ -183,7 +195,7 @@ function renderAutocmdDoc(doc: Doc & { category: "autocmd" }) {
  */
 function renderApiDoc(doc: Doc & { category: "api" }) {
   let args = "_No arguments_";
-  if (doc.args.length > 0) {
+  if (doc.args && doc.args.length > 0) {
     args = dedent`
     | Name | Type | Description |
     |------|------|-------------|
@@ -230,7 +242,7 @@ function renderTypeDoc(doc: Doc & { category: "type" }) {
  * Parse the documentation from a Lua file.
  * The documentation format is Lua's multi-line comment with JSON inside.
  * @example
- * --[[@doc
+ * --[=[@doc
  *   category = "source"
  *   name = "recent_files"
  * --]]
@@ -245,9 +257,9 @@ function getDocs(path: string) {
   {
     const state = { body: null as string | null };
     for (const line of lines) {
-      if (/^\s*--\[\[\s*@doc$/.test(line)) {
+      if (/^\s*--\[=\[\s*@doc$/.test(line)) {
         state.body = "";
-      } else if (state.body !== null && /^\s*(--)?\]\]$/.test(line)) {
+      } else if (state.body !== null && /^\s*(--)?\]=\]$/.test(line)) {
         try {
           docs.push(parseSchema(DocSchema, parseToml(state.body)));
         } catch (e) {
@@ -256,7 +268,7 @@ function getDocs(path: string) {
         }
         state.body = null;
       } else if (typeof state.body === "string") {
-        state.body += line;
+        state.body += line + "\n";
       }
     }
   }

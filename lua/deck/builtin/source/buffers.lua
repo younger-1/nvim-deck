@@ -1,19 +1,26 @@
---[[@doc
+--[=[@doc
   category = "source"
   name = "buffers"
   desc = "Show buffers."
-  options = [{
-    name = "ignore_paths",
-    type = "string[]?",
-    default = "[vim.fn.expand('%:p')]",
-    desc = "Ignore paths. The default value is intented to hide current buffer."
-  }, {
-    name = "nofile",
-    type = "boolean?",
-    default = "false",
-    desc = "Ignore nofile buffers."
-  }]
-]]
+  example = """
+    deck.start(require('deck.builtin.source.buffers')({
+      ignore_paths = { vim.fn.expand('%:p'):gsub('/$', '') },
+      nofile = false,
+    }))
+  """
+
+  [[options]]
+  name = "ignore_paths"
+  type = "string[]?"
+  default = "[vim.fn.expand('%:p')]"
+  desc = "Ignore paths. The default value is intented to hide current buffer."
+
+  [[options]]
+  name = "nofile"
+  type = "boolean?"
+  default = "false"
+  desc = "Ignore nofile buffers."
+]=]
 ---@param option? { ignore_paths?: string[], nofile?: boolean }
 return function(option)
   option = option or {}

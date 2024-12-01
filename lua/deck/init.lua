@@ -152,18 +152,16 @@ local internal = {
 
 local deck = {}
 
---[[@doc
+--[=[@doc
   category = "api"
   name = "deck.setup(config)"
   desc = "Setup deck globally."
-  args = [
-    {
-      name = "config",
-      type = "deck.ConfigSpecifier",
-      desc = "Setup deck configuration."
-    }
-  ]
---]]
+
+  [[args]]
+  name = "config"
+  type = "deck.ConfigSpecifier"
+  desc = "Setup deck configuration."
+--]=]
 ---@param config deck.ConfigSpecifier
 function deck.setup(config)
   if config.default_start_config and config.default_start_config.name then
@@ -173,23 +171,21 @@ function deck.setup(config)
   internal.config = kit.merge(kit.clone(config), internal.config)
 end
 
---[[@doc
+--[=[@doc
   category = "api"
   name = "deck.start(sources, start_config): |deck.Context|"
   desc = "Start deck with given sources."
-  args = [
-    {
-      name = "source",
-      type = "deck.Source\\|deck.Source[]",
-      desc = "source or sources to start."
-    },
-    {
-      name = "start_config",
-      type = "deck.StartConfigSpecifier",
-      desc = "start configuration."
-    }
-  ]
---]]
+
+  [[args]]
+  name = "source"
+  type = "deck.Source\\|deck.Source[]"
+  desc = "source or sources to start."
+
+  [[args]]
+  name = "start_config"
+  type = "deck.StartConfigSpecifier"
+  desc = "start configuration."
+--]=]
 ---@param sources deck.Source[]
 ---@param start_config_specifier? deck.StartConfigSpecifier
 ---@return deck.Context
@@ -244,11 +240,11 @@ function deck.start(sources, start_config_specifier)
   context.execute()
   context.show()
 
-  --[[@doc
+  --[=[@doc
     category = "autocmd"
     name = "DeckStart"
     desc = "Triggered when deck starts."
-  --]]
+  --]=]
   vim.api.nvim_exec_autocmds('User', {
     pattern = 'DeckStart',
     modeline = false,
@@ -257,11 +253,11 @@ function deck.start(sources, start_config_specifier)
     },
   })
 
-  --[[@doc
+  --[=[@doc
     category = "autocmd"
     name = "DeckStart:{source_name}"
     desc = "Triggered when deck starts for source."
-  --]]
+  --]=]
   for _, source in ipairs(sources) do
     vim.api.nvim_exec_autocmds('User', {
       pattern = 'DeckStart:' .. source.name,
@@ -275,18 +271,16 @@ function deck.start(sources, start_config_specifier)
   return context
 end
 
---[[@doc
+--[=[@doc
   category = "api"
   name = "deck.action_mapping(mapping): fun(ctx: |deck.Context|)"
   desc = "Create action mapping function for ctx.keymap."
-  args = [
-    {
-      name = "action_names",
-      type = "string\\|string[]",
-      desc = "action name or action names to use for mappings."
-    },
-  ]
---]]
+
+  [[args]]
+  name = "action_names"
+  type = "string\\|string[]"
+  desc = "action name or action names to use for mappings."
+--]=]
 ---@param action_names string|string[]
 ---@return fun(ctx: deck.Context)
 function deck.action_mapping(action_names)
@@ -302,23 +296,21 @@ function deck.action_mapping(action_names)
   end
 end
 
---[[@doc
+--[=[@doc
   category = "api"
   name = "deck.alias_action(alias_name, alias_action_name): |deck.Action|"
   desc = "Create alias action."
-  args = [
-    {
-      name = "alias_name",
-      type = "string",
-      desc = "new action name."
-    },
-    {
-      name = "alias_action_name",
-      type = "string",
-      desc = "existing action name."
-    },
-  ]
---]]
+
+  [[args]]
+  name = "alias_name"
+  type = "string"
+  desc = "new action name."
+
+  [[args]]
+  name = "alias_action_name"
+  type = "string"
+  desc = "existing action name."
+--]=]
 ---@param action_name string
 ---@param alias_action_name string
 ---@return deck.Action
@@ -333,90 +325,81 @@ function deck.alias_action(action_name, alias_action_name)
   }
 end
 
---[[@doc
+--[=[@doc
   category = "api"
   name = "deck.get_history(): |deck.Context|[]"
   desc = "Get all history (first history is latest)."
-  args = []
---]]
+--]=]
 ---@return deck.Context[]
 function deck.get_history()
   return internal.history
 end
 
---[[@doc
+--[=[@doc
   category = "api"
   name = "deck.get_start_presets(): |deck.StartPreset|[]"
   desc = "Get all registered start presets."
-  args = []
---]]
+--]=]
 ---@return deck.StartPreset[]
 function deck.get_start_presets()
   return internal.start_presets
 end
 
---[[@doc
+--[=[@doc
   category = "api"
   name = "deck.get_actions(): |deck.Action|[]"
   desc = "Get all registered actions."
-  args = []
---]]
+--]=]
 ---@return deck.Action[]
 function deck.get_actions()
   return internal.actions
 end
 
---[[@doc
+--[=[@doc
   category = "api"
   name = "deck.get_decorators(): |deck.Decorator|[]"
   desc = "Get all registered decorators."
-  args = []
---]]
+--]=]
 ---@return deck.Decorator[]
 function deck.get_decorators()
   return internal.decorators
 end
 
---[[@doc
+--[=[@doc
   category = "api"
   name = "deck.get_previewers(): |deck.Previewer|[]"
   desc = "Get all registered previewers."
-  args = []
---]]
+--]=]
 ---@return deck.Previewer[]
 function deck.get_previewers()
   return internal.previewers
 end
 
---[[@doc
+--[=[@doc
   category = "api"
   name = "deck.register_start_preset(start_preset)"
   desc = "Register start_preset."
-  args = [
-    {
-      name = "start_preset",
-      type = "deck.StartPreset",
-      desc = "|deck.StartPreset|"
-    },
-  ]
---]]
---[[@doc
+
+  [[args]]
+  name = "start_preset"
+  type = "deck.StartPreset"
+  desc = "|deck.StartPreset|"
+--]=]
+--[=[@doc
   category = "api"
   name = "deck.register_start_preset(name, start_fn)"
   desc = "Register start_preset."
-  args = [
-    {
-      name = "name",
-      type = "string",
-      desc = "preset name."
-    },
-    {
-      name = "start_fn",
-      type = "fun()",
-      desc = "Start function."
-    }
-  ]
---]]
+
+  [[args]]
+  name = "name"
+  type = "string"
+  desc = "preset name."
+
+  [[args]]
+  name = "start_fn"
+  type = "fun()"
+  desc = "Start function."
+--]=]
 ---@param start_preset_or_name deck.StartPreset
 ---@overload fun(name: string, start: fun())
 function deck.register_start_preset(start_preset_or_name, start_fn_or_nil)
@@ -438,18 +421,16 @@ function deck.register_start_preset(start_preset_or_name, start_fn_or_nil)
   table.insert(internal.start_presets, 1, start_preset)
 end
 
---[[@doc
+--[=[@doc
   category = "api"
   name = "deck.remove_start_presets(predicate)"
   desc = "Remove specific start_preset."
-  args = [
-    {
-      name = "predicate",
-      type = "fun(start_preset: |deck.StartPreset|): boolean",
-      desc = "Predicate function. If return true, remove start_preset."
-    }
-  ]
---]]
+
+  [[args]]
+  name = "predicate"
+  type = "fun(start_preset: |deck.StartPreset|): boolean"
+  desc = "Predicate function. If return true, remove start_preset."
+--]=]
 ---@param predicate fun(start_preset: deck.StartPreset): boolean
 function deck.remove_start_presets(predicate)
   for i = #internal.start_presets, 1, -1 do
@@ -460,35 +441,31 @@ function deck.remove_start_presets(predicate)
   end
 end
 
---[[@doc
+--[=[@doc
   category = "api"
   name = "deck.register_action(action)"
   desc = "Register action."
-  args = [
-    {
-      name = "action",
-      type = "|deck.Action|",
-      desc = "action to register."
-    }
-  ]
---]]
+
+  [[args]]
+  name = "action"
+  type = "|deck.Action|"
+  desc = "action to register."
+--]=]
 ---@param action deck.Action
 function deck.register_action(action)
   table.insert(internal.actions, 1, validate.action(action))
 end
 
---[[@doc
+--[=[@doc
   category = "api"
   name = "deck.remove_actions(predicate)"
   desc = "Remove specific action."
-  args = [
-    {
-      name = "predicate",
-      type = "fun(action: |deck.Action|): boolean",
-      desc = "Predicate function. If return true, remove action."
-    }
-  ]
---]]
+
+  [[args]]
+  name = "predicate"
+  type = "fun(action: |deck.Action|): boolean"
+  desc = "Predicate function. If return true, remove action."
+--]=]
 ---@param predicate fun(action: deck.Action): boolean
 function deck.remove_actions(predicate)
   for i = #internal.actions, 1, -1 do
@@ -499,35 +476,31 @@ function deck.remove_actions(predicate)
   end
 end
 
---[[@doc
+--[=[@doc
   category = "api"
   name = "deck.register_decorator(decorator)"
   desc = "Register decorator."
-  args = [
-    {
-      name = "decorator",
-      type = "|deck.Decorator|",
-      desc = "decorator to register."
-    }
-  ]
---]]
+
+  [[args]]
+  name = "decorator"
+  type = "|deck.Decorator|"
+  desc = "decorator to register."
+--]=]
 ---@param decorator deck.Decorator
 function deck.register_decorator(decorator)
   table.insert(internal.decorators, 1, validate.decorator(decorator))
 end
 
---[[@doc
+--[=[@doc
   category = "api"
   name = "deck.remove_decorators(predicate)"
   desc = "Remove specific decorator."
-  args = [
-    {
-      name = "predicate",
-      type = "fun(decorator: |deck.Decorator|): boolean",
-      desc = "Predicate function. If return true, remove decorator."
-    }
-  ]
---]]
+
+  [[args]]
+  name = "predicate"
+  type = "fun(decorator: |deck.Decorator|): boolean"
+  desc = "Predicate function. If return true, remove decorator."
+--]=]
 ---@param predicate fun(decorator: deck.Decorator): boolean
 function deck.remove_decorators(predicate)
   for i = #internal.decorators, 1, -1 do
@@ -538,35 +511,31 @@ function deck.remove_decorators(predicate)
   end
 end
 
---[[@doc
+--[=[@doc
   category = "api"
   name = "deck.register_previewer(previewer)"
   desc = "Register previewer."
-  args = [
-    {
-      name = "previewer",
-      type = "|deck.Previewer|",
-      desc = "previewer to register."
-    }
-  ]
---]]
+
+  [[args]]
+  name = "previewer"
+  type = "|deck.Previewer|"
+  desc = "previewer to register."
+--]=]
 ---@param previewer deck.Previewer
 function deck.register_previewer(previewer)
   table.insert(internal.previewers, 1, validate.previewer(previewer))
 end
 
---[[@doc
+--[=[@doc
   category = "api"
   name = "deck.remove_previewers(predicate)"
   desc = "Remove previewer."
-  args = [
-    {
-      name = "predicate",
-      type = "fun(previewer: |deck.Previewer|): boolean",
-      desc = "Predicate function. If return true, remove previewer."
-    }
-  ]
---]]
+
+  [[args]]
+  name = "predicate"
+  type = "fun(previewer: |deck.Previewer|): boolean"
+  desc = "Predicate function. If return true, remove previewer."
+--]=]
 ---@param predicate fun(previewer: deck.Previewer): boolean
 function deck.remove_previewers(predicate)
   for i = #internal.previewers, 1, -1 do

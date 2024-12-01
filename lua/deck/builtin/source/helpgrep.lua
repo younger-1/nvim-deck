@@ -2,12 +2,14 @@ local kit = require('deck.kit')
 local notify = require('deck.notify')
 local System = require('deck.kit.System')
 
---[[@doc
+--[=[@doc
   category = "source"
   name = "helpgrep"
   desc = "Live grep all helptags. (required `ripgrep`)"
-  options = []
-]]
+  example = """
+    deck.start(require('deck.builtin.source.helpgrep')())
+  """
+]=]
 return function()
   local helps = vim.api.nvim_get_runtime_file('doc/*.txt', true)
   return {

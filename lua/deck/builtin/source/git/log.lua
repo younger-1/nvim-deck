@@ -2,6 +2,21 @@ local helper = require('deck.helper')
 local Git = require('deck.helper.git')
 local Async = require('deck.kit.Async')
 
+--[=[@doc
+  category = "source"
+  name = "git"
+  desc = "Show git log."
+  example = """
+    deck.start(require('deck.builtin.source.git.log')({
+      cwd = vim.fn.getcwd(),
+    }))
+  """
+
+  [[options]]
+  name = "cwd"
+  type = "string"
+  desc = "Target git root."
+]=]
 ---@param option { cwd: string, max_count?: integer }
 return function(option)
   option.max_count = option.max_count or math.huge

@@ -2,6 +2,21 @@ local helper = require('deck.helper')
 local Git = require('deck.helper.git')
 local Async = require('deck.kit.Async')
 
+--[=[@doc
+  category = "source"
+  name = "git"
+  desc = "Show git launcher."
+  example = """
+    deck.start(require('deck.builtin.source.git.changeset')({
+      cwd = vim.fn.getcwd(),
+    }))
+  """
+
+  [[options]]
+  name = "cwd"
+  type = "string"
+  desc = "Target git root."
+]=]
 ---@param option { cwd: string }
 return function(option)
   local git = Git.new(option.cwd)

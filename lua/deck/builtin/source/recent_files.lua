@@ -1,17 +1,22 @@
 local IO = require('deck.kit.IO')
 local Async = require('deck.kit.Async')
 
---[[@doc
+--[=[@doc
   category = "source"
   name = "recent_files"
   desc = "List recent files."
-  options = [{
-    name = "ignore_paths",
-    type = "string[]?",
-    default = "[]",
-    desc = "Ignore paths."
-  }]
-]]
+  example = """
+    deck.start(require('deck.builtin.source.recent_dirs')({
+      ignore_paths = { '**/node_modules/', '**/.git/' },
+    }))
+  """
+
+  [[options]]
+  name = "ignore_paths"
+  type = "string[]?"
+  default = "[]"
+  desc = "Ignore paths."
+]=]
 return setmetatable({
   entries_path = vim.fs.normalize('~/.deck.recent_files'),
   add = function(self, target_path)

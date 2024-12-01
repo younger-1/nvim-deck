@@ -176,6 +176,62 @@ require('deck').register_decorator({
 
 <!-- auto-generate-s:source -->
 
+### git
+
+Show git launcher.
+
+| Name | Type   | Default | Description      |
+| ---- | ------ | ------- | ---------------- |
+| cwd  | string |         | Target git root. |
+
+```lua
+deck.start(require('deck.builtin.source.git.changeset')({
+  cwd = vim.fn.getcwd(),
+}))
+```
+
+### git
+
+Show git remotes.
+
+| Name | Type   | Default | Description      |
+| ---- | ------ | ------- | ---------------- |
+| cwd  | string |         | Target git root. |
+
+```lua
+deck.start(require('deck.builtin.source.git.remote')({
+  cwd = vim.fn.getcwd(),
+}))
+```
+
+### git
+
+Show git status.
+
+| Name | Type   | Default | Description      |
+| ---- | ------ | ------- | ---------------- |
+| cwd  | string |         | Target git root. |
+
+```lua
+deck.start(require('deck.builtin.source.git.status')({
+  cwd = vim.fn.getcwd(),
+}))
+```
+
+### git
+
+Show git log.
+
+| Name | Type   | Default | Description      |
+| ---- | ------ | ------- | ---------------- |
+| cwd  | string |         | Target git root. |
+
+```lua
+deck.start(require('deck.builtin.source.git.log')({
+  cwd = vim.fn.getcwd(),
+}))
+```
+
 ### grep
 
 Grep files under specified root directory. (required `ripgrep`)
@@ -187,6 +243,14 @@ Grep files under specified root directory. (required `ripgrep`)
 | dynamic      | boolean?  | false   | If true, use dynamic pattern. If you set this option to false, you must set `pattern` option. |
 | ignore_globs | string[]? | []      | Ignore glob patterns.                                                                         |
 
+```lua
+deck.start(require('deck.builtin.source.grep')({
+  root_dir = vim.fn.getcwd(),
+  pattern = vim.fn.input('grep: '),
+  ignore_globs = { '**/node_modules/', '**/.git/' },
+}))
+```
+
 ### files
 
 Show files under specified root directory.
@@ -196,6 +260,13 @@ Show files under specified root directory.
 | ignore_globs | string[]? | []      | Ignore glob patterns.  |
 | root_dir     | string    |         | Target root directory. |
 
+```lua
+deck.start(require('deck.builtin.source.files')({
+  root_dir = vim.fn.getcwd(),
+  ignore_globs = { '**/node_modules/', '**/.git/' },
+}))
+```
+
 ### items
 
 Listing any provided items.
@@ -203,6 +274,14 @@ Listing any provided items.
 | Name  | Type                           | Default | Description    |
 | ----- | ------------------------------ | ------- | -------------- |
 | items | string[]\|deck.ItemSpecifier[] |         | Items to list. |
+
+```lua
+deck.start(require('deck.builtin.source.items')({
+  items = vim.iter(vim.api.nvim_list_bufs()):map(function(buf)
+    return ('#%s'):format(buf)
+  end):totable()
+}))
+```
 
 ### buffers
 
@@ -213,11 +292,36 @@ Show buffers.
 | ignore_paths | string[]? | [vim.fn.expand('%:p')] | Ignore paths. The default value is intented to hide current buffer. |
 | nofile       | boolean?  | false                  | Ignore nofile buffers.                                              |
 
+```lua
+deck.start(require('deck.builtin.source.buffers')({
+  ignore_paths = { vim.fn.expand('%:p'):gsub('/$', '') },
+  nofile = false,
+}))
+```
+
 ### helpgrep
 
 Live grep all helptags. (required `ripgrep`)
 
 _No options_
+
+```lua
+deck.start(require('deck.builtin.source.helpgrep')())
+```
+
+### git.branch
+
+Show git branches
+
+| Name | Type   | Default | Description      |
+| ---- | ------ | ------- | ---------------- |
+| cwd  | string |         | Target git root. |
+
+```lua
+deck.start(require('deck.builtin.source.git.branch')({
+  cwd = vim.fn.getcwd() 
+}))
+```
 
 ### recent_dirs
 
@@ -227,6 +331,12 @@ List recent directories.
 | ------------ | --------- | ------- | ------------- |
 | ignore_paths | string[]? | []      | Ignore paths. |
 
+```lua
+deck.start(require('deck.builtin.source.recent_dirs')({
+  ignore_paths = { '**/node_modules/', '**/.git/' },
+}))
+```
+
 ### deck.actions
 
 Show available actions from |deck.Context|
@@ -235,11 +345,21 @@ Show available actions from |deck.Context|
 | ------- | ---------------- | ------- | ----------- |
 | context | \|deck.Context\| |         |             |
 
+```lua
+deck.start(require('deck.builtin.source.deck.actions')({
+  context = context
+}))
+```
+
 ### deck.history
 
 Show deck.start history.
 
 _No options_
+
+```lua
+deck.start(require('deck.builtin.source.deck.history')())
+```
 
 ### recent_files
 
@@ -249,15 +369,35 @@ List recent files.
 | ------------ | --------- | ------- | ------------- |
 | ignore_paths | string[]? | []      | Ignore paths. |
 
+```lua
+deck.start(require('deck.builtin.source.recent_dirs')({
+  ignore_paths = { '**/node_modules/', '**/.git/' },
+}))
+```
+
+### git.changeset
+
+Show git changeset for specified revision.
+
+| Name     | Type    | Default | Description                                            |
+| -------- | ------- | ------- | ------------------------------------------------------ |
+| cwd      | string  |         | Target git root.                                       |
+| from_rev | string  |         | From revision.                                         |
+| to_rev   | string? |         | To revision. If you omit this option, it will be HEAD. |
+
+```lua
+deck.start(require('deck.builtin.source.git.changeset')({
+  cwd = vim.fn.getcwd(),
+  from_rev = 'HEAD~3',
+  to_rev = 'HEAD'
+}))
+```
+
 <!-- auto-generate-e:source -->
 
 ## Actions
 
 <!-- auto-generate-s:action -->
-
-- `open`
-  - Open `item.data.filename` or `item.data.bufnr`. Open at the recently normal
-    window.
 
 - `yank`
   - Yank item.display_text field to default register.
@@ -268,26 +408,18 @@ List recent files.
 - `refresh`
   - Re-execute source. (it can be used to refresh the items)
 
-- `open_keep`
-  - Open `item.data.filename` or `item.data.bufnr`. But keep the deck window and
-    cursor.
-
-- `open_split`
-  - Open `item.data.filename` or `item.data.bufnr`. Open at the recently normal
-    window with split.
-
 - `substitute`
   - Open substitute buffer with selected items (`item.data.filename` and
-    `item.data.lnum` are required). You can modify and save the buffer to
-    reflect the changes to the original files.
+    `item.data.lnum` are required).
 
-- `open_vsplit`
-  - Open `item.data.filename` or `item.data.bufnr`. Open at the recently normal
-    window with vsplit.
+    You can modify and save the buffer to reflect the changes to the original
+    files.
 
 - `choose_action`
-  - Open action source. The actions listed are filtered by whether they are
-    valid in the current context.
+  - Open action source.
+
+    The actions listed are filtered by whether they are valid in the current
+    context.
 
 - `toggle_select`
   - Toggle selected state of the cursor item.

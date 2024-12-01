@@ -131,19 +131,21 @@ end
 ---Show messages
 ---@param option? { timeout?: number }
 function notify.show(message, option)
-  option = option or {}
-  option.timeout = option.timeout or 5000
+  vim.schedule(function()
+    option = option or {}
+    option.timeout = option.timeout or 5000
 
-  if #state.items ~= 0 then
-    table.insert(message, 1, { '' })
-  end
-  table.insert(state.items, {
-    message = message,
-    timeout = option.timeout,
-    visible_at = vim.uv.now(),
-  })
+    if #state.items ~= 0 then
+      table.insert(message, 1, { '' })
+    end
+    table.insert(state.items, {
+      message = message,
+      timeout = option.timeout,
+      visible_at = vim.uv.now(),
+    })
 
-  render(math.floor(vim.o.columns * 0.4), math.floor(vim.o.lines * 0.5))
+    render(math.floor(vim.o.columns * 0.4), math.floor(vim.o.lines * 0.5))
+  end)
 end
 
 return notify

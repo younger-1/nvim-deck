@@ -1,15 +1,20 @@
 local notify = require('deck.notify')
 local helper = require('deck.helper')
 
---[[@doc
+--[=[@doc
   category = "source"
   name = "deck.actions"
   desc = "Show available actions from |deck.Context|"
-  options = [{
-    name = "context",
-    type = "|deck.Context|"
-  }]
-]]
+  example = """
+    deck.start(require('deck.builtin.source.deck.actions')({
+      context = context
+    }))
+  """
+
+  [[options]]
+  name = "context"
+  type = "|deck.Context|"
+]=]
 ---@param option { context: deck.Context }
 return function(option)
   ---@type deck.Source

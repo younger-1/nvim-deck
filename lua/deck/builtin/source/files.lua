@@ -1,20 +1,27 @@
 local IO = require('deck.kit.IO')
 
---[[@doc
+--[=[@doc
   category = "source"
   name = "files"
   desc = "Show files under specified root directory."
-  options = [{
-    name = "ignore_globs",
-    type = "string[]?",
-    default = "[]",
-    desc = "Ignore glob patterns."
-  }, {
-    name = "root_dir",
-    type = "string",
-    desc = "Target root directory."
-  }]
-]]
+  example = """
+    deck.start(require('deck.builtin.source.files')({
+      root_dir = vim.fn.getcwd(),
+      ignore_globs = { '**/node_modules/', '**/.git/' },
+    }))
+  """
+
+  [[options]]
+  name = "ignore_globs"
+  type = "string[]?"
+  default = "[]"
+  desc = "Ignore glob patterns."
+
+  [[options]]
+  name = "root_dir"
+  type = "string"
+  desc = "Target root directory."
+]=]
 ---@param option { root_dir: string, ignore_globs?: string[] }
 return function(option)
   local root_dir = vim.fs.normalize(option.root_dir)

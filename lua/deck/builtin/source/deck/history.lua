@@ -1,9 +1,11 @@
---[[@doc
+--[=[@doc
   category = "source"
   name = "deck.history"
   desc = "Show deck.start history."
-  options = []
-]]
+  example = """
+    deck.start(require('deck.builtin.source.deck.history')())
+  """
+]=]
 return function()
   ---@type deck.Source
   return {

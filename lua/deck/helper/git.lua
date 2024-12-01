@@ -629,10 +629,10 @@ function Git:exec_print(command, option)
             })
           end
         end),
-        on_exit = function()
+        on_exit = kit.fast_schedule_wrap(function()
           kill()
           resolve()
-        end,
+        end),
       })
     end):await()
   end)

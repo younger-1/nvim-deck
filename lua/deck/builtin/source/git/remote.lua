@@ -2,6 +2,21 @@ local helper = require('deck.helper')
 local Git = require('deck.helper.git')
 local Async = require('deck.kit.Async')
 
+--[=[@doc
+  category = "source"
+  name = "git"
+  desc = "Show git remotes."
+  example = """
+    deck.start(require('deck.builtin.source.git.remote')({
+      cwd = vim.fn.getcwd(),
+    }))
+  """
+
+  [[options]]
+  name = "cwd"
+  type = "string"
+  desc = "Target git root."
+]=]
 ---@param option { cwd: string, from_rev: string, to_rev?: string }
 return function(option)
   local git = Git.new(option.cwd)

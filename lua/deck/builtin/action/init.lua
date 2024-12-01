@@ -77,7 +77,7 @@ do
     }
   end
 
-  --[[@doc
+  --[=[@doc
     category = "action"
     name = "open"
     desc = """
@@ -86,7 +86,7 @@ do
     """
   ]]
   action.open = create_open_action('open', {})
-  --[[@doc
+  --[=[@doc
     category = "action"
     name = "open_keep"
     desc = """
@@ -95,7 +95,7 @@ do
     """
   ]]
   action.open_keep = create_open_action('open_keep', { keep = true })
-  --[[@doc
+  --[=[@doc
     category = "action"
     name = "open_split"
     desc = """
@@ -104,7 +104,7 @@ do
     """
   ]]
   action.open_split = create_open_action('open_split', { split = 'horizontal' })
-  --[[@doc
+  --[=[@doc
     category = "action"
     name = "open_vsplit"
     desc = """
@@ -115,11 +115,11 @@ do
   action.open_vsplit = create_open_action('open_vsplit', { split = 'vertical' })
 end
 
---[[@doc
+--[=[@doc
   category = "action"
   name = "yank"
   desc = "Yank item.display_text field to default register."
-]]
+]=]
 ---@type deck.Action
 action.yank = {
   name = 'yank',
@@ -137,11 +137,11 @@ action.yank = {
   end
 }
 
---[[@doc
+--[=[@doc
   category = "action"
   name = "refresh"
   desc = "Re-execute source. (it can be used to refresh the items)"
-]]
+]=]
 ---@type deck.Action
 action.refresh = {
   name = 'refresh',
@@ -152,11 +152,11 @@ action.refresh = {
   end
 }
 
---[[@doc
+--[=[@doc
   category = "action"
   name = "prompt"
   desc = "Open filtering prompt"
-]]
+]=]
 ---@type deck.Action
 action.prompt = {
   name = 'prompt',
@@ -167,11 +167,11 @@ action.prompt = {
   end
 }
 
---[[@doc
+--[=[@doc
   category = "action"
   name = "toggle_select"
   desc = "Toggle selected state of the cursor item."
-]]
+]=]
 ---@type deck.Action
 action.toggle_select = {
   name = 'toggle_select',
@@ -186,11 +186,11 @@ action.toggle_select = {
   end
 }
 
---[[@doc
+--[=[@doc
   category = "action"
   name = "toggle_select_all"
   desc = "Toggle selected state of all items."
-]]
+]=]
 ---@type deck.Action
 action.toggle_select_all = {
   name = 'toggle_select_all',
@@ -201,11 +201,11 @@ action.toggle_select_all = {
   end
 }
 
---[[@doc
+--[=[@doc
   category = "action"
   name = "toggle_preview_mode"
   desc = "Toggle preview mode"
-]]
+]=]
 ---@type deck.Action
 action.toggle_preview_mode = {
   name = 'toggle_preview_mode',
@@ -216,11 +216,11 @@ action.toggle_preview_mode = {
   end
 }
 
---[[@doc
+--[=[@doc
   category = "action"
   name = "scroll_preview_up"
   desc = "Scroll preview window up."
-]]
+]=]
 ---@type deck.Action
 action.scroll_preview_up = {
   name = 'scroll_preview_up',
@@ -231,11 +231,11 @@ action.scroll_preview_up = {
   end
 }
 
---[[@doc
+--[=[@doc
   category = "action"
   name = "scroll_preview_down"
   desc = "Scroll preview window down."
-]]
+]=]
 ---@type deck.Action
 action.scroll_preview_down = {
   name = 'scroll_preview_down',
@@ -246,14 +246,14 @@ action.scroll_preview_down = {
   end
 }
 
---[[@doc
+--[=[@doc
   category = "action"
   name = "choose_action"
   desc = """
     Open action source.\n
     The actions listed are filtered by whether they are valid in the current context.
   """
-]]
+]=]
 ---@type deck.Action
 action.choose_action = {
   name = 'choose_action',
@@ -268,14 +268,14 @@ action.choose_action = {
   end
 }
 
---[[@doc
+--[=[@doc
   category = "action"
   name = "substitute"
   desc = """
     Open substitute buffer with selected items (`item.data.filename` and `item.data.lnum` are required).\n
     You can modify and save the buffer to reflect the changes to the original files.
   """
-]]
+]=]
 ---@type deck.Action
 action.substitute = {
   name = 'substitute',
