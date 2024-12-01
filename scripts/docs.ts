@@ -69,9 +69,6 @@ function main() {
     if (a.category !== b.category) {
       return a.category.localeCompare(b.category);
     }
-    if (a.name.length !== b.name.length) {
-      return a.name.length - b.name.length;
-    }
     return a.name.localeCompare(b.name);
   });
 
