@@ -72,6 +72,7 @@ Here’s an example of how to set up `nvim-deck`
         ctx.keymap('n', '<Tab>', deck.action_mapping('choose_action'))
         ctx.keymap('n', '<C-l>', deck.action_mapping('refresh'))
         ctx.keymap('n', 'i', deck.action_mapping('prompt'))
+        ctx.keymap('n', 'a', deck.action_mapping('prompt'))
         ctx.keymap('n', '@', deck.action_mapping('toggle_select'))
         ctx.keymap('n', '*', deck.action_mapping('toggle_select_all'))
         ctx.keymap('n', 'p', deck.action_mapping('toggle_preview_mode'))
