@@ -223,20 +223,6 @@ Show git launcher.
 
 GIT ~
 
-Show git log.
-
-  Name   Type     Default   Description
-  ------ -------- --------- ------------------
-  cwd    string             Target git root.
->lua
-    deck.start(require('deck.builtin.source.git.log')({
-      cwd = vim.fn.getcwd(),
-    }))
-<
-
-
-GIT ~
-
 Show git remotes.
 
   Name   Type     Default   Description
@@ -258,6 +244,20 @@ Show git status.
   cwd    string             Target git root.
 >lua
     deck.start(require('deck.builtin.source.git.status')({
+      cwd = vim.fn.getcwd(),
+    }))
+<
+
+
+GIT ~
+
+Show git log.
+
+  Name   Type     Default   Description
+  ------ -------- --------- ------------------
+  cwd    string             Target git root.
+>lua
+    deck.start(require('deck.builtin.source.git.log')({
       cwd = vim.fn.getcwd(),
     }))
 <

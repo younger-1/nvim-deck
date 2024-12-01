@@ -4,7 +4,7 @@ local Async = require('deck.kit.Async')
 
 --[=[@doc
   category = "source"
-  name = "git"
+  name = "git.remote"
   desc = "Show git remotes."
   example = """
     deck.start(require('deck.builtin.source.git.remote')({

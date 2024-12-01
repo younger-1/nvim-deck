@@ -192,20 +192,6 @@ deck.start(require('deck.builtin.source.git.changeset')({
 
 ### git
 
-Show git log.
-
-| Name | Type   | Default | Description      |
-| ---- | ------ | ------- | ---------------- |
-| cwd  | string |         | Target git root. |
-
-```lua
-deck.start(require('deck.builtin.source.git.log')({
-  cwd = vim.fn.getcwd(),
-}))
-```
-
-### git
-
 Show git remotes.
 
 | Name | Type   | Default | Description      |
@@ -228,6 +214,20 @@ Show git status.
 
 ```lua
 deck.start(require('deck.builtin.source.git.status')({
+  cwd = vim.fn.getcwd(),
+}))
+```
+
+### git
+
+Show git log.
+
+| Name | Type   | Default | Description      |
+| ---- | ------ | ------- | ---------------- |
+| cwd  | string |         | Target git root. |
+
+```lua
+deck.start(require('deck.builtin.source.git.log')({
   cwd = vim.fn.getcwd(),
 }))
 ```

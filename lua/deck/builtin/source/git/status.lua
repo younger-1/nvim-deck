@@ -4,7 +4,7 @@ local Async = require('deck.kit.Async')
 
 --[=[@doc
   category = "source"
-  name = "git"
+  name = "git.status"
   desc = "Show git status."
   example = """
     deck.start(require('deck.builtin.source.git.status')({
