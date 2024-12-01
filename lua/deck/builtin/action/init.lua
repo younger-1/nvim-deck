@@ -26,7 +26,7 @@ do
     option.keep = option.keep or false
     return {
       name = name,
-      desc = 'deck buildin action',
+      desc = ('(built-in) open action (%s, %s)'):format(option.split or 'no split', option.keep and 'keep' or 'no keep'),
       resolve = function(ctx)
         for _, item in ipairs(ctx.get_action_items()) do
           if item.data.filename or item.data.bufnr then
@@ -117,13 +117,85 @@ end
 
 --[=[@doc
   category = "action"
+  name = "delete"
+  desc = """
+    Delete `item.data.filename`.\n
+    If multiple items are selected, they will be deleted in order.
+  """
+]=]
+action.delete_filename = {
+  name = 'delete',
+  desc = '(built-in) delete `item.data.filename`',
+  resolve = function(ctx)
+    for _, item in ipairs(ctx.get_action_items()) do
+      if item.data.filename then
+        return true
+      end
+    end
+    return false
+  end,
+  execute = function(ctx)
+    local targets = {}
+    for _, item in ipairs(ctx.get_action_items()) do
+      if item.data.filename then
+        table.insert(targets, item.data.filename)
+      end
+    end
+    local yes_no = vim.fn.input(table.concat(targets, '\n') .. '\n-----\nfiles will be deleted (yes/no)? ')
+    if yes_no == 'yes' then
+      for _, target in ipairs(targets) do
+        vim.fn.delete(target)
+      end
+    end
+    ctx.execute()
+  end
+}
+
+--[=[@doc
+  category = "action"
+  name = "delete"
+  desc = """
+    Delete `item.data.bufnr`.\n
+    If multiple items are selected, they will be deleted in order.
+  """
+]=]
+action.delete_bufnr = {
+  name = 'delete',
+  desc = '(built-in) delete `item.data.bufnr`',
+  resolve = function(ctx)
+    for _, item in ipairs(ctx.get_action_items()) do
+      if item.data.bufnr then
+        return true
+      end
+    end
+    return false
+  end,
+  execute = function(ctx)
+    local targets = {}
+    for _, item in ipairs(ctx.get_action_items()) do
+      if item.data.bufnr and vim.api.nvim_buf_is_valid(item.data.bufnr) then
+        table.insert(targets, item.data.bufnr)
+      end
+    end
+    local yes_no = vim.fn.input(table.concat(targets, '\n') .. '\n-----\nbuffers will be deleted (yes/no)? ')
+    if yes_no == 'yes' then
+      for _, target in ipairs(targets) do
+        vim.api.nvim_buf_delete(target, { force = true })
+      end
+    end
+    ctx.execute()
+  end
+}
+
+--[=[@doc
+  category = "action"
   name = "yank"
   desc = "Yank item.display_text field to default register."
 ]=]
 ---@type deck.Action
 action.yank = {
   name = 'yank',
-  desc = 'deck buildin action',
+  desc = '(built-in) yank `item.display_text`',
   execute = function(ctx)
     local contents = {}
     for _, item in ipairs(ctx.get_action_items()) do
@@ -145,7 +217,7 @@ action.yank = {
 ---@type deck.Action
 action.refresh = {
   name = 'refresh',
-  desc = 'deck buildin action',
+  desc = '(built-in) re-execute source',
   hidden = true,
   execute = function(ctx)
     ctx.execute()
@@ -160,7 +232,7 @@ action.refresh = {
 ---@type deck.Action
 action.prompt = {
   name = 'prompt',
-  desc = 'deck buildin action',
+  desc = '(built-in) open filtering prompt',
   hidden = true,
   execute = function(ctx)
     ctx.prompt()
@@ -175,7 +247,7 @@ action.prompt = {
 ---@type deck.Action
 action.toggle_select = {
   name = 'toggle_select',
-  desc = 'deck buildin action',
+  desc = '(built-in) toggle selected state of the cursor item',
   hidden = true,
   execute = function(ctx)
     local cursor_item = ctx.get_cursor_item()
@@ -194,7 +266,7 @@ action.toggle_select = {
 ---@type deck.Action
 action.toggle_select_all = {
   name = 'toggle_select_all',
-  desc = 'deck buildin action',
+  desc = '(built-in) toggle selected state of all items',
   hidden = true,
   execute = function(ctx)
     ctx.set_select_all(not ctx.get_select_all())
@@ -209,7 +281,7 @@ action.toggle_select_all = {
 ---@type deck.Action
 action.toggle_preview_mode = {
   name = 'toggle_preview_mode',
-  desc = 'deck buildin action',
+  desc = '(built-in) toggle preview mode',
   hidden = true,
   execute = function(ctx)
     ctx.set_preview_mode(not ctx.get_preview_mode())
@@ -224,7 +296,7 @@ action.toggle_preview_mode = {
 ---@type deck.Action
 action.scroll_preview_up = {
   name = 'scroll_preview_up',
-  desc = 'deck buildin action',
+  desc = '(built-in) scroll preview window up.',
   hidden = true,
   execute = function(ctx)
     ctx.scroll_preview(-3)
@@ -239,7 +311,7 @@ action.scroll_preview_up = {
 ---@type deck.Action
 action.scroll_preview_down = {
   name = 'scroll_preview_down',
-  desc = 'deck buildin action',
+  desc = '(built-in) scroll preview window down.',
   hidden = true,
   execute = function(ctx)
     ctx.scroll_preview(3)
@@ -257,7 +329,7 @@ action.scroll_preview_down = {
 ---@type deck.Action
 action.choose_action = {
   name = 'choose_action',
-  desc = 'deck buildin action',
+  desc = '(built-in) open action source',
   hidden = true,
   execute = function(prev_ctx)
     require('deck').start(require('deck.builtin.source.deck.actions')({
@@ -279,7 +351,7 @@ action.choose_action = {
 ---@type deck.Action
 action.substitute = {
   name = 'substitute',
-  desc = 'deck buildin action',
+  desc = '(built-in) open substitute buffer',
   resolve = function(ctx)
     for _, item in ipairs(ctx.get_action_items()) do
       if not item.data.filename or not item.data.lnum then
