@@ -414,6 +414,16 @@ deck.start(require('deck.builtin.source.recent_dirs')({
     The actions listed are filtered by whether they are valid in the current
     context.
 
+- `delete`
+  - Delete `item.data.filename`.
+
+    If multiple items are selected, they will be deleted in order.
+
+- `delete`
+  - Delete `item.data.bufnr`.
+
+    If multiple items are selected, they will be deleted in order.
+
 - `open`
   - Open `item.data.filename` or `item.data.bufnr`.
 
