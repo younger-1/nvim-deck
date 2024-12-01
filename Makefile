@@ -2,6 +2,7 @@ DENO_DIR := ${PWD}/.deno_dir
 
 .PHONY: docs
 docs:
+	if [ ! -d ${DENO_DIR} ]; then mkdir ${DENO_DIR}; fi
 	docker run -v ${PWD}:/app -v ${DENO_DIR}:/deno-dir -i denoland/deno -A /app/scripts/docs.ts
 	docker run -v ${PWD}:/app -v ${DENO_DIR}:/deno-dir -i denoland/deno fmt /app/README.md
 	# --project-name: the name of the project

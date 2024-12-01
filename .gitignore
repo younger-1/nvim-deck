@@ -1,3 +1,2 @@
-.deno_dir/*
-!.gitkeep
+.deno_dir
 doc/tags
