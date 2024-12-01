@@ -2,20 +2,24 @@ name: docs
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
 
 permissions:
   contents: write
 
 jobs:
   docs:
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Generate docs
-        run: |
-          make prepare
-          make docs
-      - uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          commit_message: "Auto generate docs"
-          branch: ${{ github.head_ref }}
+    - uses: actions/checkout@v2
+
+    - name: Generate docs
+      run: |
+        make prepare
+        make docs
+
+    - uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        commit_message: "Auto generate docs"
+        branch: ${{ github.head_ref }}
