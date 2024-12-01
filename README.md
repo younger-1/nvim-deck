@@ -399,6 +399,11 @@ deck.start(require('deck.builtin.source.git.changeset')({
 
 <!-- auto-generate-s:action -->
 
+- `open`
+  - Open `item.data.filename` or `item.data.bufnr`.
+
+    Open at the recently normal window.
+
 - `yank`
   - Yank item.display_text field to default register.
 
@@ -408,12 +413,27 @@ deck.start(require('deck.builtin.source.git.changeset')({
 - `refresh`
   - Re-execute source. (it can be used to refresh the items)
 
+- `open_keep`
+  - Open `item.data.filename` or `item.data.bufnr`.
+
+    But keep the deck window and cursor.
+
+- `open_split`
+  - Open `item.data.filename` or `item.data.bufnr`.
+
+    Open at the recently normal window with split.
+
 - `substitute`
   - Open substitute buffer with selected items (`item.data.filename` and
     `item.data.lnum` are required).
 
     You can modify and save the buffer to reflect the changes to the original
     files.
+
+- `open_vsplit`
+  - Open `item.data.filename` or `item.data.bufnr`.
+
+    Open at the recently normal window with vsplit.
 
 - `choose_action`
   - Open action source.
