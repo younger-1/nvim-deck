@@ -129,6 +129,7 @@ local function render(max_width, max_height)
 end
 
 ---Show messages
+---@param message deck.notify.Line[]
 ---@param option? { timeout?: number }
 function notify.show(message, option)
   vim.schedule(function()

@@ -8,7 +8,14 @@ do
       acc[preset.name] = {
         args = preset.args or {},
         execute = function(_, arguments)
-          preset.start(arguments)
+          local ok, msg = pcall(function()
+            preset.start(arguments)
+          end)
+          if not ok then
+            require('deck.notify').show({
+              { { msg, 'ErrorMsg' } }
+            })
+          end
         end
       }
       return acc
