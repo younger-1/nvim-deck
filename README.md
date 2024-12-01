@@ -77,6 +77,15 @@ vim.keymap.set('n', '<Leader>;', function()
     ctx.show()
   end
 end)
+
+-- Do default action on next item.
+vim.keymap.set('n', '<Leader>n', function()
+  local ctx = require('deck').get_history()[1]
+  if ctx then
+    ctx.set_cursor(ctx.get_cursor() + 1)
+    ctx.do_action('default')
+  end
+end)
 ```
 
 # Customization

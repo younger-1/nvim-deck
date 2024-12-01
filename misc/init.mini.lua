@@ -65,6 +65,14 @@ require("lazy").setup({
             ctx.show()
           end
         end)
+
+        vim.keymap.set('n', '<Leader>n', function()
+          local ctx = require('deck').get_history()[1]
+          if ctx then
+            ctx.set_cursor(ctx.get_cursor() + 1)
+            ctx.do_action('default')
+          end
+        end)
       end
     }
   },
