@@ -2,8 +2,8 @@ DENO_DIR := ${PWD}/.deno_dir
 
 .PHONY: docs
 docs:
-	docker run -v ${PWD}:/app -v ${DENO_DIR}:/deno-dir -it denoland/deno -A /app/scripts/docs.ts
-	docker run -v ${PWD}:/app -v ${DENO_DIR}:/deno-dir -it denoland/deno fmt /app/README.md
+	docker run -v ${PWD}:/app -v ${DENO_DIR}:/deno-dir -i denoland/deno -A /app/scripts/docs.ts
+	docker run -v ${PWD}:/app -v ${DENO_DIR}:/deno-dir -i denoland/deno fmt /app/README.md
 	# --project-name: the name of the project
 	# --input-file: the input markdown file
 	# --vim-version: the version of Vim that the project is compatible with
@@ -19,7 +19,7 @@ docs:
 	# --shift-heading-level-by: 0 if you don't want to shift heading levels , n otherwise
 	# --increment-heading-level-by: 0 if don't want to increment the starting heading number, n otherwise
 	# --scripts-dir: '/scripts' if 'GITHUB_ACTIONS=true' or '.dockerenv' is present, '/panvimdoc.sh/scripts' if no argument is passed, scripts directory otherwise
-	docker run -v $(PWD):/data -it panvimdoc \
+	docker run -v $(PWD):/data -i panvimdoc \
 		--project-name deck \
 		--input-file README.md \
 		--vim-version "NVIM v0.10.0" \
