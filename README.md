@@ -175,13 +175,16 @@ require('deck').register_decorator({
 
 <!-- auto-generate-s:source -->
 
-### items
+### grep
 
-Listing any provided items.
+Grep files under specified root directory. (required `ripgrep`)
 
-| Name  | Type                           | Default | Description    |
-| ----- | ------------------------------ | ------- | -------------- |
-| items | string[]\|deck.ItemSpecifier[] |         | Items to list. |
+| Name         | Type      | Default | Description                                                                                   |
+| ------------ | --------- | ------- | --------------------------------------------------------------------------------------------- |
+| root_dir     | string    |         | Target root directory.                                                                        |
+| pattern      | string?   |         | Grep pattern. If you omit this option, you must set `dynamic` option to true.                 |
+| dynamic      | boolean?  | false   | If true, use dynamic pattern. If you set this option to false, you must set `pattern` option. |
+| ignore_globs | string[]? | []      | Ignore glob patterns.                                                                         |
 
 ### files
 
@@ -191,6 +194,14 @@ Show files under specified root directory.
 | ------------ | --------- | ------- | ---------------------- |
 | ignore_globs | string[]? | []      | Ignore glob patterns.  |
 | root_dir     | string    |         | Target root directory. |
+
+### items
+
+Listing any provided items.
+
+| Name  | Type                           | Default | Description    |
+| ----- | ------------------------------ | ------- | -------------- |
+| items | string[]\|deck.ItemSpecifier[] |         | Items to list. |
 
 ### buffers
 
@@ -207,22 +218,13 @@ Live grep all helptags. (required `ripgrep`)
 
 _No options_
 
-### grep
+### recent_dirs
 
-Grep files under specified root directory. (required `ripgrep`)
+List recent directories.
 
-| Name         | Type      | Default | Description                                                                                   |
-| ------------ | --------- | ------- | --------------------------------------------------------------------------------------------- |
-| root_dir     | string    |         | Target root directory.                                                                        |
-| pattern      | string?   |         | Grep pattern. If you omit this option, you must set `dynamic` option to true.                 |
-| dynamic      | boolean?  | false   | If true, use dynamic pattern. If you set this option to false, you must set `pattern` option. |
-| ignore_globs | string[]? | []      | Ignore glob patterns.                                                                         |
-
-### deck.history
-
-Show deck.start history.
-
-_No options_
+| Name         | Type      | Default | Description   |
+| ------------ | --------- | ------- | ------------- |
+| ignore_paths | string[]? | []      | Ignore paths. |
 
 ### deck.actions
 
@@ -232,13 +234,11 @@ Show available actions from |deck.Context|
 | ------- | ---------------- | ------- | ----------- |
 | context | \|deck.Context\| |         |             |
 
-### recent_dirs
+### deck.history
 
-List recent directories.
+Show deck.start history.
 
-| Name         | Type      | Default | Description   |
-| ------------ | --------- | ------- | ------------- |
-| ignore_paths | string[]? | []      | Ignore paths. |
+_No options_
 
 ### recent_files
 
@@ -258,6 +258,15 @@ List recent files.
   - Open `item.data.filename` or `item.data.bufnr`. Open at the recently normal
     window.
 
+- `yank`
+  - Yank item.display_text field to default register.
+
+- `prompt`
+  - Open filtering prompt
+
+- `refresh`
+  - Re-execute source. (it can be used to refresh the items)
+
 - `open_keep`
   - Open `item.data.filename` or `item.data.bufnr`. But keep the deck window and
     cursor.
@@ -266,42 +275,33 @@ List recent files.
   - Open `item.data.filename` or `item.data.bufnr`. Open at the recently normal
     window with split.
 
+- `substitute`
+  - Open substitute buffer with selected items (`item.data.filename` and
+    `item.data.lnum` are required). You can modify and save the buffer to
+    reflect the changes to the original files.
+
 - `open_vsplit`
   - Open `item.data.filename` or `item.data.bufnr`. Open at the recently normal
     window with vsplit.
-
-- `yank`
-  - Yank item.display_text field to default register.
-
-- `refresh`
-  - Re-execute source. (it can be used to refresh the items)
-
-- `prompt`
-  - Open filtering prompt
-
-- `toggle_select`
-  - Toggle selected state of the cursor item.
-
-- `toggle_select_all`
-  - Toggle selected state of all items.
-
-- `toggle_preview_mode`
-  - Toggle preview mode
-
-- `scroll_preview_up`
-  - Scroll preview window up.
-
-- `scroll_preview_down`
-  - Scroll preview window down.
 
 - `choose_action`
   - Open action source. The actions listed are filtered by whether they are
     valid in the current context.
 
-- `substitute`
-  - Open substitute buffer with selected items (`item.data.filename` and
-    `item.data.lnum` are required). You can modify and save the buffer to
-    reflect the changes to the original files.
+- `toggle_select`
+  - Toggle selected state of the cursor item.
+
+- `scroll_preview_up`
+  - Scroll preview window up.
+
+- `toggle_select_all`
+  - Toggle selected state of all items.
+
+- `scroll_preview_down`
+  - Scroll preview window down.
+
+- `toggle_preview_mode`
+  - Toggle preview mode
 
 <!-- auto-generate-e:action -->
 
@@ -336,6 +336,211 @@ Setup deck globally.
 | config | deck.ConfigSpecifier | Setup deck configuration. |
 
 &nbsp;
+
+<!-- panvimdoc-include-comment deck.register_action(action) ~ -->
+
+<!-- panvimdoc-ignore-start -->
+
+### deck.register_action(action)
+
+<!-- panvimdoc-ignore-end -->
+
+Register action.
+
+| Name   | Type            | Description         |
+| ------ | --------------- | ------------------- |
+| action | \|deck.Action\| | action to register. |
+
+&nbsp;
+
+<!-- panvimdoc-include-comment deck.remove_actions(predicate) ~ -->
+
+<!-- panvimdoc-ignore-start -->
+
+### deck.remove_actions(predicate)
+
+<!-- panvimdoc-ignore-end -->
+
+Remove specific action.
+
+| Name      | Type                                  | Description                                        |
+| --------- | ------------------------------------- | -------------------------------------------------- |
+| predicate | fun(action: \|deck.Action\|): boolean | Predicate function. If return true, remove action. |
+
+&nbsp;
+
+<!-- panvimdoc-include-comment deck.remove_decorators(predicate) ~ -->
+
+<!-- panvimdoc-ignore-start -->
+
+### deck.remove_decorators(predicate)
+
+<!-- panvimdoc-ignore-end -->
+
+Remove specific decorator.
+
+| Name      | Type                                        | Description                                           |
+| --------- | ------------------------------------------- | ----------------------------------------------------- |
+| predicate | fun(decorator: \|deck.Decorator\|): boolean | Predicate function. If return true, remove decorator. |
+
+&nbsp;
+
+<!-- panvimdoc-include-comment deck.remove_previewers(predicate) ~ -->
+
+<!-- panvimdoc-ignore-start -->
+
+### deck.remove_previewers(predicate)
+
+<!-- panvimdoc-ignore-end -->
+
+Remove previewer.
+
+| Name      | Type                                        | Description                                           |
+| --------- | ------------------------------------------- | ----------------------------------------------------- |
+| predicate | fun(previewer: \|deck.Previewer\|): boolean | Predicate function. If return true, remove previewer. |
+
+&nbsp;
+
+<!-- panvimdoc-include-comment deck.register_decorator(decorator) ~ -->
+
+<!-- panvimdoc-ignore-start -->
+
+### deck.register_decorator(decorator)
+
+<!-- panvimdoc-ignore-end -->
+
+Register decorator.
+
+| Name      | Type               | Description            |
+| --------- | ------------------ | ---------------------- |
+| decorator | \|deck.Decorator\| | decorator to register. |
+
+&nbsp;
+
+<!-- panvimdoc-include-comment deck.register_previewer(previewer) ~ -->
+
+<!-- panvimdoc-ignore-start -->
+
+### deck.register_previewer(previewer)
+
+<!-- panvimdoc-ignore-end -->
+
+Register previewer.
+
+| Name      | Type               | Description            |
+| --------- | ------------------ | ---------------------- |
+| previewer | \|deck.Previewer\| | previewer to register. |
+
+&nbsp;
+
+<!-- panvimdoc-include-comment deck.get_actions(): |deck.Action|[] ~ -->
+
+<!-- panvimdoc-ignore-start -->
+
+### deck.get_actions(): |deck.Action|[]
+
+<!-- panvimdoc-ignore-end -->
+
+Get all registered actions.
+
+_No arguments_ &nbsp;
+
+<!-- panvimdoc-include-comment deck.get_history(): |deck.Context|[] ~ -->
+
+<!-- panvimdoc-ignore-start -->
+
+### deck.get_history(): |deck.Context|[]
+
+<!-- panvimdoc-ignore-end -->
+
+Get all history (first history is latest).
+
+_No arguments_ &nbsp;
+
+<!-- panvimdoc-include-comment deck.remove_start_presets(predicate) ~ -->
+
+<!-- panvimdoc-ignore-start -->
+
+### deck.remove_start_presets(predicate)
+
+<!-- panvimdoc-ignore-end -->
+
+Remove specific start_preset.
+
+| Name      | Type                                             | Description                                              |
+| --------- | ------------------------------------------------ | -------------------------------------------------------- |
+| predicate | fun(start_preset: \|deck.StartPreset\|): boolean | Predicate function. If return true, remove start_preset. |
+
+&nbsp;
+
+<!-- panvimdoc-include-comment deck.register_start_preset(start_preset) ~ -->
+
+<!-- panvimdoc-ignore-start -->
+
+### deck.register_start_preset(start_preset)
+
+<!-- panvimdoc-ignore-end -->
+
+Register start_preset.
+
+| Name         | Type             | Description          |
+| ------------ | ---------------- | -------------------- |
+| start_preset | deck.StartPreset | \|deck.StartPreset\| |
+
+&nbsp;
+
+<!-- panvimdoc-include-comment deck.get_decorators(): |deck.Decorator|[] ~ -->
+
+<!-- panvimdoc-ignore-start -->
+
+### deck.get_decorators(): |deck.Decorator|[]
+
+<!-- panvimdoc-ignore-end -->
+
+Get all registered decorators.
+
+_No arguments_ &nbsp;
+
+<!-- panvimdoc-include-comment deck.get_previewers(): |deck.Previewer|[] ~ -->
+
+<!-- panvimdoc-ignore-start -->
+
+### deck.get_previewers(): |deck.Previewer|[]
+
+<!-- panvimdoc-ignore-end -->
+
+Get all registered previewers.
+
+_No arguments_ &nbsp;
+
+<!-- panvimdoc-include-comment deck.register_start_preset(name, start_fn) ~ -->
+
+<!-- panvimdoc-ignore-start -->
+
+### deck.register_start_preset(name, start_fn)
+
+<!-- panvimdoc-ignore-end -->
+
+Register start_preset.
+
+| Name     | Type   | Description     |
+| -------- | ------ | --------------- |
+| name     | string | preset name.    |
+| start_fn | fun()  | Start function. |
+
+&nbsp;
+
+<!-- panvimdoc-include-comment deck.get_start_presets(): |deck.StartPreset|[] ~ -->
+
+<!-- panvimdoc-ignore-start -->
+
+### deck.get_start_presets(): |deck.StartPreset|[]
+
+<!-- panvimdoc-ignore-end -->
+
+Get all registered start presets.
+
+_No arguments_ &nbsp;
 
 <!-- panvimdoc-include-comment deck.start(sources, start_config): |deck.Context| ~ -->
 
@@ -387,228 +592,11 @@ Create alias action.
 
 &nbsp;
 
-<!-- panvimdoc-include-comment deck.get_history(): |deck.Context|[] ~ -->
-
-<!-- panvimdoc-ignore-start -->
-
-### deck.get_history(): |deck.Context|[]
-
-<!-- panvimdoc-ignore-end -->
-
-Get all history (first history is latest).
-
-_No arguments_ &nbsp;
-
-<!-- panvimdoc-include-comment deck.get_start_presets(): |deck.StartPreset|[] ~ -->
-
-<!-- panvimdoc-ignore-start -->
-
-### deck.get_start_presets(): |deck.StartPreset|[]
-
-<!-- panvimdoc-ignore-end -->
-
-Get all registered start presets.
-
-_No arguments_ &nbsp;
-
-<!-- panvimdoc-include-comment deck.get_actions(): |deck.Action|[] ~ -->
-
-<!-- panvimdoc-ignore-start -->
-
-### deck.get_actions(): |deck.Action|[]
-
-<!-- panvimdoc-ignore-end -->
-
-Get all registered actions.
-
-_No arguments_ &nbsp;
-
-<!-- panvimdoc-include-comment deck.get_decorators(): |deck.Decorator|[] ~ -->
-
-<!-- panvimdoc-ignore-start -->
-
-### deck.get_decorators(): |deck.Decorator|[]
-
-<!-- panvimdoc-ignore-end -->
-
-Get all registered decorators.
-
-_No arguments_ &nbsp;
-
-<!-- panvimdoc-include-comment deck.get_previewers(): |deck.Previewer|[] ~ -->
-
-<!-- panvimdoc-ignore-start -->
-
-### deck.get_previewers(): |deck.Previewer|[]
-
-<!-- panvimdoc-ignore-end -->
-
-Get all registered previewers.
-
-_No arguments_ &nbsp;
-
-<!-- panvimdoc-include-comment deck.register_start_preset(start_preset) ~ -->
-
-<!-- panvimdoc-ignore-start -->
-
-### deck.register_start_preset(start_preset)
-
-<!-- panvimdoc-ignore-end -->
-
-Register start_preset.
-
-| Name         | Type             | Description          |
-| ------------ | ---------------- | -------------------- |
-| start_preset | deck.StartPreset | \|deck.StartPreset\| |
-
-&nbsp;
-
-<!-- panvimdoc-include-comment deck.register_start_preset(name, start_fn) ~ -->
-
-<!-- panvimdoc-ignore-start -->
-
-### deck.register_start_preset(name, start_fn)
-
-<!-- panvimdoc-ignore-end -->
-
-Register start_preset.
-
-| Name     | Type   | Description     |
-| -------- | ------ | --------------- |
-| name     | string | preset name.    |
-| start_fn | fun()  | Start function. |
-
-&nbsp;
-
-<!-- panvimdoc-include-comment deck.remove_start_presets(predicate) ~ -->
-
-<!-- panvimdoc-ignore-start -->
-
-### deck.remove_start_presets(predicate)
-
-<!-- panvimdoc-ignore-end -->
-
-Remove specific start_preset.
-
-| Name      | Type                                             | Description                                              |
-| --------- | ------------------------------------------------ | -------------------------------------------------------- |
-| predicate | fun(start_preset: \|deck.StartPreset\|): boolean | Predicate function. If return true, remove start_preset. |
-
-&nbsp;
-
-<!-- panvimdoc-include-comment deck.register_action(action) ~ -->
-
-<!-- panvimdoc-ignore-start -->
-
-### deck.register_action(action)
-
-<!-- panvimdoc-ignore-end -->
-
-Register action.
-
-| Name   | Type            | Description         |
-| ------ | --------------- | ------------------- |
-| action | \|deck.Action\| | action to register. |
-
-&nbsp;
-
-<!-- panvimdoc-include-comment deck.remove_actions(predicate) ~ -->
-
-<!-- panvimdoc-ignore-start -->
-
-### deck.remove_actions(predicate)
-
-<!-- panvimdoc-ignore-end -->
-
-Remove specific action.
-
-| Name      | Type                                  | Description                                        |
-| --------- | ------------------------------------- | -------------------------------------------------- |
-| predicate | fun(action: \|deck.Action\|): boolean | Predicate function. If return true, remove action. |
-
-&nbsp;
-
-<!-- panvimdoc-include-comment deck.register_decorator(decorator) ~ -->
-
-<!-- panvimdoc-ignore-start -->
-
-### deck.register_decorator(decorator)
-
-<!-- panvimdoc-ignore-end -->
-
-Register decorator.
-
-| Name      | Type               | Description            |
-| --------- | ------------------ | ---------------------- |
-| decorator | \|deck.Decorator\| | decorator to register. |
-
-&nbsp;
-
-<!-- panvimdoc-include-comment deck.remove_decorators(predicate) ~ -->
-
-<!-- panvimdoc-ignore-start -->
-
-### deck.remove_decorators(predicate)
-
-<!-- panvimdoc-ignore-end -->
-
-Remove specific decorator.
-
-| Name      | Type                                        | Description                                           |
-| --------- | ------------------------------------------- | ----------------------------------------------------- |
-| predicate | fun(decorator: \|deck.Decorator\|): boolean | Predicate function. If return true, remove decorator. |
-
-&nbsp;
-
-<!-- panvimdoc-include-comment deck.register_previewer(previewer) ~ -->
-
-<!-- panvimdoc-ignore-start -->
-
-### deck.register_previewer(previewer)
-
-<!-- panvimdoc-ignore-end -->
-
-Register previewer.
-
-| Name      | Type               | Description            |
-| --------- | ------------------ | ---------------------- |
-| previewer | \|deck.Previewer\| | previewer to register. |
-
-&nbsp;
-
-<!-- panvimdoc-include-comment deck.remove_previewers(predicate) ~ -->
-
-<!-- panvimdoc-ignore-start -->
-
-### deck.remove_previewers(predicate)
-
-<!-- panvimdoc-ignore-end -->
-
-Remove previewer.
-
-| Name      | Type                                        | Description                                           |
-| --------- | ------------------------------------------- | ----------------------------------------------------- |
-| predicate | fun(previewer: \|deck.Previewer\|): boolean | Predicate function. If return true, remove previewer. |
-
-&nbsp;
-
 <!-- auto-generate-e:api -->
 
 # Type
 
 <!-- auto-generate-s:type -->
-
-```vimdoc
-*deck.ItemSpecifier*
-```
-
-```lua
----@class deck.ItemSpecifier
----@field public display_text string|(deck.VirtualText[])
----@field public highlights? deck.Highlight[]
----@field public filter_text? string
----@field public data? table
-```
 
 ```vimdoc
 *deck.Item*
@@ -618,87 +606,6 @@ Remove previewer.
 ---@class deck.Item: deck.ItemSpecifier
 ---@field public display_text string
 ---@field public data table
-```
-
-```vimdoc
-*deck.Source*
-```
-
-```lua
----@class deck.Source
----@field public name string
----@field public dynamic? boolean
----@field public events? { Start?: fun(ctx: deck.Context), BufWinEnter?: fun(ctx: deck.Context) }
----@field public execute deck.SourceExecuteFunction
----@field public actions? deck.Action[]
----@field public decorators? deck.Decorator[]
----@field public previewers? deck.Previewer[]
----@alias deck.SourceExecuteFunction fun(ctx: deck.ExecuteContext)
-```
-
-```vimdoc
-*deck.ExecuteContext*
-```
-
-```lua
----@class deck.ExecuteContext
----@field public item fun(item: deck.ItemSpecifier)
----@field public done fun( )
----@field public get_query fun(): string
----@field public aborted fun(): boolean
----@field public on_abort fun(callback: fun())
-```
-
-```vimdoc
-*deck.Action*
-```
-
-```lua
----@class deck.Action
----@field public name string
----@field public desc? string
----@field public hidden? boolean
----@field public resolve? deck.ActionResolveFunction
----@field public execute deck.ActionExecuteFunction
----@alias deck.ActionResolveFunction fun(ctx: deck.Context): any
----@alias deck.ActionExecuteFunction fun(ctx: deck.Context)
-```
-
-```vimdoc
-*deck.Decorator*
-```
-
-```lua
----@class deck.Decorator
----@field public name string
----@field public resolve? deck.DecoratorResolveFunction
----@field public decorate deck.DecoratorDecorateFunction
----@alias deck.DecoratorResolveFunction fun(ctx: deck.Context, item: deck.Item): any
----@alias deck.DecoratorDecorateFunction fun(ctx: deck.Context, item: deck.Item, row: integer): any
-```
-
-```vimdoc
-*deck.Previewer*
-```
-
-```lua
----@class deck.Previewer
----@field public name string
----@field public resolve? deck.PreviewerResolveFunction
----@field public preview deck.PreviewerPreviewFunction
----@alias deck.PreviewerResolveFunction fun(ctx: deck.Context): any
----@alias deck.PreviewerPreviewFunction fun(ctx: deck.Context, env: { win: integer })
-```
-
-```vimdoc
-*deck.StartPreset*
-```
-
-```lua
----@class deck.StartPreset
----@field public name string
----@field public args? table<string|integer, fun(input: string): string[]>
----@field public start fun(args: table<string|integer, string>)
 ```
 
 ```vimdoc
@@ -717,39 +624,18 @@ Remove previewer.
 ```
 
 ```vimdoc
-*deck.StartConfigSpecifier*
+*deck.Action*
 ```
 
 ```lua
----@class deck.StartConfigSpecifier
----@field public name? string
----@field public view? fun(): deck.View
----@field public matcher? deck.Matcher
----@field public history? boolean
----@field public performance? { interrupt_interval: integer, interrupt_timeout: integer }
-```
-
-```vimdoc
-*deck.StartConfig*
-```
-
-```lua
----@class deck.StartConfig: deck.StartConfigSpecifier
+---@class deck.Action
 ---@field public name string
----@field public view fun(): deck.View
----@field public matcher deck.Matcher
----@field public history boolean
----@field public performance { interrupt_interval: integer, interrupt_timeout: integer }
-```
-
-```vimdoc
-*deck.ConfigSpecifier*
-```
-
-```lua
----@class deck.ConfigSpecifier
----@field public max_history_size? integer
----@field public default_start_config? deck.StartConfigSpecifier
+---@field public desc? string
+---@field public hidden? boolean
+---@field public resolve? deck.ActionResolveFunction
+---@field public execute deck.ActionExecuteFunction
+---@alias deck.ActionResolveFunction fun(ctx: deck.Context): any
+---@alias deck.ActionExecuteFunction fun(ctx: deck.Context)
 ```
 
 ```vimdoc
@@ -760,6 +646,22 @@ Remove previewer.
 ---@class deck.Config: deck.ConfigSpecifier
 ---@field public max_history_size integer
 ---@field public default_start_config? deck.StartConfigSpecifier
+```
+
+```vimdoc
+*deck.Source*
+```
+
+```lua
+---@class deck.Source
+---@field public name string
+---@field public dynamic? boolean
+---@field public events? { Start?: fun(ctx: deck.Context), BufWinEnter?: fun(ctx: deck.Context) }
+---@field public execute deck.SourceExecuteFunction
+---@field public actions? deck.Action[]
+---@field public decorators? deck.Decorator[]
+---@field public previewers? deck.Previewer[]
+---@alias deck.SourceExecuteFunction fun(ctx: deck.ExecuteContext)
 ```
 
 ```vimdoc
@@ -805,6 +707,104 @@ Remove previewer.
 ---@field dispose fun()
 ---@field disposed fun(): boolean
 ---@field on_dispose fun(callback: fun()): fun()
+```
+
+```vimdoc
+*deck.Decorator*
+```
+
+```lua
+---@class deck.Decorator
+---@field public name string
+---@field public resolve? deck.DecoratorResolveFunction
+---@field public decorate deck.DecoratorDecorateFunction
+---@alias deck.DecoratorResolveFunction fun(ctx: deck.Context, item: deck.Item): any
+---@alias deck.DecoratorDecorateFunction fun(ctx: deck.Context, item: deck.Item, row: integer): any
+```
+
+```vimdoc
+*deck.Previewer*
+```
+
+```lua
+---@class deck.Previewer
+---@field public name string
+---@field public resolve? deck.PreviewerResolveFunction
+---@field public preview deck.PreviewerPreviewFunction
+---@alias deck.PreviewerResolveFunction fun(ctx: deck.Context): any
+---@alias deck.PreviewerPreviewFunction fun(ctx: deck.Context, env: { win: integer })
+```
+
+```vimdoc
+*deck.StartConfig*
+```
+
+```lua
+---@class deck.StartConfig: deck.StartConfigSpecifier
+---@field public name string
+---@field public view fun(): deck.View
+---@field public matcher deck.Matcher
+---@field public history boolean
+---@field public performance { interrupt_interval: integer, interrupt_timeout: integer }
+```
+
+```vimdoc
+*deck.StartPreset*
+```
+
+```lua
+---@class deck.StartPreset
+---@field public name string
+---@field public args? table<string|integer, fun(input: string): string[]>
+---@field public start fun(args: table<string|integer, string>)
+```
+
+```vimdoc
+*deck.ItemSpecifier*
+```
+
+```lua
+---@class deck.ItemSpecifier
+---@field public display_text string|(deck.VirtualText[])
+---@field public highlights? deck.Highlight[]
+---@field public filter_text? string
+---@field public data? table
+```
+
+```vimdoc
+*deck.ExecuteContext*
+```
+
+```lua
+---@class deck.ExecuteContext
+---@field public item fun(item: deck.ItemSpecifier)
+---@field public done fun( )
+---@field public get_query fun(): string
+---@field public aborted fun(): boolean
+---@field public on_abort fun(callback: fun())
+```
+
+```vimdoc
+*deck.ConfigSpecifier*
+```
+
+```lua
+---@class deck.ConfigSpecifier
+---@field public max_history_size? integer
+---@field public default_start_config? deck.StartConfigSpecifier
+```
+
+```vimdoc
+*deck.StartConfigSpecifier*
+```
+
+```lua
+---@class deck.StartConfigSpecifier
+---@field public name? string
+---@field public view? fun(): deck.View
+---@field public matcher? deck.Matcher
+---@field public history? boolean
+---@field public performance? { interrupt_interval: integer, interrupt_timeout: integer }
 ```
 
 <!-- auto-generate-e:type -->

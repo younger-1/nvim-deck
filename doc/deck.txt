@@ -206,13 +206,23 @@ The below example shows how to create your own decorator.
 SOURCES                                                *deck-built-in-sources*
 
 
-ITEMS ~
+GREP ~
 
-Listing any provided items.
+Grep files under specified root directory. (required `ripgrep`)
 
-  Name    Type                            Default   Description
-  ------- ------------------------------- --------- ----------------
-  items   string[]|deck.ItemSpecifier[]             Items to list.
+  -------------------------------------------------------------------------------------------
+  Name           Type        Default   Description
+  -------------- ----------- --------- ------------------------------------------------------
+  root_dir       string                Target root directory.
+
+  pattern        string?               Grep pattern. If you omit this option, you must set
+                                       dynamic option to true.
+
+  dynamic        boolean?    false     If true, use dynamic pattern. If you set this option
+                                       to false, you must set pattern option.
+
+  ignore_globs   string[]?   []        Ignore glob patterns.
+  -------------------------------------------------------------------------------------------
 
 FILES ~
 
@@ -222,6 +232,14 @@ Show files under specified root directory.
   -------------- ----------- --------- ------------------------
   ignore_globs   string[]?   []        Ignore glob patterns.
   root_dir       string                Target root directory.
+
+ITEMS ~
+
+Listing any provided items.
+
+  Name    Type                            Default   Description
+  ------- ------------------------------- --------- ----------------
+  items   string[]|deck.ItemSpecifier[]             Items to list.
 
 BUFFERS ~
 
@@ -243,30 +261,13 @@ Live grep all helptags. (required `ripgrep`)
 _No options_
 
 
-GREP ~
+RECENT_DIRS ~
 
-Grep files under specified root directory. (required `ripgrep`)
+List recent directories.
 
-  -------------------------------------------------------------------------------------------
   Name           Type        Default   Description
-  -------------- ----------- --------- ------------------------------------------------------
-  root_dir       string                Target root directory.
-
-  pattern        string?               Grep pattern. If you omit this option, you must set
-                                       dynamic option to true.
-
-  dynamic        boolean?    false     If true, use dynamic pattern. If you set this option
-                                       to false, you must set pattern option.
-
-  ignore_globs   string[]?   []        Ignore glob patterns.
-  -------------------------------------------------------------------------------------------
-
-DECK.HISTORY ~
-
-Show deck.start history.
-
-_No options_
-
+  -------------- ----------- --------- ---------------
+  ignore_paths   string[]?   []        Ignore paths.
 
 DECK.ACTIONS ~
 
@@ -276,13 +277,12 @@ Show available actions from |deck.Context|
   --------- ---------------- --------- -------------
   context   |deck.Context|             
 
-RECENT_DIRS ~
+DECK.HISTORY ~
 
-List recent directories.
+Show deck.start history.
 
-  Name           Type        Default   Description
-  -------------- ----------- --------- ---------------
-  ignore_paths   string[]?   []        Ignore paths.
+_No options_
+
 
 RECENT_FILES ~
 
@@ -297,38 +297,38 @@ ACTIONS                                                *deck-built-in-actions*
 - `open`
     - Open `item.data.filename` or `item.data.bufnr`. Open at the recently normal
         window.
+- `yank`
+    - Yank item.display_text field to default register.
+- `prompt`
+    - Open filtering prompt
+- `refresh`
+    - Re-execute source. (it can be used to refresh the items)
 - `open_keep`
     - Open `item.data.filename` or `item.data.bufnr`. But keep the deck window and
         cursor.
 - `open_split`
     - Open `item.data.filename` or `item.data.bufnr`. Open at the recently normal
         window with split.
-- `open_vsplit`
-    - Open `item.data.filename` or `item.data.bufnr`. Open at the recently normal
-        window with vsplit.
-- `yank`
-    - Yank item.display_text field to default register.
-- `refresh`
-    - Re-execute source. (it can be used to refresh the items)
-- `prompt`
-    - Open filtering prompt
-- `toggle_select`
-    - Toggle selected state of the cursor item.
-- `toggle_select_all`
-    - Toggle selected state of all items.
-- `toggle_preview_mode`
-    - Toggle preview mode
-- `scroll_preview_up`
-    - Scroll preview window up.
-- `scroll_preview_down`
-    - Scroll preview window down.
-- `choose_action`
-    - Open action source. The actions listed are filtered by whether they are
-        valid in the current context.
 - `substitute`
     - Open substitute buffer with selected items (`item.data.filename` and
         `item.data.lnum` are required). You can modify and save the buffer to
         reflect the changes to the original files.
+- `open_vsplit`
+    - Open `item.data.filename` or `item.data.bufnr`. Open at the recently normal
+        window with vsplit.
+- `choose_action`
+    - Open action source. The actions listed are filtered by whether they are
+        valid in the current context.
+- `toggle_select`
+    - Toggle selected state of the cursor item.
+- `scroll_preview_up`
+    - Scroll preview window up.
+- `toggle_select_all`
+    - Toggle selected state of all items.
+- `scroll_preview_down`
+    - Scroll preview window down.
+- `toggle_preview_mode`
+    - Toggle preview mode
 
 
 AUTOCMD                                                *deck-built-in-autocmd*
@@ -350,6 +350,134 @@ Setup deck globally.
   -------- ---------------------- ---------------------------
   config   deck.ConfigSpecifier   Setup deck configuration.
  
+
+deck.register_action(action) ~
+
+Register action.
+
+  Name     Type            Description
+  -------- --------------- ---------------------
+  action   |deck.Action|   action to register.
+ 
+
+deck.remove_actions(predicate) ~
+
+Remove specific action.
+
+  ----------------------------------------------------------------------------
+  Name        Type                        Description
+  ----------- --------------------------- ------------------------------------
+  predicate   fun(action: |deck.Action|): Predicate function. If return true,
+              boolean                     remove action.
+
+  ----------------------------------------------------------------------------
+ 
+
+deck.remove_decorators(predicate) ~
+
+Remove specific decorator.
+
+  -----------------------------------------------------------------------------
+  Name        Type                          Description
+  ----------- ----------------------------- -----------------------------------
+  predicate   fun(decorator:                Predicate function. If return true,
+              |deck.Decorator|): boolean    remove decorator.
+
+  -----------------------------------------------------------------------------
+ 
+
+deck.remove_previewers(predicate) ~
+
+Remove previewer.
+
+  -----------------------------------------------------------------------------
+  Name        Type                          Description
+  ----------- ----------------------------- -----------------------------------
+  predicate   fun(previewer:                Predicate function. If return true,
+              |deck.Previewer|): boolean    remove previewer.
+
+  -----------------------------------------------------------------------------
+ 
+
+deck.register_decorator(decorator) ~
+
+Register decorator.
+
+  Name        Type               Description
+  ----------- ------------------ ------------------------
+  decorator   |deck.Decorator|   decorator to register.
+ 
+
+deck.register_previewer(previewer) ~
+
+Register previewer.
+
+  Name        Type               Description
+  ----------- ------------------ ------------------------
+  previewer   |deck.Previewer|   previewer to register.
+ 
+
+deck.get_actions(): |deck.Action|[] ~
+
+Get all registered actions.
+
+_No arguments_  
+
+deck.get_history(): |deck.Context|[] ~
+
+Get all history (first history is latest).
+
+_No arguments_  
+
+deck.remove_start_presets(predicate) ~
+
+Remove specific start_preset.
+
+  ------------------------------------------------------------------------------
+  Name        Type                           Description
+  ----------- ------------------------------ -----------------------------------
+  predicate   fun(start_preset:              Predicate function. If return true,
+              |deck.StartPreset|): boolean   remove start_preset.
+
+  ------------------------------------------------------------------------------
+ 
+
+deck.register_start_preset(start_preset) ~
+
+Register start_preset.
+
+  Name           Type               Description
+  -------------- ------------------ --------------------
+  start_preset   deck.StartPreset   |deck.StartPreset|
+ 
+
+deck.get_decorators(): |deck.Decorator|[] ~
+
+Get all registered decorators.
+
+_No arguments_  
+
+deck.get_previewers(): |deck.Previewer|[] ~
+
+Get all registered previewers.
+
+_No arguments_  
+
+deck.register_start_preset(name, start_fn) ~
+
+Register start_preset.
+
+  Name       Type     Description
+  ---------- -------- -----------------
+  name       string   preset name.
+  start_fn   fun()    Start function.
+ 
+
+deck.get_start_presets(): |deck.StartPreset|[] ~
+
+Get all registered start presets.
+
+_No arguments_  
 
 deck.start(sources, start_config): |deck.Context| ~
 
@@ -386,147 +514,9 @@ Create alias action.
   alias_action_name   string   existing action name.
  
 
-deck.get_history(): |deck.Context|[] ~
-
-Get all history (first history is latest).
-
-_No arguments_  
-
-deck.get_start_presets(): |deck.StartPreset|[] ~
-
-Get all registered start presets.
-
-_No arguments_  
-
-deck.get_actions(): |deck.Action|[] ~
-
-Get all registered actions.
-
-_No arguments_  
-
-deck.get_decorators(): |deck.Decorator|[] ~
-
-Get all registered decorators.
-
-_No arguments_  
-
-deck.get_previewers(): |deck.Previewer|[] ~
-
-Get all registered previewers.
-
-_No arguments_  
-
-deck.register_start_preset(start_preset) ~
-
-Register start_preset.
-
-  Name           Type               Description
-  -------------- ------------------ --------------------
-  start_preset   deck.StartPreset   |deck.StartPreset|
- 
-
-deck.register_start_preset(name, start_fn) ~
-
-Register start_preset.
-
-  Name       Type     Description
-  ---------- -------- -----------------
-  name       string   preset name.
-  start_fn   fun()    Start function.
- 
-
-deck.remove_start_presets(predicate) ~
-
-Remove specific start_preset.
-
-  ------------------------------------------------------------------------------
-  Name        Type                           Description
-  ----------- ------------------------------ -----------------------------------
-  predicate   fun(start_preset:              Predicate function. If return true,
-              |deck.StartPreset|): boolean   remove start_preset.
-
-  ------------------------------------------------------------------------------
- 
-
-deck.register_action(action) ~
-
-Register action.
-
-  Name     Type            Description
-  -------- --------------- ---------------------
-  action   |deck.Action|   action to register.
- 
-
-deck.remove_actions(predicate) ~
-
-Remove specific action.
-
-  ----------------------------------------------------------------------------
-  Name        Type                        Description
-  ----------- --------------------------- ------------------------------------
-  predicate   fun(action: |deck.Action|): Predicate function. If return true,
-              boolean                     remove action.
-
-  ----------------------------------------------------------------------------
- 
-
-deck.register_decorator(decorator) ~
-
-Register decorator.
-
-  Name        Type               Description
-  ----------- ------------------ ------------------------
-  decorator   |deck.Decorator|   decorator to register.
- 
-
-deck.remove_decorators(predicate) ~
-
-Remove specific decorator.
-
-  -----------------------------------------------------------------------------
-  Name        Type                          Description
-  ----------- ----------------------------- -----------------------------------
-  predicate   fun(decorator:                Predicate function. If return true,
-              |deck.Decorator|): boolean    remove decorator.
-
-  -----------------------------------------------------------------------------
- 
-
-deck.register_previewer(previewer) ~
-
-Register previewer.
-
-  Name        Type               Description
-  ----------- ------------------ ------------------------
-  previewer   |deck.Previewer|   previewer to register.
- 
-
-deck.remove_previewers(predicate) ~
-
-Remove previewer.
-
-  -----------------------------------------------------------------------------
-  Name        Type                          Description
-  ----------- ----------------------------- -----------------------------------
-  predicate   fun(previewer:                Predicate function. If return true,
-              |deck.Previewer|): boolean    remove previewer.
-
-  -----------------------------------------------------------------------------
- 
-
 
 ==============================================================================
 8. Type                                                            *deck-type*
-
-*deck.ItemSpecifier*
-
->lua
-    ---@class deck.ItemSpecifier
-    ---@field public display_text string|(deck.VirtualText[])
-    ---@field public highlights? deck.Highlight[]
-    ---@field public filter_text? string
-    ---@field public data? table
-<
 
 *deck.Item*
 
@@ -534,75 +524,6 @@ Remove previewer.
     ---@class deck.Item: deck.ItemSpecifier
     ---@field public display_text string
     ---@field public data table
-<
-
-*deck.Source*
-
->lua
-    ---@class deck.Source
-    ---@field public name string
-    ---@field public dynamic? boolean
-    ---@field public events? { Start?: fun(ctx: deck.Context), BufWinEnter?: fun(ctx: deck.Context) }
-    ---@field public execute deck.SourceExecuteFunction
-    ---@field public actions? deck.Action[]
-    ---@field public decorators? deck.Decorator[]
-    ---@field public previewers? deck.Previewer[]
-    ---@alias deck.SourceExecuteFunction fun(ctx: deck.ExecuteContext)
-<
-
-*deck.ExecuteContext*
-
->lua
-    ---@class deck.ExecuteContext
-    ---@field public item fun(item: deck.ItemSpecifier)
-    ---@field public done fun( )
-    ---@field public get_query fun(): string
-    ---@field public aborted fun(): boolean
-    ---@field public on_abort fun(callback: fun())
-<
-
-*deck.Action*
-
->lua
-    ---@class deck.Action
-    ---@field public name string
-    ---@field public desc? string
-    ---@field public hidden? boolean
-    ---@field public resolve? deck.ActionResolveFunction
-    ---@field public execute deck.ActionExecuteFunction
-    ---@alias deck.ActionResolveFunction fun(ctx: deck.Context): any
-    ---@alias deck.ActionExecuteFunction fun(ctx: deck.Context)
-<
-
-*deck.Decorator*
-
->lua
-    ---@class deck.Decorator
-    ---@field public name string
-    ---@field public resolve? deck.DecoratorResolveFunction
-    ---@field public decorate deck.DecoratorDecorateFunction
-    ---@alias deck.DecoratorResolveFunction fun(ctx: deck.Context, item: deck.Item): any
-    ---@alias deck.DecoratorDecorateFunction fun(ctx: deck.Context, item: deck.Item, row: integer): any
-<
-
-*deck.Previewer*
-
->lua
-    ---@class deck.Previewer
-    ---@field public name string
-    ---@field public resolve? deck.PreviewerResolveFunction
-    ---@field public preview deck.PreviewerPreviewFunction
-    ---@alias deck.PreviewerResolveFunction fun(ctx: deck.Context): any
-    ---@alias deck.PreviewerPreviewFunction fun(ctx: deck.Context, env: { win: integer })
-<
-
-*deck.StartPreset*
-
->lua
-    ---@class deck.StartPreset
-    ---@field public name string
-    ---@field public args? table<string|integer, fun(input: string): string[]>
-    ---@field public start fun(args: table<string|integer, string>)
 <
 
 *deck.View*
@@ -618,34 +539,17 @@ Remove previewer.
     ---@field public render fun(ctx: deck.Context)
 <
 
-*deck.StartConfigSpecifier*
+*deck.Action*
 
 >lua
-    ---@class deck.StartConfigSpecifier
-    ---@field public name? string
-    ---@field public view? fun(): deck.View
-    ---@field public matcher? deck.Matcher
-    ---@field public history? boolean
-    ---@field public performance? { interrupt_interval: integer, interrupt_timeout: integer }
-<
-
-*deck.StartConfig*
-
->lua
-    ---@class deck.StartConfig: deck.StartConfigSpecifier
+    ---@class deck.Action
     ---@field public name string
-    ---@field public view fun(): deck.View
-    ---@field public matcher deck.Matcher
-    ---@field public history boolean
-    ---@field public performance { interrupt_interval: integer, interrupt_timeout: integer }
-<
-
-*deck.ConfigSpecifier*
-
->lua
-    ---@class deck.ConfigSpecifier
-    ---@field public max_history_size? integer
-    ---@field public default_start_config? deck.StartConfigSpecifier
+    ---@field public desc? string
+    ---@field public hidden? boolean
+    ---@field public resolve? deck.ActionResolveFunction
+    ---@field public execute deck.ActionExecuteFunction
+    ---@alias deck.ActionResolveFunction fun(ctx: deck.Context): any
+    ---@alias deck.ActionExecuteFunction fun(ctx: deck.Context)
 <
 
 *deck.Config*
@@ -654,6 +558,20 @@ Remove previewer.
     ---@class deck.Config: deck.ConfigSpecifier
     ---@field public max_history_size integer
     ---@field public default_start_config? deck.StartConfigSpecifier
+<
+
+*deck.Source*
+
+>lua
+    ---@class deck.Source
+    ---@field public name string
+    ---@field public dynamic? boolean
+    ---@field public events? { Start?: fun(ctx: deck.Context), BufWinEnter?: fun(ctx: deck.Context) }
+    ---@field public execute deck.SourceExecuteFunction
+    ---@field public actions? deck.Action[]
+    ---@field public decorators? deck.Decorator[]
+    ---@field public previewers? deck.Previewer[]
+    ---@alias deck.SourceExecuteFunction fun(ctx: deck.ExecuteContext)
 <
 
 *deck.Context*
@@ -697,6 +615,88 @@ Remove previewer.
     ---@field dispose fun()
     ---@field disposed fun(): boolean
     ---@field on_dispose fun(callback: fun()): fun()
+<
+
+*deck.Decorator*
+
+>lua
+    ---@class deck.Decorator
+    ---@field public name string
+    ---@field public resolve? deck.DecoratorResolveFunction
+    ---@field public decorate deck.DecoratorDecorateFunction
+    ---@alias deck.DecoratorResolveFunction fun(ctx: deck.Context, item: deck.Item): any
+    ---@alias deck.DecoratorDecorateFunction fun(ctx: deck.Context, item: deck.Item, row: integer): any
+<
+
+*deck.Previewer*
+
+>lua
+    ---@class deck.Previewer
+    ---@field public name string
+    ---@field public resolve? deck.PreviewerResolveFunction
+    ---@field public preview deck.PreviewerPreviewFunction
+    ---@alias deck.PreviewerResolveFunction fun(ctx: deck.Context): any
+    ---@alias deck.PreviewerPreviewFunction fun(ctx: deck.Context, env: { win: integer })
+<
+
+*deck.StartConfig*
+
+>lua
+    ---@class deck.StartConfig: deck.StartConfigSpecifier
+    ---@field public name string
+    ---@field public view fun(): deck.View
+    ---@field public matcher deck.Matcher
+    ---@field public history boolean
+    ---@field public performance { interrupt_interval: integer, interrupt_timeout: integer }
+<
+
+*deck.StartPreset*
+
+>lua
+    ---@class deck.StartPreset
+    ---@field public name string
+    ---@field public args? table<string|integer, fun(input: string): string[]>
+    ---@field public start fun(args: table<string|integer, string>)
+<
+
+*deck.ItemSpecifier*
+
+>lua
+    ---@class deck.ItemSpecifier
+    ---@field public display_text string|(deck.VirtualText[])
+    ---@field public highlights? deck.Highlight[]
+    ---@field public filter_text? string
+    ---@field public data? table
+<
+
+*deck.ExecuteContext*
+
+>lua
+    ---@class deck.ExecuteContext
+    ---@field public item fun(item: deck.ItemSpecifier)
+    ---@field public done fun( )
+    ---@field public get_query fun(): string
+    ---@field public aborted fun(): boolean
+    ---@field public on_abort fun(callback: fun())
+<
+
+*deck.ConfigSpecifier*
+
+>lua
+    ---@class deck.ConfigSpecifier
+    ---@field public max_history_size? integer
+    ---@field public default_start_config? deck.StartConfigSpecifier
+<
+
+*deck.StartConfigSpecifier*
+
+>lua
+    ---@class deck.StartConfigSpecifier
+    ---@field public name? string
+    ---@field public view? fun(): deck.View
+    ---@field public matcher? deck.Matcher
+    ---@field public history? boolean
+    ---@field public performance? { interrupt_interval: integer, interrupt_timeout: integer }
 <
 
 Generated by panvimdoc <https://github.com/kdheepak/panvimdoc>
