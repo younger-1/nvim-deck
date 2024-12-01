@@ -214,12 +214,14 @@ Listing any provided items.
   ------- ------------------------------- --------- ----------------
   items   string[]|deck.ItemSpecifier[]             Items to list.
 
-HELPGREP ~
+FILES ~
 
-Live grep all helptags. (required `ripgrep`)
+Show files under specified root directory.
 
-_No options_
-
+  Name           Type        Default   Description
+  -------------- ----------- --------- ------------------------
+  ignore_globs   string[]?   []        Ignore glob patterns.
+  root_dir       string                Target root directory.
 
 BUFFERS ~
 
@@ -234,30 +236,12 @@ Show buffers.
   nofile         boolean?    false                    Ignore nofile buffers.
   -----------------------------------------------------------------------------------------------
 
-FILES ~
+HELPGREP ~
 
-Show files under specified root directory.
+Live grep all helptags. (required `ripgrep`)
 
-  Name           Type        Default   Description
-  -------------- ----------- --------- ------------------------
-  ignore_globs   string[]?   []        Ignore glob patterns.
-  root_dir       string                Target root directory.
+_No options_
 
-RECENT_FILES ~
-
-List recent files.
-
-  Name           Type        Default   Description
-  -------------- ----------- --------- ---------------
-  ignore_paths   string[]?   []        Ignore paths.
-
-RECENT_DIRS ~
-
-List recent directories.
-
-  Name           Type        Default   Description
-  -------------- ----------- --------- ---------------
-  ignore_paths   string[]?   []        Ignore paths.
 
 GREP ~
 
@@ -277,6 +261,13 @@ Grep files under specified root directory. (required `ripgrep`)
   ignore_globs   string[]?   []        Ignore glob patterns.
   -------------------------------------------------------------------------------------------
 
+DECK.HISTORY ~
+
+Show deck.start history.
+
+_No options_
+
+
 DECK.ACTIONS ~
 
 Show available actions from |deck.Context|
@@ -285,12 +276,21 @@ Show available actions from |deck.Context|
   --------- ---------------- --------- -------------
   context   |deck.Context|             
 
-DECK.HISTORY ~
+RECENT_DIRS ~
 
-Show deck.start history.
+List recent directories.
 
-_No options_
+  Name           Type        Default   Description
+  -------------- ----------- --------- ---------------
+  ignore_paths   string[]?   []        Ignore paths.
 
+RECENT_FILES ~
+
+List recent files.
+
+  Name           Type        Default   Description
+  -------------- ----------- --------- ---------------
+  ignore_paths   string[]?   []        Ignore paths.
 
 ACTIONS                                                *deck-built-in-actions*
 

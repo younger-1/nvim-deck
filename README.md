@@ -183,11 +183,14 @@ Listing any provided items.
 | ----- | ------------------------------ | ------- | -------------- |
 | items | string[]\|deck.ItemSpecifier[] |         | Items to list. |
 
-### helpgrep
+### files
 
-Live grep all helptags. (required `ripgrep`)
+Show files under specified root directory.
 
-_No options_
+| Name         | Type      | Default | Description            |
+| ------------ | --------- | ------- | ---------------------- |
+| ignore_globs | string[]? | []      | Ignore glob patterns.  |
+| root_dir     | string    |         | Target root directory. |
 
 ### buffers
 
@@ -198,30 +201,11 @@ Show buffers.
 | ignore_paths | string[]? | [vim.fn.expand('%:p')] | Ignore paths. The default value is intented to hide current buffer. |
 | nofile       | boolean?  | false                  | Ignore nofile buffers.                                              |
 
-### files
+### helpgrep
 
-Show files under specified root directory.
+Live grep all helptags. (required `ripgrep`)
 
-| Name         | Type      | Default | Description            |
-| ------------ | --------- | ------- | ---------------------- |
-| ignore_globs | string[]? | []      | Ignore glob patterns.  |
-| root_dir     | string    |         | Target root directory. |
-
-### recent_files
-
-List recent files.
-
-| Name         | Type      | Default | Description   |
-| ------------ | --------- | ------- | ------------- |
-| ignore_paths | string[]? | []      | Ignore paths. |
-
-### recent_dirs
-
-List recent directories.
-
-| Name         | Type      | Default | Description   |
-| ------------ | --------- | ------- | ------------- |
-| ignore_paths | string[]? | []      | Ignore paths. |
+_No options_
 
 ### grep
 
@@ -234,6 +218,12 @@ Grep files under specified root directory. (required `ripgrep`)
 | dynamic      | boolean?  | false   | If true, use dynamic pattern. If you set this option to false, you must set `pattern` option. |
 | ignore_globs | string[]? | []      | Ignore glob patterns.                                                                         |
 
+### deck.history
+
+Show deck.start history.
+
+_No options_
+
 ### deck.actions
 
 Show available actions from |deck.Context|
@@ -242,11 +232,21 @@ Show available actions from |deck.Context|
 | ------- | ---------------- | ------- | ----------- |
 | context | \|deck.Context\| |         |             |
 
-### deck.history
+### recent_dirs
 
-Show deck.start history.
+List recent directories.
 
-_No options_
+| Name         | Type      | Default | Description   |
+| ------------ | --------- | ------- | ------------- |
+| ignore_paths | string[]? | []      | Ignore paths. |
+
+### recent_files
+
+List recent files.
+
+| Name         | Type      | Default | Description   |
+| ------------ | --------- | ------- | ------------- |
+| ignore_paths | string[]? | []      | Ignore paths. |
 
 <!-- auto-generate-e:source -->
 
