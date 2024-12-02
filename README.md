@@ -240,7 +240,7 @@ require('deck').register_decorator({
 
 `nvim-deck` has `previewer` concept. It's designed to show the item preview.
 
-````lua
+```lua
 require('deck').register_previewer({
   name = 'bat',
   resolve = function(_, item)
