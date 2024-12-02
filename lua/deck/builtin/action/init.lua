@@ -124,18 +124,18 @@ end
 
 --[=[@doc
   category = "action"
-  name = "delete"
+  name = "delete_filename"
   desc = """
     Delete `item.data.filename`.\n
     If multiple items are selected, they will be deleted in order.
   """
 ]=]
 action.delete_filename = {
-  name = 'delete',
+  name = 'delete_filename',
   desc = '(built-in) delete `item.data.filename`',
   resolve = function(ctx)
     for _, item in ipairs(ctx.get_action_items()) do
-      if item.data.filename then
+      if item.data.filename and vim.fn.filereadable(item.data.filename) == 1 then
         return true
       end
     end
@@ -144,7 +144,7 @@ action.delete_filename = {
   execute = function(ctx)
     local targets = {}
     for _, item in ipairs(ctx.get_action_items()) do
-      if item.data.filename then
+      if item.data.filename and vim.fn.filereadable(item.data.filename) == 1 then
         table.insert(targets, item.data.filename)
       end
     end
@@ -160,18 +160,18 @@ action.delete_filename = {
 
 --[=[@doc
   category = "action"
-  name = "delete"
+  name = "delete_bufnr"
   desc = """
     Delete `item.data.bufnr`.\n
     If multiple items are selected, they will be deleted in order.
   """
 ]=]
 action.delete_bufnr = {
-  name = 'delete',
+  name = 'delete_bufnr',
   desc = '(built-in) delete `item.data.bufnr`',
   resolve = function(ctx)
     for _, item in ipairs(ctx.get_action_items()) do
-      if item.data.bufnr then
+      if item.data.bufnr and vim.api.nvim_buf_is_valid(item.data.bufnr) then
         return true
       end
     end

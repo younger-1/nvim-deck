@@ -302,8 +302,10 @@ function deck.action_mapping(action_names)
     for _, action_name in ipairs(kit.to_array(action_names)) do
       for _, action in ipairs(ctx.get_actions()) do
         if action.name == action_name then
-          action.execute(ctx)
-          return
+          if not action.resolve or action.resolve(ctx) then
+            ctx.do_action(action_name)
+            return
+          end
         end
       end
     end
