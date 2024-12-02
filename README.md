@@ -29,6 +29,16 @@ nvim-deck revolves around four core concepts:
 - Highly customizable: sources, actions, previewers, decorators, views, and
   matchers.
 
+# Why nvim-deck?
+
+- Use normal-window by default
+    - IMO, floating-window is fancy but normal window is more handy for edit & preview.
+- UX focused
+    - Use `vim.wait` carefully, it makes a crisp and smooth experience.
+- Configuration over Object control
+    - `nvim-deck` does not require huge setup functions
+    - Instead of this, nvim-deck allows you to customize by controlling |deck.Context| object.
+
 # Setup
 
 Here’s an example of how to set up `nvim-deck`:
@@ -61,6 +71,9 @@ vim.api.nvim_create_autocmd('User', {
     ctx.keymap('n', 'N', deck.action_mapping('create'))
     ctx.keymap('n', '<C-u>', deck.action_mapping('scroll_preview_up'))
     ctx.keymap('n', '<C-d>', deck.action_mapping('scroll_preview_down'))
+
+    -- If you want to start the filter by default, call ctx.prompt() here
+    ctx.prompt()
   end
 })
 
@@ -264,31 +277,43 @@ require('deck').register_previewer({
 
 Show buffers.
 
-| Name         | Type      | Default                | Description                                                         |
-| ------------ | --------- | ---------------------- | ------------------------------------------------------------------- |
+
+| Name | Type | Default |Description|
+|------|------|---------|-----------|
 | ignore_paths | string[]? | [vim.fn.expand('%:p')] | Ignore paths. The default value is intented to hide current buffer. |
-| nofile       | boolean?  | false                  | Ignore nofile buffers.                                              |
+| nofile | boolean? | false | Ignore nofile buffers. |
+
+
 
 ```lua
-deck.start(require('deck.builtin.source.buffers')({
-  ignore_paths = { vim.fn.expand('%:p'):gsub('/$', '') },
-  nofile = false,
-}))
+    deck.start(require('deck.builtin.source.buffers')({
+      ignore_paths = { vim.fn.expand('%:p'):gsub('/$', '') },
+      nofile = false,
+    }))
+  
 ```
+
+
 
 ### deck.actions
 
 Show available actions from |deck.Context|
 
-| Name    | Type             | Default | Description |
-| ------- | ---------------- | ------- | ----------- |
-| context | \|deck.Context\| |         |             |
+
+| Name | Type | Default |Description|
+|------|------|---------|-----------|
+| context | \|deck.Context\| |  |  |
+
+
 
 ```lua
-deck.start(require('deck.builtin.source.deck.actions')({
-  context = context
-}))
+    deck.start(require('deck.builtin.source.deck.actions')({
+      context = context
+    }))
+  
 ```
+
+
 
 ### deck.history
 
@@ -296,132 +321,184 @@ Show deck.start history.
 
 _No options_
 
+
 ```lua
-deck.start(require('deck.builtin.source.deck.history')())
+    deck.start(require('deck.builtin.source.deck.history')())
+  
 ```
+
+
 
 ### files
 
 Show files under specified root directory.
 
-| Name         | Type      | Default | Description            |
-| ------------ | --------- | ------- | ---------------------- |
-| ignore_globs | string[]? | []      | Ignore glob patterns.  |
-| root_dir     | string    |         | Target root directory. |
+
+| Name | Type | Default |Description|
+|------|------|---------|-----------|
+| ignore_globs | string[]? | [] | Ignore glob patterns. |
+| root_dir | string |  | Target root directory. |
+
+
 
 ```lua
-deck.start(require('deck.builtin.source.files')({
-  root_dir = vim.fn.getcwd(),
-  ignore_globs = { '**/node_modules/', '**/.git/' },
-}))
+    deck.start(require('deck.builtin.source.files')({
+      root_dir = vim.fn.getcwd(),
+      ignore_globs = { '**/node_modules/', '**/.git/' },
+    }))
+  
 ```
+
+
 
 ### git
 
 Show git launcher.
 
-| Name | Type   | Default | Description      |
-| ---- | ------ | ------- | ---------------- |
-| cwd  | string |         | Target git root. |
+
+| Name | Type | Default |Description|
+|------|------|---------|-----------|
+| cwd | string |  | Target git root. |
+
+
 
 ```lua
-deck.start(require('deck.builtin.source.git.changeset')({
-  cwd = vim.fn.getcwd(),
-}))
+    deck.start(require('deck.builtin.source.git.changeset')({
+      cwd = vim.fn.getcwd(),
+    }))
+  
 ```
+
+
 
 ### git.branch
 
 Show git branches
 
-| Name | Type   | Default | Description      |
-| ---- | ------ | ------- | ---------------- |
-| cwd  | string |         | Target git root. |
+
+| Name | Type | Default |Description|
+|------|------|---------|-----------|
+| cwd | string |  | Target git root. |
+
+
 
 ```lua
-deck.start(require('deck.builtin.source.git.branch')({
-  cwd = vim.fn.getcwd() 
-}))
+    deck.start(require('deck.builtin.source.git.branch')({
+      cwd = vim.fn.getcwd() 
+    }))
+  
 ```
+
+
 
 ### git.changeset
 
 Show git changeset for specified revision.
 
-| Name     | Type    | Default | Description                                            |
-| -------- | ------- | ------- | ------------------------------------------------------ |
-| cwd      | string  |         | Target git root.                                       |
-| from_rev | string  |         | From revision.                                         |
-| to_rev   | string? |         | To revision. If you omit this option, it will be HEAD. |
+
+| Name | Type | Default |Description|
+|------|------|---------|-----------|
+| cwd | string |  | Target git root. |
+| from_rev | string |  | From revision. |
+| to_rev | string? |  | To revision. If you omit this option, it will be HEAD. |
+
+
 
 ```lua
-deck.start(require('deck.builtin.source.git.changeset')({
-  cwd = vim.fn.getcwd(),
-  from_rev = 'HEAD~3',
-  to_rev = 'HEAD'
-}))
+    deck.start(require('deck.builtin.source.git.changeset')({
+      cwd = vim.fn.getcwd(),
+      from_rev = 'HEAD~3',
+      to_rev = 'HEAD'
+    }))
+  
 ```
+
+
 
 ### git.log
 
 Show git log.
 
-| Name | Type   | Default | Description      |
-| ---- | ------ | ------- | ---------------- |
-| cwd  | string |         | Target git root. |
+
+| Name | Type | Default |Description|
+|------|------|---------|-----------|
+| cwd | string |  | Target git root. |
+
+
 
 ```lua
-deck.start(require('deck.builtin.source.git.log')({
-  cwd = vim.fn.getcwd(),
-}))
+    deck.start(require('deck.builtin.source.git.log')({
+      cwd = vim.fn.getcwd(),
+    }))
+  
 ```
+
+
 
 ### git.remote
 
 Show git remotes.
 
-| Name | Type   | Default | Description      |
-| ---- | ------ | ------- | ---------------- |
-| cwd  | string |         | Target git root. |
+
+| Name | Type | Default |Description|
+|------|------|---------|-----------|
+| cwd | string |  | Target git root. |
+
+
 
 ```lua
-deck.start(require('deck.builtin.source.git.remote')({
-  cwd = vim.fn.getcwd(),
-}))
+    deck.start(require('deck.builtin.source.git.remote')({
+      cwd = vim.fn.getcwd(),
+    }))
+  
 ```
+
+
 
 ### git.status
 
 Show git status.
 
-| Name | Type   | Default | Description      |
-| ---- | ------ | ------- | ---------------- |
-| cwd  | string |         | Target git root. |
+
+| Name | Type | Default |Description|
+|------|------|---------|-----------|
+| cwd | string |  | Target git root. |
+
+
 
 ```lua
-deck.start(require('deck.builtin.source.git.status')({
-  cwd = vim.fn.getcwd(),
-}))
+    deck.start(require('deck.builtin.source.git.status')({
+      cwd = vim.fn.getcwd(),
+    }))
+  
 ```
+
+
 
 ### grep
 
 Grep files under specified root directory. (required `ripgrep`)
 
-| Name         | Type      | Default | Description                                                                                   |
-| ------------ | --------- | ------- | --------------------------------------------------------------------------------------------- |
-| root_dir     | string    |         | Target root directory.                                                                        |
-| pattern      | string?   |         | Grep pattern. If you omit this option, you must set `dynamic` option to true.                 |
-| dynamic      | boolean?  | false   | If true, use dynamic pattern. If you set this option to false, you must set `pattern` option. |
-| ignore_globs | string[]? | []      | Ignore glob patterns.                                                                         |
+
+| Name | Type | Default |Description|
+|------|------|---------|-----------|
+| root_dir | string |  | Target root directory. |
+| pattern | string? |  | Grep pattern. If you omit this option, you must set `dynamic` option to true. |
+| dynamic | boolean? | false | If true, use dynamic pattern. If you set this option to false, you must set `pattern` option. |
+| ignore_globs | string[]? | [] | Ignore glob patterns. |
+
+
 
 ```lua
-deck.start(require('deck.builtin.source.grep')({
-  root_dir = vim.fn.getcwd(),
-  pattern = vim.fn.input('grep: '),
-  ignore_globs = { '**/node_modules/', '**/.git/' },
-}))
+    deck.start(require('deck.builtin.source.grep')({
+      root_dir = vim.fn.getcwd(),
+      pattern = vim.fn.input('grep: '),
+      ignore_globs = { '**/node_modules/', '**/.git/' },
+    }))
+  
 ```
+
+
 
 ### helpgrep
 
@@ -429,53 +506,74 @@ Live grep all helptags. (required `ripgrep`)
 
 _No options_
 
+
 ```lua
-deck.start(require('deck.builtin.source.helpgrep')())
+    deck.start(require('deck.builtin.source.helpgrep')())
+  
 ```
+
+
 
 ### items
 
 Listing any provided items.
 
-| Name  | Type                           | Default | Description    |
-| ----- | ------------------------------ | ------- | -------------- |
-| items | string[]\|deck.ItemSpecifier[] |         | Items to list. |
+
+| Name | Type | Default |Description|
+|------|------|---------|-----------|
+| items | string[]\|deck.ItemSpecifier[] |  | Items to list. |
+
+
 
 ```lua
-deck.start(require('deck.builtin.source.items')({
-  items = vim.iter(vim.api.nvim_list_bufs()):map(function(buf)
-    return ('#%s'):format(buf)
-  end):totable()
-}))
+    deck.start(require('deck.builtin.source.items')({
+      items = vim.iter(vim.api.nvim_list_bufs()):map(function(buf)
+        return ('#%s'):format(buf)
+      end):totable()
+    }))
+  
 ```
+
+
 
 ### recent_dirs
 
 List recent directories.
 
-| Name         | Type      | Default | Description   |
-| ------------ | --------- | ------- | ------------- |
-| ignore_paths | string[]? | []      | Ignore paths. |
+
+| Name | Type | Default |Description|
+|------|------|---------|-----------|
+| ignore_paths | string[]? | [] | Ignore paths. |
+
+
 
 ```lua
-deck.start(require('deck.builtin.source.recent_dirs')({
-  ignore_paths = { '**/node_modules/', '**/.git/' },
-}))
+    deck.start(require('deck.builtin.source.recent_dirs')({
+      ignore_paths = { '**/node_modules/', '**/.git/' },
+    }))
+  
 ```
+
+
 
 ### recent_files
 
 List recent files.
 
-| Name         | Type      | Default | Description   |
-| ------------ | --------- | ------- | ------------- |
-| ignore_paths | string[]? | []      | Ignore paths. |
+
+| Name | Type | Default |Description|
+|------|------|---------|-----------|
+| ignore_paths | string[]? | [] | Ignore paths. |
+
+
 
 ```lua
-deck.start(require('deck.builtin.source.recent_dirs')({
-  ignore_paths = { '**/node_modules/', '**/.git/' },
-}))
+    deck.start(require('deck.builtin.source.recent_dirs')({
+      ignore_paths = { '**/node_modules/', '**/.git/' },
+    }))
+  
 ```
+
 
 <!-- auto-generate-e:source -->
 
@@ -484,68 +582,88 @@ deck.start(require('deck.builtin.source.recent_dirs')({
 <!-- auto-generate-s:action -->
 
 - `choose_action`
-  - Open action source.
+  -     Open action source.
 
-    The actions listed are filtered by whether they are valid in the current
-    context.
+    The actions listed are filtered by whether they are valid in the current context.
+  
 
-- `delete`
-  - Delete `item.data.filename`.
-
-    If multiple items are selected, they will be deleted in order.
 
 - `delete`
-  - Delete `item.data.bufnr`.
+  -     Delete `item.data.filename`.
 
     If multiple items are selected, they will be deleted in order.
+  
+
+
+- `delete`
+  -     Delete `item.data.bufnr`.
+
+    If multiple items are selected, they will be deleted in order.
+  
+
 
 - `open`
-  - Open `item.data.filename` or `item.data.bufnr`.
+  -       Open `item.data.filename` or `item.data.bufnr`.
 
-    Open at the recently normal window.
+      Open at the recently normal window.
+    
+
 
 - `open_keep`
-  - Open `item.data.filename` or `item.data.bufnr`.
+  -       Open `item.data.filename` or `item.data.bufnr`.
 
-    But keep the deck window and cursor.
+      But keep the deck window and cursor.
+    
+
 
 - `open_split`
-  - Open `item.data.filename` or `item.data.bufnr`.
+  -       Open `item.data.filename` or `item.data.bufnr`.
 
-    Open at the recently normal window with split.
+      Open at the recently normal window with split.
+    
+
 
 - `open_vsplit`
-  - Open `item.data.filename` or `item.data.bufnr`.
+  -       Open `item.data.filename` or `item.data.bufnr`.
 
-    Open at the recently normal window with vsplit.
+      Open at the recently normal window with vsplit.
+    
+
 
 - `prompt`
   - Open filtering prompt
 
+
 - `refresh`
   - Re-execute source. (it can be used to refresh the items)
+
 
 - `scroll_preview_down`
   - Scroll preview window down.
 
+
 - `scroll_preview_up`
   - Scroll preview window up.
 
-- `substitute`
-  - Open substitute buffer with selected items (`item.data.filename` and
-    `item.data.lnum` are required).
 
-    You can modify and save the buffer to reflect the changes to the original
-    files.
+- `substitute`
+  -     Open substitute buffer with selected items (`item.data.filename` and `item.data.lnum` are required).
+
+    You can modify and save the buffer to reflect the changes to the original files.
+  
+
 
 - `toggle_preview_mode`
   - Toggle preview mode
 
+
 - `toggle_select`
   - Toggle selected state of the cursor item.
 
+
 - `toggle_select_all`
   - Toggle selected state of all items.
+
 
 - `yank`
   - Yank item.display_text field to default register.
@@ -559,6 +677,7 @@ deck.start(require('deck.builtin.source.recent_dirs')({
 - `DeckStart`
   - Triggered when deck starts.
 
+
 - `DeckStart:{source_name}`
   - Triggered when deck starts for source.
 
@@ -568,274 +687,291 @@ deck.start(require('deck.builtin.source.recent_dirs')({
 
 <!-- auto-generate-s:api -->
 
+
 <!-- panvimdoc-include-comment deck.action_mapping(mapping): fun(ctx: |deck.Context|) ~ -->
 
 <!-- panvimdoc-ignore-start -->
-
 ### deck.action_mapping(mapping): fun(ctx: |deck.Context|)
-
 <!-- panvimdoc-ignore-end -->
 
 Create action mapping function for ctx.keymap.
 
-| Name         | Type              | Description                                      |
-| ------------ | ----------------- | ------------------------------------------------ |
+
+| Name | Type | Description |
+|------|------|-------------|
 | action_names | string\\|string[] | action name or action names to use for mappings. |
 
 &nbsp;
 
+
+
 <!-- panvimdoc-include-comment deck.alias_action(alias_name, alias_action_name): |deck.Action| ~ -->
 
 <!-- panvimdoc-ignore-start -->
-
 ### deck.alias_action(alias_name, alias_action_name): |deck.Action|
-
 <!-- panvimdoc-ignore-end -->
 
 Create alias action.
 
-| Name              | Type   | Description           |
-| ----------------- | ------ | --------------------- |
-| alias_name        | string | new action name.      |
+
+| Name | Type | Description |
+|------|------|-------------|
+| alias_name | string | new action name. |
 | alias_action_name | string | existing action name. |
 
 &nbsp;
 
+
+
 <!-- panvimdoc-include-comment deck.get_actions(): |deck.Action|[] ~ -->
 
 <!-- panvimdoc-ignore-start -->
-
 ### deck.get_actions(): |deck.Action|[]
-
 <!-- panvimdoc-ignore-end -->
 
 Get all registered actions.
 
-_No arguments_ &nbsp;
+_No arguments_
+&nbsp;
+
+
 
 <!-- panvimdoc-include-comment deck.get_decorators(): |deck.Decorator|[] ~ -->
 
 <!-- panvimdoc-ignore-start -->
-
 ### deck.get_decorators(): |deck.Decorator|[]
-
 <!-- panvimdoc-ignore-end -->
 
 Get all registered decorators.
 
-_No arguments_ &nbsp;
+_No arguments_
+&nbsp;
+
+
 
 <!-- panvimdoc-include-comment deck.get_history(): |deck.Context|[] ~ -->
 
 <!-- panvimdoc-ignore-start -->
-
 ### deck.get_history(): |deck.Context|[]
-
 <!-- panvimdoc-ignore-end -->
 
 Get all history (first history is latest).
 
-_No arguments_ &nbsp;
+_No arguments_
+&nbsp;
+
+
 
 <!-- panvimdoc-include-comment deck.get_previewers(): |deck.Previewer|[] ~ -->
 
 <!-- panvimdoc-ignore-start -->
-
 ### deck.get_previewers(): |deck.Previewer|[]
-
 <!-- panvimdoc-ignore-end -->
 
 Get all registered previewers.
 
-_No arguments_ &nbsp;
+_No arguments_
+&nbsp;
+
+
 
 <!-- panvimdoc-include-comment deck.get_start_presets(): |deck.StartPreset|[] ~ -->
 
 <!-- panvimdoc-ignore-start -->
-
 ### deck.get_start_presets(): |deck.StartPreset|[]
-
 <!-- panvimdoc-ignore-end -->
 
 Get all registered start presets.
 
-_No arguments_ &nbsp;
+_No arguments_
+&nbsp;
+
+
 
 <!-- panvimdoc-include-comment deck.register_action(action) ~ -->
 
 <!-- panvimdoc-ignore-start -->
-
 ### deck.register_action(action)
-
 <!-- panvimdoc-ignore-end -->
 
 Register action.
 
-| Name   | Type            | Description         |
-| ------ | --------------- | ------------------- |
+
+| Name | Type | Description |
+|------|------|-------------|
 | action | \|deck.Action\| | action to register. |
 
 &nbsp;
 
+
+
 <!-- panvimdoc-include-comment deck.register_decorator(decorator) ~ -->
 
 <!-- panvimdoc-ignore-start -->
-
 ### deck.register_decorator(decorator)
-
 <!-- panvimdoc-ignore-end -->
 
 Register decorator.
 
-| Name      | Type               | Description            |
-| --------- | ------------------ | ---------------------- |
+
+| Name | Type | Description |
+|------|------|-------------|
 | decorator | \|deck.Decorator\| | decorator to register. |
 
 &nbsp;
 
+
+
 <!-- panvimdoc-include-comment deck.register_previewer(previewer) ~ -->
 
 <!-- panvimdoc-ignore-start -->
-
 ### deck.register_previewer(previewer)
-
 <!-- panvimdoc-ignore-end -->
 
 Register previewer.
 
-| Name      | Type               | Description            |
-| --------- | ------------------ | ---------------------- |
+
+| Name | Type | Description |
+|------|------|-------------|
 | previewer | \|deck.Previewer\| | previewer to register. |
 
 &nbsp;
 
+
+
 <!-- panvimdoc-include-comment deck.register_start_preset(name, start_fn) ~ -->
 
 <!-- panvimdoc-ignore-start -->
-
 ### deck.register_start_preset(name, start_fn)
-
 <!-- panvimdoc-ignore-end -->
 
 Register start_preset.
 
-| Name     | Type   | Description     |
-| -------- | ------ | --------------- |
-| name     | string | preset name.    |
-| start_fn | fun()  | Start function. |
+
+| Name | Type | Description |
+|------|------|-------------|
+| name | string | preset name. |
+| start_fn | fun() | Start function. |
 
 &nbsp;
+
+
 
 <!-- panvimdoc-include-comment deck.register_start_preset(start_preset) ~ -->
 
 <!-- panvimdoc-ignore-start -->
-
 ### deck.register_start_preset(start_preset)
-
 <!-- panvimdoc-ignore-end -->
 
 Register start_preset.
 
-| Name         | Type             | Description          |
-| ------------ | ---------------- | -------------------- |
+
+| Name | Type | Description |
+|------|------|-------------|
 | start_preset | deck.StartPreset | \|deck.StartPreset\| |
 
 &nbsp;
 
+
+
 <!-- panvimdoc-include-comment deck.remove_actions(predicate) ~ -->
 
 <!-- panvimdoc-ignore-start -->
-
 ### deck.remove_actions(predicate)
-
 <!-- panvimdoc-ignore-end -->
 
 Remove specific action.
 
-| Name      | Type                                  | Description                                        |
-| --------- | ------------------------------------- | -------------------------------------------------- |
+
+| Name | Type | Description |
+|------|------|-------------|
 | predicate | fun(action: \|deck.Action\|): boolean | Predicate function. If return true, remove action. |
 
 &nbsp;
 
+
+
 <!-- panvimdoc-include-comment deck.remove_decorators(predicate) ~ -->
 
 <!-- panvimdoc-ignore-start -->
-
 ### deck.remove_decorators(predicate)
-
 <!-- panvimdoc-ignore-end -->
 
 Remove specific decorator.
 
-| Name      | Type                                        | Description                                           |
-| --------- | ------------------------------------------- | ----------------------------------------------------- |
+
+| Name | Type | Description |
+|------|------|-------------|
 | predicate | fun(decorator: \|deck.Decorator\|): boolean | Predicate function. If return true, remove decorator. |
 
 &nbsp;
 
+
+
 <!-- panvimdoc-include-comment deck.remove_previewers(predicate) ~ -->
 
 <!-- panvimdoc-ignore-start -->
-
 ### deck.remove_previewers(predicate)
-
 <!-- panvimdoc-ignore-end -->
 
 Remove previewer.
 
-| Name      | Type                                        | Description                                           |
-| --------- | ------------------------------------------- | ----------------------------------------------------- |
+
+| Name | Type | Description |
+|------|------|-------------|
 | predicate | fun(previewer: \|deck.Previewer\|): boolean | Predicate function. If return true, remove previewer. |
 
 &nbsp;
 
+
+
 <!-- panvimdoc-include-comment deck.remove_start_presets(predicate) ~ -->
 
 <!-- panvimdoc-ignore-start -->
-
 ### deck.remove_start_presets(predicate)
-
 <!-- panvimdoc-ignore-end -->
 
 Remove specific start_preset.
 
-| Name      | Type                                             | Description                                              |
-| --------- | ------------------------------------------------ | -------------------------------------------------------- |
+
+| Name | Type | Description |
+|------|------|-------------|
 | predicate | fun(start_preset: \|deck.StartPreset\|): boolean | Predicate function. If return true, remove start_preset. |
 
 &nbsp;
 
+
+
 <!-- panvimdoc-include-comment deck.setup(config) ~ -->
 
 <!-- panvimdoc-ignore-start -->
-
 ### deck.setup(config)
-
 <!-- panvimdoc-ignore-end -->
 
 Setup deck globally.
 
-| Name   | Type                 | Description               |
-| ------ | -------------------- | ------------------------- |
+
+| Name | Type | Description |
+|------|------|-------------|
 | config | deck.ConfigSpecifier | Setup deck configuration. |
 
 &nbsp;
 
+
+
 <!-- panvimdoc-include-comment deck.start(sources, start_config): |deck.Context| ~ -->
 
 <!-- panvimdoc-ignore-start -->
-
 ### deck.start(sources, start_config): |deck.Context|
-
 <!-- panvimdoc-ignore-end -->
 
 Start deck with given sources.
 
-| Name         | Type                        | Description                 |
-| ------------ | --------------------------- | --------------------------- |
-| source       | deck.Source\\|deck.Source[] | source or sources to start. |
-| start_config | deck.StartConfigSpecifier   | start configuration.        |
+
+| Name | Type | Description |
+|------|------|-------------|
+| source | deck.Source\\|deck.Source[] | source or sources to start. |
+| start_config | deck.StartConfigSpecifier | start configuration. |
 
 &nbsp;
 
@@ -848,7 +984,6 @@ Start deck with given sources.
 ```vimdoc
 *deck.Action*
 ```
-
 ```lua
 ---@class deck.Action
 ---@field public name string
@@ -858,20 +993,20 @@ Start deck with given sources.
 ---@field public execute deck.ActionExecuteFunction
 ```
 
+
 ```vimdoc
 *deck.Config*
 ```
-
 ```lua
 ---@class deck.Config: deck.ConfigSpecifier
 ---@field public max_history_size integer
 ---@field public default_start_config? deck.StartConfigSpecifier
 ```
 
+
 ```vimdoc
 *deck.Context*
 ```
-
 ```lua
 ---@class deck.Context
 ---@field id integer
@@ -913,10 +1048,10 @@ Start deck with given sources.
 ---@field on_dispose fun(callback: fun()): fun()
 ```
 
+
 ```vimdoc
 *deck.Decorator*
 ```
-
 ```lua
 ---@class deck.Decorator
 ---@field public name string
@@ -924,10 +1059,10 @@ Start deck with given sources.
 ---@field public decorate deck.DecoratorDecorateFunction
 ```
 
+
 ```vimdoc
 *deck.ExecuteContext*
 ```
-
 ```lua
 ---@class deck.ExecuteContext
 ---@field public item fun(item: deck.ItemSpecifier)
@@ -937,20 +1072,20 @@ Start deck with given sources.
 ---@field public on_abort fun(callback: fun())
 ```
 
+
 ```vimdoc
 *deck.Item*
 ```
-
 ```lua
 ---@class deck.Item: deck.ItemSpecifier
 ---@field public display_text string
 ---@field public data table
 ```
 
+
 ```vimdoc
 *deck.Previewer*
 ```
-
 ```lua
 ---@class deck.Previewer
 ---@field public name string
@@ -958,10 +1093,10 @@ Start deck with given sources.
 ---@field public preview deck.PreviewerPreviewFunction
 ```
 
+
 ```vimdoc
 *deck.Source*
 ```
-
 ```lua
 ---@class deck.Source
 ---@field public name string
@@ -973,10 +1108,10 @@ Start deck with given sources.
 ---@field public previewers? deck.Previewer[]
 ```
 
+
 ```vimdoc
 *deck.StartConfig*
 ```
-
 ```lua
 ---@class deck.StartConfig: deck.StartConfigSpecifier
 ---@field public name string
@@ -986,10 +1121,10 @@ Start deck with given sources.
 ---@field public performance { interrupt_interval: integer, interrupt_timeout: integer }
 ```
 
+
 ```vimdoc
 *deck.StartPreset*
 ```
-
 ```lua
 ---@class deck.StartPreset
 ---@field public name string
@@ -997,10 +1132,10 @@ Start deck with given sources.
 ---@field public start fun(args: table<string|integer, string>)
 ```
 
+
 ```vimdoc
 *deck.View*
 ```
-
 ```lua
 ---@class deck.View
 ---@field public get_win fun(): integer?
@@ -1013,6 +1148,4 @@ Start deck with given sources.
 ```
 
 <!-- auto-generate-e:type -->
-
-```
-```
+````

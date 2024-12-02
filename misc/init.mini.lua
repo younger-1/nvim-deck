@@ -51,6 +51,12 @@ require("lazy").setup({
             ctx.keymap('n', 'N', deck.action_mapping('create'))
             ctx.keymap('n', '<C-u>', deck.action_mapping('scroll_preview_up'))
             ctx.keymap('n', '<C-d>', deck.action_mapping('scroll_preview_down'))
+
+            -- If you want to start the filter by default, call ctx.prompt() here
+            ctx.prompt()
+
+            -- If you want to show preview by default, call ctx.set_preview_mode(true) here
+            ctx.set_preview_mode(true)
           end
         })
 
