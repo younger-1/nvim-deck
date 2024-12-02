@@ -23,6 +23,7 @@ return setmetatable({
     if not target_path then
       return
     end
+    target_path = vim.fs.normalize(target_path)
 
     Async.run(function()
       local exists = IO.exists(target_path):await()
@@ -39,14 +40,14 @@ return setmetatable({
       for _, path in ipairs(vim.split(IO.read_file(self.entries_path):await(), '\n')) do
         if not seen[path] then
           seen[path] = true
-          if IO.exists(path):await() and vim.fn.type(path) == vim.v.t_string then
+          if IO.exists(path):await() then
             table.insert(paths, path)
           end
         end
       end
       table.insert(paths, target_path)
 
-      IO.write_file(self.entries_path, table.concat(paths, '\n')):await()
+      vim.fn.writefile(paths, self.entries_path)
     end)
   end
 }, {
