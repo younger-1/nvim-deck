@@ -6,14 +6,15 @@ Table of Contents                                     *deck-table-of-contents*
 1. Intro                                                          |deck-intro|
 2. Concept                                                      |deck-concept|
 3. Features                                                    |deck-features|
-4. Setup                                                          |deck-setup|
-5. Customization                                          |deck-customization|
-6. Built-in                                                    |deck-built-in|
+4. Why nvim-deck?                                        |deck-why-nvim-deck?|
+5. Setup                                                          |deck-setup|
+6. Customization                                          |deck-customization|
+7. Built-in                                                    |deck-built-in|
   - Sources                                            |deck-built-in-sources|
   - Actions                                            |deck-built-in-actions|
   - Autocmd                                            |deck-built-in-autocmd|
-7. API                                                              |deck-api|
-8. Type                                                            |deck-type|
+8. API                                                              |deck-api|
+9. Type                                                            |deck-type|
 
 ==============================================================================
 1. Intro                                                          *deck-intro*
@@ -53,7 +54,21 @@ nvim-deck revolves around four core concepts:
 
 
 ==============================================================================
-4. Setup                                                          *deck-setup*
+4. Why nvim-deck?                                        *deck-why-nvim-deck?*
+
+- Use normal-window by default
+    - IMO, floating-window is fancy but normal window is more handy for edit &
+        preview.
+- UX focused
+    - Use `vim.wait` carefully, it makes a crisp and smooth experience.
+- Configuration over Object control
+    - `nvim-deck` does not require huge setup functions
+    - Instead of this, nvim-deck allows you to customize by controlling
+        |deck.Context| object.
+
+
+==============================================================================
+5. Setup                                                          *deck-setup*
 
 Here’s an example of how to set up `nvim-deck`
 
@@ -85,6 +100,9 @@ Here’s an example of how to set up `nvim-deck`
         ctx.keymap('n', 'N', deck.action_mapping('create'))
         ctx.keymap('n', '<C-u>', deck.action_mapping('scroll_preview_up'))
         ctx.keymap('n', '<C-d>', deck.action_mapping('scroll_preview_down'))
+    
+        -- If you want to start the filter by default, call ctx.prompt() here
+        ctx.prompt()
       end
     })
     
@@ -114,7 +132,7 @@ Here’s an example of how to set up `nvim-deck`
 
 
 ==============================================================================
-5. Customization                                          *deck-customization*
+6. Customization                                          *deck-customization*
 
 !!!We strongly recommend using `lua-language-server` !!!
 
@@ -287,7 +305,7 @@ PREVIEWER ~
 
 
 ==============================================================================
-6. Built-in                                                    *deck-built-in*
+7. Built-in                                                    *deck-built-in*
 
 
 SOURCES                                                *deck-built-in-sources*
@@ -584,7 +602,7 @@ AUTOCMD                                                *deck-built-in-autocmd*
 
 
 ==============================================================================
-7. API                                                              *deck-api*
+8. API                                                              *deck-api*
 
 deck.action_mapping(mapping): fun(ctx: |deck.Context|) ~
 
@@ -760,7 +778,7 @@ Start deck with given sources.
 
 
 ==============================================================================
-8. Type                                                            *deck-type*
+9. Type                                                            *deck-type*
 
 *deck.Action*
 
