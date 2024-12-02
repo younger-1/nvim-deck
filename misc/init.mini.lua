@@ -15,6 +15,10 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
+local function get_script_path()
+  return debug.getinfo(1, "S").source:sub(2):match("(.*/)")
+end
+
 -- Make sure to setup `mapleader` and `maplocalleader` before
 -- loading lazy.nvim so that mappings are correct.
 -- This is also a good place to setup other settings (vim.opt)
@@ -26,6 +30,7 @@ require("lazy").setup({
   spec = {
     {
       "hrsh7th/nvim-deck",
+      dir = vim.fs.dirname(vim.fs.dirname(get_script_path())),
       config = function()
         local deck = require('deck')
 

@@ -35,27 +35,22 @@ function helper.open_preview_buffer(win, file)
     end
   end
 
-  -- syntax highlights.
-  if vim.tbl_contains({ 'diff', 'gitcommit' }, filetype) then
-    -- vim syntax.
-    vim.api.nvim_buf_call(buf, function()
-      vim.api.nvim_set_option_value('filetype', 'diff', { buf = 0 })
-      vim.treesitter.stop(0)
-    end)
-  else
-    -- treesitter syntax.
-    local ok, msg = pcall(function()
-      if filetype then
-        local lang = vim.treesitter.language.get_lang(filetype)
-        if lang and lang ~= 'text' then
-          vim.treesitter.start(buf, lang)
-        end
+  -- treesitter syntax.
+  local ok, msg = pcall(function()
+    if filetype then
+      local lang = vim.treesitter.language.get_lang(filetype)
+      if lang and lang ~= 'text' then
+        vim.treesitter.start(buf, lang)
       end
-    end)
-    if not ok and msg then
-      notify.show({
-        { { ('[deck.helper.open_preview_buffer] vim.treesitter.start thrown error: %s'):format(filetype, msg), 'ErrorMsg' } }
-      })
+    end
+  end)
+  if not ok and msg then
+    -- vim syntax.
+    if filetype ~= 'text' then
+      vim.api.nvim_buf_call(buf, function()
+        vim.api.nvim_set_option_value('filetype', filetype, { buf = 0 })
+        vim.treesitter.stop(0)
+      end)
     end
   end
 
