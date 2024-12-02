@@ -24,7 +24,7 @@ local IO = require('deck.kit.IO')
 ]=]
 ---@param option { root_dir: string, ignore_globs?: string[] }
 return function(option)
-  local root_dir = vim.fs.normalize(option.root_dir)
+  local root_dir = vim.fs.normalize(vim.fn.fnamemodify(option.root_dir, ':p'))
   local ignore_globs = vim.iter(option.ignore_globs or {}):map(function(glob)
     return vim.glob.to_lpeg(glob)
   end):totable()
