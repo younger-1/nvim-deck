@@ -925,6 +925,8 @@ Start deck with given sources.
 ---@field do_action fun(name: string)
 ---@field dispose fun()
 ---@field disposed fun(): boolean
+---@field on_show fun(callback: fun())
+---@field on_hide fun(callback: fun())
 ---@field on_dispose fun(callback: fun()): fun()
 ```
 
