@@ -14,7 +14,6 @@ local Context = require('deck.Context')
 ---@doc.type
 ---@alias deck.Matcher fun(query: string, text: string): boolean, deck.Match[]?
 
----@doc.type
 ---@class deck.ItemSpecifier
 ---@field public display_text string|(deck.VirtualText[])
 ---@field public highlights? deck.Highlight[]
@@ -35,6 +34,8 @@ local Context = require('deck.Context')
 ---@field public actions? deck.Action[]
 ---@field public decorators? deck.Decorator[]
 ---@field public previewers? deck.Previewer[]
+
+---@doc.type
 ---@alias deck.SourceExecuteFunction fun(ctx: deck.ExecuteContext)
 
 ---@doc.type
@@ -52,7 +53,11 @@ local Context = require('deck.Context')
 ---@field public hidden? boolean
 ---@field public resolve? deck.ActionResolveFunction
 ---@field public execute deck.ActionExecuteFunction
+
+---@doc.type
 ---@alias deck.ActionResolveFunction fun(ctx: deck.Context): any
+
+---@doc.type
 ---@alias deck.ActionExecuteFunction fun(ctx: deck.Context)
 
 ---@doc.type
@@ -60,7 +65,11 @@ local Context = require('deck.Context')
 ---@field public name string
 ---@field public resolve? deck.DecoratorResolveFunction
 ---@field public decorate deck.DecoratorDecorateFunction
+
+---@doc.type
 ---@alias deck.DecoratorResolveFunction fun(ctx: deck.Context, item: deck.Item): any
+
+---@doc.type
 ---@alias deck.DecoratorDecorateFunction fun(ctx: deck.Context, item: deck.Item, row: integer): any
 
 ---@doc.type
@@ -68,8 +77,12 @@ local Context = require('deck.Context')
 ---@field public name string
 ---@field public resolve? deck.PreviewerResolveFunction
 ---@field public preview deck.PreviewerPreviewFunction
----@alias deck.PreviewerResolveFunction fun(ctx: deck.Context): any
----@alias deck.PreviewerPreviewFunction fun(ctx: deck.Context, env: { win: integer })
+
+---@doc.type
+---@alias deck.PreviewerResolveFunction fun(ctx: deck.Context, item: deck.Item): any
+
+---@doc.type
+---@alias deck.PreviewerPreviewFunction fun(ctx: deck.Context, item: deck.Item, env: { win: integer })
 
 ---@doc.type
 ---@class deck.StartPreset
@@ -87,12 +100,14 @@ local Context = require('deck.Context')
 ---@field public scroll_preview fun(ctx: deck.Context, delta: integer)
 ---@field public render fun(ctx: deck.Context)
 
----@doc.type
 ---@class deck.StartConfigSpecifier
 ---@field public name? string
 ---@field public view? fun(): deck.View
 ---@field public matcher? deck.Matcher
 ---@field public history? boolean
+---@field public actions? deck.Action[]
+---@field public decorators? deck.Decorator[]
+---@field public previewers? deck.Previewer[]
 ---@field public performance? { interrupt_interval: integer, interrupt_timeout: integer }
 
 ---@doc.type
@@ -103,7 +118,6 @@ local Context = require('deck.Context')
 ---@field public history boolean
 ---@field public performance { interrupt_interval: integer, interrupt_timeout: integer }
 
----@doc.type
 ---@class deck.ConfigSpecifier
 ---@field public max_history_size? integer
 ---@field public default_start_config? deck.StartConfigSpecifier
@@ -319,6 +333,17 @@ function deck.alias_action(action_name, alias_action_name)
     name = action_name,
     desc = ('alias for %s'):format(alias_action_name),
     hidden = true,
+    resolve = function(ctx)
+      local available_actions = {}
+      for _, action in ipairs(ctx.get_actions()) do
+        if action.name == alias_action_name then
+          if not action.resolve or action.resolve(ctx) then
+            table.insert(available_actions, action)
+          end
+        end
+      end
+      return #available_actions > 0
+    end,
     execute = function(ctx)
       ctx.do_action(alias_action_name)
     end,
@@ -453,7 +478,7 @@ end
 --]=]
 ---@param action deck.Action
 function deck.register_action(action)
-  table.insert(internal.actions, 1, validate.action(action))
+  table.insert(internal.actions, validate.action(action))
 end
 
 --[=[@doc
@@ -488,7 +513,7 @@ end
 --]=]
 ---@param decorator deck.Decorator
 function deck.register_decorator(decorator)
-  table.insert(internal.decorators, 1, validate.decorator(decorator))
+  table.insert(internal.decorators, validate.decorator(decorator))
 end
 
 --[=[@doc
@@ -523,7 +548,7 @@ end
 --]=]
 ---@param previewer deck.Previewer
 function deck.register_previewer(previewer)
-  table.insert(internal.previewers, 1, validate.previewer(previewer))
+  table.insert(internal.previewers, validate.previewer(previewer))
 end
 
 --[=[@doc

@@ -92,19 +92,78 @@ end)
 
 !!! We strongly recommend using `lua-language-server` !!!
 
-### Create Your Own Action
+### Source
 
-Actions define what happens when a user interacts with an item.
+The source is typed as |deck.Source|. The source can be executed by
+`deck.start()`.
 
-The action can be registered in three different levels:
+The source can specify source-level actions, decorators, and previewers.
 
-- _Global Action_ : Registered globally.
-- _Source Action_ : Provided by a source.
+```lua
+require('deck').start({
+  name = 'my_source',
+  execute = function(ctx)
+    ctx.item({
+      display_text = 'Hello, World!',
+    })
+    ctx.done()
+  end,
+  actions = {
+    ...
+  },
+  decorators = {
+    ...
+  },
+  previewers = {
+    ...
+  },
+})
+```
 
-You can register action to the global level using `deck.register_action()`.
+### Action
 
-Note: If an action has the same name in both the global and source levels, the
-source action will take priority.
+The action is typed as |deck.Action| and can be registered below three different
+levels.
+
+1. _Config Action_ : Provided by a start configuration.
+
+This level can be registered by `start_config.actions` field.
+
+```lua
+require('deck').start(some_of_the_source, {
+  actions = {
+    {
+      name = 'my_open',
+      execute = function(ctx)
+        -- some of the process.
+      end
+    }
+  }
+})
+```
+
+2. _Source Action_ : Provided by a source.
+
+This level of actions can be registered by `source.actions` field.
+
+```lua
+require('deck').start({
+  name = 'my_source',
+  ...
+  actions = {
+    {
+      name = 'my_open',
+      execute = function(ctx)
+        -- some of the process.
+      end
+    }
+  }
+})
+```
+
+3. _Global Action_ : Registered globally.
+
+This level of actions can be registered by `deck.register_action()`.
 
 ```lua
 require('deck').register_action({
@@ -120,15 +179,16 @@ require('deck').register_action({
 })
 ```
 
-### Create Your Own StartPreset
+Note: The same name actions are choosen in the order of 1 -> 2 -> 3.
 
-A start-preset in `nvim-deck` allows you to define a set of sources that can be
-triggered by a single command. This is useful for creating custom workflows or
-predefined lists of sources that you want to display when starting a specific
-context.
+### StartPreset
+
+The start-preset is typed as |deck.StartPreset| and can be registered globally.
+
+A start-preset in `nvim-deck` allows you to define shortcut command. In the
+below example, you can use `:Deck recent` command.
 
 ```lua
--- Register a start preset
 -- After registration, you can start the preset using the `:Deck recent` command.
 require('deck').register_start_preset('recent', {
   require('deck').start({
@@ -138,14 +198,11 @@ require('deck').register_start_preset('recent', {
 })
 ```
 
-After registering the start-preset, you can use `:Deck recent` command.
+### Decorator
 
-### Create Your Own Decorator
-
-nvim-deck has `decorator` concept. It's designed to decorate the buffer via
-`nvim_buf_set_extmark`.
-
-The below example shows how to create your own decorator.
+`nvim-deck` has `decorator` concept. It's designed to decorate the deck-buffer
+via `nvim_buf_set_extmark`. The below example shows how to create your own
+decorator.
 
 ```lua
 --- This is example decorator.
@@ -179,6 +236,24 @@ require('deck').register_decorator({
 })
 ```
 
+### Previewer
+
+`nvim-deck` has `previewer` concept. It's designed to show the item preview.
+
+````lua
+require('deck').register_previewer({
+  name = 'bat',
+  resolve = function(_, item)
+    return item.data.filename and vim.fn.filereadable(item.data.filename) == 1
+  end,
+  preview = function(_, item, env)
+    vim.api.nvim_win_call(env.win, function()
+      vim.fn.termopen(('bat --color=always %s'):format(item.data.filename))
+    end)
+  end
+})
+```
+
 # Built-in
 
 ## Sources
@@ -195,7 +270,7 @@ Show buffers.
 | nofile       | boolean?  | false                  | Ignore nofile buffers.                                              |
 
 ```lua
-deck.start(require('deck.builtin.source.buffers')({
+dec`k.start(require('deck.builtin.source.buffers')({
   ignore_paths = { vim.fn.expand('%:p'):gsub('/$', '') },
   nofile = false,
 }))

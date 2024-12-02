@@ -24,9 +24,16 @@ do
     option = option or {}
     option.split = option.split
     option.keep = option.keep or false
+
+    local desc_opts = {}
+    table.insert(desc_opts, option.split or 'edit')
+    if option.keep then
+      table.insert(desc_opts, 'keep')
+    end
+
     return {
       name = name,
-      desc = ('(built-in) open action (%s, %s)'):format(option.split or 'no split', option.keep and 'keep' or 'no keep'),
+      desc = ('(built-in) open action (%s)'):format(table.concat(desc_opts, ', ')),
       resolve = function(ctx)
         for _, item in ipairs(ctx.get_action_items()) do
           if item.data.filename or item.data.bufnr then

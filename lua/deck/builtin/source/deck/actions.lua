@@ -24,7 +24,9 @@ return function(option)
       local actions = {}
       for _, action in ipairs(option.context.get_actions()) do
         if not action.hidden then
-          table.insert(actions, action)
+          if not action.resolve or action.resolve(option.context) then
+            table.insert(actions, action)
+          end
         end
       end
       local display_texts, highlights = helper.create_aligned_display_texts(actions, function(action)

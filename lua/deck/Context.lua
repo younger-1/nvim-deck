@@ -622,21 +622,23 @@ function Context.create(id, sources, start_config)
     get_actions = function()
       local actions = {}
 
-      -- source actions.
+      -- config.
+      for _, action in ipairs(start_config.actions or {}) do
+        action.desc = action.desc or 'start_config'
+        table.insert(actions, action)
+      end
+
+      -- source.
       for _, source in ipairs(sources) do
         for _, action in ipairs(source.actions or {}) do
           action.desc = action.desc or source.name
-          if not action.resolve or action.resolve(context) then
-            table.insert(actions, action)
-          end
+          table.insert(actions, action)
         end
       end
 
-      -- global actions.
+      -- global.
       for _, action in ipairs(require('deck').get_actions()) do
-        if action.resolve(context) then
-          table.insert(actions, action)
-        end
+        table.insert(actions, action)
       end
       return actions
     end,
@@ -645,14 +647,19 @@ function Context.create(id, sources, start_config)
     get_decorators = function()
       local decorators = {}
 
-      -- source decorators.
+      -- config.
+      for _, decorator in ipairs(start_config.decorators or {}) do
+        table.insert(decorators, decorator)
+      end
+
+      -- source.
       for _, source in ipairs(sources) do
         for _, decorator in ipairs(source.decorators or {}) do
           table.insert(decorators, decorator)
         end
       end
 
-      -- global decorators.
+      -- global.
       for _, decorator in ipairs(require('deck').get_decorators()) do
         table.insert(decorators, decorator)
       end
@@ -661,21 +668,31 @@ function Context.create(id, sources, start_config)
 
     ---Get previewer.
     get_previewer = function()
-      -- source previewers.
+      local item = context.get_cursor_item()
+      if not item then
+        return
+      end
+
+      -- config.
+      for _, previewer in ipairs(start_config.previewers or {}) do
+        if not previewer.resolve or previewer.resolve(context, item) then
+          return previewer
+        end
+      end
+
+      -- source.
       for _, source in ipairs(sources) do
         for _, previewer in ipairs(source.previewers or {}) do
-          previewer.resolve = previewer.resolve or function() return true end
-          if previewer.resolve(context) then
-            return previewer --[[@as deck.Previewer]]
+          if not previewer.resolve or previewer.resolve(context, item) then
+            return previewer
           end
         end
       end
 
-      -- global previewers.
+      -- global.
       for _, previewer in ipairs(require('deck').get_previewers()) do
-        previewer.resolve = previewer.resolve or function() return true end
-        if previewer.resolve(context) then
-          return previewer --[[@as deck.Previewer]]
+        if not previewer.resolve or previewer.resolve(context, item) then
+          return previewer
         end
       end
     end,
@@ -729,12 +746,14 @@ function Context.create(id, sources, start_config)
     do_action = function(name)
       for _, action in ipairs(context.get_actions()) do
         if action.name == name then
-          action.execute(context)
-          return
+          if not action.resolve or action.resolve(context) then
+            action.execute(context)
+            return
+          end
         end
       end
       notify.show({
-        { { ('Action not found: %s'):format(name), 'WarningMsg' } }
+        { { ('Available Action not found: %s'):format(name), 'WarningMsg' } }
       })
     end,
 

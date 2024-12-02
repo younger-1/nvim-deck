@@ -121,7 +121,9 @@ function default_view.create(config)
       vim.api.nvim_win_call(state.win_preview, function()
         local topline = vim.fn.getwininfo(state.win_preview)[1].topline
         topline = math.max(1, topline + delta)
-        topline = math.min(vim.api.nvim_buf_line_count(vim.api.nvim_win_get_buf(state.win_preview)) - vim.api.nvim_win_get_height(state.win_preview) + 1, topline)
+        topline = math.min(
+        vim.api.nvim_buf_line_count(vim.api.nvim_win_get_buf(state.win_preview)) -
+        vim.api.nvim_win_get_height(state.win_preview) + 1, topline)
         vim.cmd(('normal! %szt'):format(topline))
       end)
     end,
@@ -186,7 +188,8 @@ function default_view.create(config)
 
       -- update preview.
       if prev_revision.execute ~= next_revision.execute or prev_revision.query ~= next_revision.query or prev_revision.cursor ~= next_revision.cursor or prev_revision.preview_mode ~= next_revision.preview_mode then
-        if not ctx.get_preview_mode() or not ctx.get_previewer() then
+        local item = ctx.get_cursor_item()
+        if not item or not ctx.get_preview_mode() or not ctx.get_previewer() then
           if is_visible(state.win_preview) then
             vim.api.nvim_win_hide(state.win_preview)
             state.win_preview = nil
@@ -211,7 +214,8 @@ function default_view.create(config)
           else
             vim.api.nvim_win_set_height(state.win_preview, preview_height)
           end
-          ctx.get_previewer().preview(ctx, { win = state.win_preview })
+          vim.api.nvim_set_option_value('modified', false, { buf = vim.api.nvim_win_get_buf(state.win_preview) })
+          ctx.get_previewer().preview(ctx, item, { win = state.win_preview })
         end
       end
 
