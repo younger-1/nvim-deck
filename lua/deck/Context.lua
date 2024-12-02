@@ -77,6 +77,8 @@ local Status         = {
 ---@field do_action fun(name: string)
 ---@field dispose fun()
 ---@field disposed fun(): boolean
+---@field on_show fun(callback: fun())
+---@field on_hide fun(callback: fun())
 ---@field on_dispose fun(callback: fun()): fun()
 
 ---Create deck buffer.
@@ -147,7 +149,8 @@ function Context.create(id, sources, start_config)
 
   local events = {
     dispose = create_events(),
-    selected = create_events(),
+    show = create_events(),
+    hide = create_events(),
   }
 
   local view = start_config.view()
@@ -410,11 +413,17 @@ function Context.create(id, sources, start_config)
       view.show(context)
       vim.api.nvim_set_option_value('conceallevel', 3, { win = view.get_win() })
       vim.api.nvim_set_option_value('concealcursor', 'nvic', { win = view.get_win() })
+      vim.schedule(function()
+        events.show.emit()
+      end)
     end,
 
     ---Hide context via given view.
     hide = function()
       view.hide(context)
+      vim.schedule(function()
+        events.hide.emit()
+      end)
     end,
 
     ---Start prompt.
@@ -774,7 +783,9 @@ function Context.create(id, sources, start_config)
           source_state.controller.abort()
         end
       end
-      events.dispose.emit()
+      vim.schedule(function()
+        events.dispose.emit()
+      end)
     end,
 
     ---Return dispose state.
@@ -784,6 +795,12 @@ function Context.create(id, sources, start_config)
 
     ---Subscribe dispose event.
     on_dispose = events.dispose.on,
+
+    ---Subscribe show event.
+    on_show = events.show.on,
+
+    ---Subscribe hide event.
+    on_hide = events.hide.on,
   } --[[@as deck.Context]]
 
   -- explicitly show when buffer entered.

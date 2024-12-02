@@ -44,7 +44,7 @@ function easy.setup(config)
   do
     -- Register `files` start preset.
     deck.register_start_preset('files', function()
-      deck.start({
+      local ctx = deck.start({
         require('deck.builtin.source.recent_files')(),
         require('deck.builtin.source.buffers')(),
         require('deck.builtin.source.files')({
@@ -52,6 +52,9 @@ function easy.setup(config)
           ignore_globs = config.ignore_globs,
         })
       })
+      ctx.on_hide(function()
+        ctx.dispose()
+      end)
     end)
 
     -- Register `grep` start preset.
