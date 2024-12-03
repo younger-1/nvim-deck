@@ -46,18 +46,18 @@ function default_view.create(config)
         -- open win.
         if vim.api.nvim_get_option_value('filetype', { buf = 0 }) ~= 'deck' then
           -- search existing deck_builtin_view_default window.
-          local deck_builtin_view_default --[[@type integer?]]
+          local existing_deck_win --[[@type integer?]]
           for _, win in ipairs(vim.api.nvim_list_wins()) do
             local ok, v = pcall(vim.api.nvim_win_get_var, win, 'deck_builtin_view_default')
             if ok and v then
-              deck_builtin_view_default = win
+              existing_deck_win = win
               break
             end
           end
 
           -- open new window or move to window.
-          if deck_builtin_view_default then
-            vim.api.nvim_set_current_win(deck_builtin_view_default)
+          if existing_deck_win then
+            vim.api.nvim_set_current_win(existing_deck_win)
           else
             local height = math.max(1, math.min(vim.api.nvim_buf_line_count(ctx.buf), config.max_height))
             vim.cmd.split({
@@ -77,7 +77,8 @@ function default_view.create(config)
         -- setup window.
         vim.api.nvim_win_set_var(0, 'deck_builtin_view_default', true)
 
-        vim.cmd.buffer(ctx.buf)
+        vim.cmd.buffer({ ctx.buf, bang = true })
+
         state.win = vim.api.nvim_get_current_win()
       end
 
@@ -122,8 +123,8 @@ function default_view.create(config)
         local topline = vim.fn.getwininfo(state.win_preview)[1].topline
         topline = math.max(1, topline + delta)
         topline = math.min(
-        vim.api.nvim_buf_line_count(vim.api.nvim_win_get_buf(state.win_preview)) -
-        vim.api.nvim_win_get_height(state.win_preview) + 1, topline)
+          vim.api.nvim_buf_line_count(vim.api.nvim_win_get_buf(state.win_preview)) -
+          vim.api.nvim_win_get_height(state.win_preview) + 1, topline)
         vim.cmd(('normal! %szt'):format(topline))
       end)
     end,

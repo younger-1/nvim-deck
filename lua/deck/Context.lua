@@ -82,13 +82,22 @@ local Status         = {
 ---@field on_dispose fun(callback: fun()): fun()
 
 ---Create deck buffer.
+---@param name string
 ---@return integer
-local function create_buf()
-  local buf = vim.api.nvim_create_buf(false, false)
+local function create_buf(name)
+  local buf = vim.api.nvim_create_buf(true, false)
   vim.api.nvim_buf_set_var(buf, 'deck', true)
+  vim.api.nvim_buf_set_var(buf, 'deck_name', name)
   vim.api.nvim_set_option_value("filetype", "deck", { buf = buf })
   vim.api.nvim_set_option_value("buftype", "nofile", { buf = buf })
   vim.api.nvim_set_option_value("bufhidden", "hide", { buf = buf })
+  vim.api.nvim_create_autocmd('BufWinEnter', {
+    pattern = ('<buffer=%s>'):format(buf),
+    callback = function()
+      vim.api.nvim_set_option_value('conceallevel', 3, { win = 0 })
+      vim.api.nvim_set_option_value('concealcursor', 'nvic', { win = 0 })
+    end
+  })
   return buf
 end
 
@@ -143,7 +152,7 @@ Context.Status = Status
 function Context.create(id, sources, start_config)
   sources = kit.to_array(sources) --[=[@as deck.Source[]]=]
 
-  local buf = create_buf()
+  local buf = create_buf(start_config.name)
   local namespace = vim.api.nvim_create_namespace(('deck.%s'):format(buf))
   local context ---@type deck.Context
 
@@ -411,8 +420,6 @@ function Context.create(id, sources, start_config)
     ---Show context via given view.
     show = function()
       view.show(context)
-      vim.api.nvim_set_option_value('conceallevel', 3, { win = view.get_win() })
-      vim.api.nvim_set_option_value('concealcursor', 'nvic', { win = view.get_win() })
       vim.schedule(function()
         events.show.emit()
       end)
@@ -729,12 +736,14 @@ function Context.create(id, sources, start_config)
 
       -- sync for enough height.
       vim.wait(200, function()
-        if vim.api.nvim_buf_line_count(context.buf) >= option.count then
+        if #state.cache.buf_items >= option.count then
           return true
         end
-        if context.get_status() ~= Context.Status.Running then
+
+        if context.get_status() == Status.Success then
           return true
         end
+
         return false
       end, 16)
     end,
