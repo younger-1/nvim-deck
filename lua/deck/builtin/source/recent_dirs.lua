@@ -25,30 +25,24 @@ return setmetatable({
     end
     target_path = vim.fs.normalize(target_path)
 
-    Async.run(function()
-      local exists = IO.exists(target_path):await()
-      if not exists then
-        return
-      end
+    local exists = vim.fn.filereadable(target_path) == 1
+    if not exists then
+      return
+    end
 
-      if vim.fn.isdirectory(target_path) == 0 then
-        return
-      end
-
-      local seen = { [target_path] = true }
-      local paths = {}
-      for _, path in ipairs(vim.split(IO.read_file(self.entries_path):await(), '\n')) do
-        if not seen[path] then
-          seen[path] = true
-          if IO.exists(path):await() then
-            table.insert(paths, path)
-          end
+    local seen = { [target_path] = true }
+    local paths = {}
+    for _, path in ipairs(vim.fn.readfile(self.entries_path)) do
+      if not seen[path] then
+        seen[path] = true
+        if vim.fn.filereadable(path) == 1 then
+          table.insert(paths, path)
         end
       end
-      table.insert(paths, target_path)
+    end
+    table.insert(paths, target_path)
 
-      vim.fn.writefile(paths, self.entries_path)
-    end)
+    vim.fn.writefile(paths, self.entries_path)
   end
 }, {
   ---@param option { ignore_paths?: string[] }
