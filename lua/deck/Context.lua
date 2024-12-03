@@ -85,7 +85,7 @@ local Status         = {
 ---@param name string
 ---@return integer
 local function create_buf(name)
-  local buf = vim.api.nvim_create_buf(true, false)
+  local buf = vim.api.nvim_create_buf(false, false)
   vim.api.nvim_buf_set_var(buf, 'deck', true)
   vim.api.nvim_buf_set_var(buf, 'deck_name', name)
   vim.api.nvim_set_option_value("filetype", "deck", { buf = buf })

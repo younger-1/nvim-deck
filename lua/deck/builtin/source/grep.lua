@@ -62,8 +62,6 @@ return function(option)
         'rg',
         '--ignore-case',
         '--vimgrep',
-        '--color',
-        'never',
         '--sort',
         'path'
       }
