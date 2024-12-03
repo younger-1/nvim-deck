@@ -47,7 +47,6 @@ return function(option)
         local command = {
           'rg',
           '--files',
-          '--follow'
         }
         for _, glob in ipairs(option.ignore_globs or {}) do
           table.insert(command, '--glob')
