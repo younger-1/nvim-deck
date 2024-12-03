@@ -1010,7 +1010,7 @@ Start deck with given sources.
 ```lua
 ---@class deck.StartPreset
 ---@field public name string
----@field public args? table<string|integer, fun(input: string): string[]>
+---@field public args? table<string|integer, { complete?: (fun(prefix: string):string[]), required?: boolean }>
 ---@field public start fun(args: table<string|integer, string>)
 ```
 
