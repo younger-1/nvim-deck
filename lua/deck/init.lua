@@ -87,7 +87,7 @@ local Context = require('deck.Context')
 ---@doc.type
 ---@class deck.StartPreset
 ---@field public name string
----@field public args? table<string|integer, fun(input: string): string[]>
+---@field public args? table<string|integer, { complete?: (fun(prefix: string):string[]), required?: boolean }>
 ---@field public start fun(args: table<string|integer, string>)
 
 ---@doc.type
@@ -427,8 +427,10 @@ end
   type = "fun()"
   desc = "Start function."
 --]=]
----@param start_preset_or_name deck.StartPreset
+---@overload fun(start_preset: deck.StartPreset)
 ---@overload fun(name: string, start: fun())
+---@param start_preset_or_name deck.StartPreset|string
+---@param start_fn_or_nil fun()|nil
 function deck.register_start_preset(start_preset_or_name, start_fn_or_nil)
   if type(start_preset_or_name) == 'string' and type(start_fn_or_nil) == 'function' then
     deck.register_start_preset({

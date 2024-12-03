@@ -33,3 +33,6 @@ docs:
 prepare:
 	docker build --platform linux/arm64/v8 -t panvimdoc https://github.com/kdheepak/panvimdoc.git#d5b6a1f3ab0cb2c060766e7fd426ed32c4b349b2
 
+.PHONY: test
+test:
+	vusted --output=gtest --pattern=.spec ./lua
