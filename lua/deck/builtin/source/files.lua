@@ -62,7 +62,7 @@ return function(option)
           on_stdout = function(text)
             local path = vim.fs.joinpath(root_dir, text)
             ctx.item({
-              display_text = path,
+              display_text = vim.fn.fnamemodify(path, ':~'):gsub(vim.pesc(root_dir), '.'),
               data = {
                 filename = path
               }

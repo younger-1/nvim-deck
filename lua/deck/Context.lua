@@ -407,7 +407,7 @@ function Context.create(id, sources, start_config)
       Async.run(function()
         for _, source in ipairs(sources) do
           execute_source(source)
-          Async.timeout(200):await()
+          Async.timeout(32):await()
         end
       end)
     end,
