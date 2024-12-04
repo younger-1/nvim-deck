@@ -25,7 +25,7 @@ return setmetatable({
     end
     target_path = vim.fs.normalize(target_path)
 
-    local exists = vim.fn.filereadable(target_path) == 1
+    local exists = vim.fn.isdirectory(target_path) == 1
     if not exists then
       return
     end
@@ -35,7 +35,7 @@ return setmetatable({
     for _, path in ipairs(vim.fn.readfile(self.entries_path)) do
       if not seen[path] then
         seen[path] = true
-        if vim.fn.filereadable(path) == 1 then
+        if vim.fn.isdirectory(path) == 1 then
           table.insert(paths, path)
         end
       end
