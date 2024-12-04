@@ -46,9 +46,11 @@ return function(option)
       {
         name = 'git.remote.fetch',
         execute = function(ctx)
-          for _, item in ipairs(ctx.get_action_items()) do
-            git:exec_print({ 'git', 'fetch', '--all', '--prune', item.data.name }):await()
-          end
+          Async.run(function()
+            for _, item in ipairs(ctx.get_action_items()) do
+              git:exec_print({ 'git', 'fetch', '--all', '--prune', item.data.name }):await()
+            end
+          end)
         end
       },
       {
