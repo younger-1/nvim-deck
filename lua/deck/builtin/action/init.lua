@@ -372,26 +372,33 @@ action.substitute = {
     local substitute_targets = {}
 
     -- open all files.
+    local buf_lines = {}
     for _, item in ipairs(ctx.get_action_items()) do
-      vim.cmd.edit({
-        item.data.filename,
-        mods = {
-          silent = true,
-          keepalt = true,
-          keepjumps = true,
-        }
-      })
-      if not vim.api.nvim_get_option_value('modified', { buf = 0 }) then
-        table.insert(substitute_targets, {
-          buf = vim.api.nvim_get_current_buf(),
-          filename = item.data.filename,
-          lnum = item.data.lnum,
-          line = vim.api.nvim_buf_get_lines(0, item.data.lnum - 1, item.data.lnum, false)[1] or '',
+      if not buf_lines[item.data.filename] then
+        buf_lines[item.data.filename] = {}
+      end
+      if not buf_lines[item.data.filename][item.data.lnum] then
+        buf_lines[item.data.filename][item.data.lnum] = true
+        vim.cmd.edit({
+          item.data.filename,
+          mods = {
+            silent = true,
+            keepalt = true,
+            keepjumps = true,
+          }
         })
-      else
-        notify.show({
-          { { ('File "%s" is modified.'):format(item.data.filename), 'ErrorMsg' } }
-        })
+        if not vim.api.nvim_get_option_value('modified', { buf = 0 }) then
+          table.insert(substitute_targets, {
+            buf = vim.api.nvim_get_current_buf(),
+            filename = item.data.filename,
+            lnum = item.data.lnum,
+            line = vim.api.nvim_buf_get_lines(0, item.data.lnum - 1, item.data.lnum, false)[1] or '',
+          })
+        else
+          notify.show({
+            { { ('File "%s" is modified.'):format(item.data.filename), 'ErrorMsg' } }
+          })
+        end
       end
     end
 
