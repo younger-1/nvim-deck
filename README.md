@@ -24,8 +24,8 @@ nvim-deck revolves around four core concepts:
   - `:Deck git` to open the git launcher.
 - Built-in ripgrep integration.
   - `:Deck grep` to start a grep search.
-- Built-in recursive file traversal in pure Lua.
-  - `:Deck files` to show files under the specified root directory.
+- Built-in file listing.
+  - `:Deck files` to show files under the root directory (`ripgrep`, `PureLua`).
 - Highly customizable: sources, actions, previewers, decorators, views, and
   matchers.
 

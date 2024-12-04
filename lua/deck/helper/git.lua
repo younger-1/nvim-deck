@@ -110,7 +110,7 @@ function Git:branch()
     '--sort=refname:rstrip=-2',
     '--format=%(HEAD)%00%(refname:rstrip=-2)%00%(refname)%00%(push)%00%(push:remotename)%00%(push:track)%00%(push:trackshort)%00%(subject)' .. ('%00'):rep(sep_count),
   }, {
-    buffering = System.PatternBuffering.new({ pattern = ('\0'):rep(sep_count) .. '\n' })
+    buffering = System.DelimiterBuffering.new({ delimiter = ('\0'):rep(sep_count) .. '\n' })
   }):next(function(out)
     ---Get remotename from rename.
     ---@param refname string
@@ -251,7 +251,7 @@ function Git:log(params)
     params.offset and ('--skip=%s'):format(params.offset),
     '--pretty=format:%H%x00%P%x00%an%x00%ae%x00%ai%x00%s%x00%b%x00%B' .. ('%x00'):rep(sep_count),
   }, {
-    buffering = System.PatternBuffering.new({ pattern = ('\0'):rep(sep_count) .. '\n' })
+    buffering = System.DelimiterBuffering.new({ delimiter = ('\0'):rep(sep_count) .. '\n' })
   }):next(
   ---@param out deck.builtin.source.git.Git.ExecOutput
     function(out)
@@ -339,7 +339,7 @@ function Git:show_log(rev)
     '--no-patch',
     rev
   }, {
-    buffering = System.PatternBuffering.new({ pattern = ('\0'):rep(sep_count) .. '\n' })
+    buffering = System.DelimiterBuffering.new({ delimiter = ('\0'):rep(sep_count) .. '\n' })
   }):next(
   ---@param out deck.builtin.source.git.Git.ExecOutput
     function(out)
