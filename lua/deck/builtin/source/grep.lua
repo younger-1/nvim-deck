@@ -61,7 +61,8 @@ return function(option)
       local command = {
         'rg',
         '--ignore-case',
-        '--vimgrep',
+        '--column',
+        '--line-number',
         '--sort',
         'path'
       }
@@ -87,7 +88,7 @@ return function(option)
           ctx.item({
             display_text = {
               { ('%s (%s:%s): '):format(filename, lnum, col) },
-              { match, 'Comment' }
+              { match,                                       'Comment' }
             },
             data = {
               filename = vim.fs.joinpath(option.root_dir, filename),
