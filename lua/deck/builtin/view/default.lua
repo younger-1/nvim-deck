@@ -124,8 +124,19 @@ function default_view.create(config)
         topline = math.max(1, topline + delta)
         topline = math.min(
           vim.api.nvim_buf_line_count(vim.api.nvim_win_get_buf(state.win_preview)) -
-          vim.api.nvim_win_get_height(state.win_preview) + 1, topline)
-        vim.cmd(('normal! %szt'):format(topline))
+          vim.api.nvim_win_get_height(state.win_preview) + 1,
+          topline
+        )
+        vim.cmd.normal({
+          ('%szt'):format(topline),
+          bang = true,
+          mods = {
+            keepmarks = true,
+            keepjumps = true,
+            keepalt = true,
+            noautocmd = true,
+          }
+        })
       end)
     end,
 
@@ -164,7 +175,7 @@ function default_view.create(config)
         local winheight = vim.api.nvim_win_get_height(state.win)
         local maxline = vim.api.nvim_buf_line_count(ctx.buf)
         local topline = vim.fn.getwininfo(state.win)[1].topline
-        if topline > maxline - winheight then
+        if topline > 1 + maxline - winheight then
           vim.api.nvim_win_call(state.win, function()
             vim.cmd.normal({
               ('%szt'):format(maxline - winheight + 1),

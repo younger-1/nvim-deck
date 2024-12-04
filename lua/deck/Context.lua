@@ -404,10 +404,17 @@ function Context.create(id, sources, start_config)
         }
       end
 
+      local max_height = vim.o.lines
       Async.run(function()
         for _, source in ipairs(sources) do
           execute_source(source)
-          Async.timeout(32):await()
+          local s = vim.uv.hrtime() / 1000000
+          while (vim.uv.hrtime() / 1000000 - s) < 200 do
+            if #state.cache.buf_items >= max_height then
+              break
+            end
+            Async.timeout(32):await()
+          end
         end
       end)
     end,
