@@ -53,7 +53,7 @@ return function(option)
       end)
     end,
     actions = {
-      require('deck').alias_action('default', 'git.branch.vimdiff'),
+      require('deck').alias_action('default', 'git.changeset.vimdiff'),
       {
         name = 'git.changeset.vimdiff',
         execute = function(ctx)
@@ -70,19 +70,16 @@ return function(option)
     previewers = {
       {
         name = 'git.changeset.unified_diff',
-        preview = function(ctx, env)
-          local item = ctx.get_cursor_item()
-          if item then
-            helper.open_preview_buffer(env.win, {
-              contents = git:get_unified_diff({
-                from_rev = option.from_rev,
-                to_rev = option.to_rev,
-                filename = item.data.filename
-              }):sync(5000),
-              filename = item.data.filename,
-              filetype = 'diff'
-            })
-          end
+        preview = function(_, item, env)
+          helper.open_preview_buffer(env.win, {
+            contents = git:get_unified_diff({
+              from_rev = option.from_rev,
+              to_rev = option.to_rev,
+              filename = item.data.filename
+            }):sync(5000),
+            filename = item.data.filename,
+            filetype = 'diff'
+          })
         end
       }
     }

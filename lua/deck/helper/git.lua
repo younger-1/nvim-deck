@@ -108,7 +108,8 @@ function Git:branch()
     '--all',
     '--sort=-committerdate',
     '--sort=refname:rstrip=-2',
-    '--format=%(HEAD)%00%(refname:rstrip=-2)%00%(refname)%00%(push)%00%(push:remotename)%00%(push:track)%00%(push:trackshort)%00%(subject)' .. ('%00'):rep(sep_count),
+    '--format=%(HEAD)%00%(refname:rstrip=-2)%00%(refname)%00%(push)%00%(push:remotename)%00%(push:track)%00%(push:trackshort)%00%(subject)' ..
+    ('%00'):rep(sep_count),
   }, {
     buffering = System.DelimiterBuffering.new({ delimiter = ('\0'):rep(sep_count) .. '\n' })
   }):next(function(out)
@@ -509,7 +510,8 @@ function Git:commit(params, callback)
           if yes_no == 'y' or yes_no == 'yes' then
             vim.cmd.tabclose()
 
-            IO.cp(vim.fs.joinpath(self.cwd, '.git', 'COMMIT_EDITMSG'), vim.fs.joinpath(self.cwd, '.git', 'DECK_COMMIT_EDITMSG')):await()
+            IO.cp(vim.fs.joinpath(self.cwd, '.git', 'COMMIT_EDITMSG'),
+              vim.fs.joinpath(self.cwd, '.git', 'DECK_COMMIT_EDITMSG')):await()
             self:exec_print(kit.concat({
               'git',
               'commit',
@@ -609,8 +611,8 @@ function Git:exec_print(command, option)
         :totable(), ' ')), 'ModeMsg' } }
     })
     Async.new(function(resolve)
-      local kill --@type fun():void
-      kill = System.spawn(command, {
+      local close --@type fun():void
+      close = System.spawn(command, {
         cwd = self.cwd,
         buffering = option and option.buffering or System.LineBuffering.new({
           ignore_empty = false
@@ -630,7 +632,7 @@ function Git:exec_print(command, option)
           end
         end),
         on_exit = kit.fast_schedule_wrap(function()
-          kill()
+          close()
           resolve()
         end),
       })
@@ -646,8 +648,8 @@ function Git:exec(command, option)
   return Async.new(function(resolve)
     local stdouts = {}
     local stderrs = {}
-    local kill --@type fun():void
-    kill = System.spawn(command, {
+    local close --@type fun():void
+    close = System.spawn(command, {
       cwd = self.cwd,
       buffering = option and option.buffering or System.LineBuffering.new({
         ignore_empty = false
@@ -659,7 +661,7 @@ function Git:exec(command, option)
         table.insert(stderrs, text)
       end),
       on_exit = kit.fast_schedule_wrap(function(code)
-        kill()
+        close()
         if stdouts[#stdouts] == '' then
           table.remove(stdouts, #stdouts)
         end

@@ -84,6 +84,24 @@ return function(option)
           end
         end
       },
+    {
+      name = 'git.log.changeset_head',
+      resolve = function(ctx)
+        local item = ctx.get_cursor_item()
+        return item and #item.data.hash_parents == 1
+      end,
+      execute = function(ctx)
+        local item = ctx.get_cursor_item()
+        if item then
+          local next_ctx = require('deck').start(require('deck.builtin.source.git.changeset')({
+            cwd = option.cwd,
+            from_rev = item.data.hash,
+            to_rev = 'HEAD',
+          }))
+          next_ctx.set_preview_mode(true)
+        end
+      end
+    },
       {
         name = 'git.log.reset_soft',
         resolve = function(ctx)
@@ -150,18 +168,15 @@ return function(option)
           local item = ctx.get_cursor_item()
           return item and #item.data.hash_parents == 1
         end,
-        preview = function(ctx, env)
+        preview = function(_, item, env)
           Async.run(function()
-            local item = ctx.get_cursor_item()
-            if item then
-              helper.open_preview_buffer(env.win, {
-                contents = git:get_unified_diff({
-                  from_rev = item.data.hash_parents[1],
-                  to_rev = item.data.hash,
-                }):sync(5000),
-                filetype = 'diff'
-              })
-            end
+            helper.open_preview_buffer(env.win, {
+              contents = git:get_unified_diff({
+                from_rev = item.data.hash_parents[1],
+                to_rev = item.data.hash,
+              }):sync(5000),
+              filetype = 'diff'
+            })
           end)
         end
       }

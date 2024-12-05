@@ -28,7 +28,8 @@ return function(option)
         local status_items = git:status():await() ---@type deck.builtin.source.git.Status[]
         local display_texts, highlights = helper.create_aligned_display_texts(status_items, function(status_item)
           if status_item.type == 'renamed' then
-            return { status_item.xy, ('%s <- %s'):format(git:to_relative(status_item.filename), git:to_relative(status_item.filename_before)) }
+            return { status_item.xy, ('%s <- %s'):format(git:to_relative(status_item.filename),
+              git:to_relative(status_item.filename_before)) }
           end
           return { status_item.xy, git:to_relative(status_item.filename) }
         end, { sep = ' │ ' })
@@ -171,18 +172,15 @@ return function(option)
             return item.data.type ~= 'untracked' and item.data.type ~= 'ignored'
           end
         end,
-        preview = function(ctx, env)
-          local item = ctx.get_cursor_item()
-          if item then
-            helper.open_preview_buffer(env.win, {
-              contents = git:get_unified_diff({
-                from_rev = 'HEAD',
-                filename = item.data.filename
-              }):sync(5000),
-              filename = item.data.filename,
-              filetype = 'diff'
-            })
-          end
+        preview = function(_, item, env)
+          helper.open_preview_buffer(env.win, {
+            contents = git:get_unified_diff({
+              from_rev = 'HEAD',
+              filename = item.data.filename
+            }):sync(5000),
+            filename = item.data.filename,
+            filetype = 'diff'
+          })
         end
       }
     }
