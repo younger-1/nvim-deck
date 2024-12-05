@@ -1,6 +1,5 @@
 local deck = require('deck')
 local Async = require('deck.kit.Async')
-local Keymap = require('deck.kit.Vim.Keymap')
 
 for _, action in pairs(require('deck.builtin.action')) do
   deck.register_action(action)

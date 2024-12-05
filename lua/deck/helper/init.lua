@@ -1,5 +1,3 @@
-local notify = require('deck.notify')
-
 local helper = {}
 
 ---Normalize display_text.

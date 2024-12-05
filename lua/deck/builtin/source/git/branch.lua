@@ -8,7 +8,7 @@ local Async = require('deck.kit.Async')
   desc = "Show git branches"
   example = """
     deck.start(require('deck.builtin.source.git.branch')({
-      cwd = vim.fn.getcwd() 
+      cwd = vim.fn.getcwd()
     }))
   """
 
