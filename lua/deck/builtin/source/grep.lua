@@ -85,17 +85,19 @@ return function(option)
           local lnum = tonumber(text:match(':(%d+):'))
           local col = tonumber(text:match(':%d+:(%d+):'))
           local match = text:match(':%d+:%d+:(.*)$')
-          ctx.item({
-            display_text = {
-              { ('%s (%s:%s): '):format(filename, lnum, col) },
-              { match,                                       'Comment' }
-            },
-            data = {
-              filename = vim.fs.joinpath(option.root_dir, filename),
-              lnum = lnum,
-              col = col,
-            }
-          })
+          if filename and match then
+            ctx.item({
+              display_text = {
+                { ('%s (%s:%s): '):format(filename, lnum, col) },
+                { match,                                       'Comment' }
+              },
+              data = {
+                filename = vim.fs.joinpath(option.root_dir, filename),
+                lnum = lnum,
+                col = col,
+              }
+            })
+          end
         end,
         on_stderr = function(text)
           notify.show({
