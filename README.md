@@ -358,7 +358,7 @@ Show git branches
 
 ```lua
 deck.start(require('deck.builtin.source.git.branch')({
-  cwd = vim.fn.getcwd() 
+  cwd = vim.fn.getcwd()
 }))
 ```
 
