@@ -1,5 +1,5 @@
 -- Bootstrap lazy.nvim
-local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+local lazypath = "/root/lazy/lazy.nvim"
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
   local lazyrepo = "https://github.com/folke/lazy.nvim.git"
   local out = vim.fn.system({ "git", "clone", "--filter=blob:none", "--branch=stable", lazyrepo, lazypath })
@@ -15,22 +15,46 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
-local function get_script_path()
-  return debug.getinfo(1, "S").source:sub(2):match("(.*/)")
-end
-
 -- Make sure to setup `mapleader` and `maplocalleader` before
 -- loading lazy.nvim so that mappings are correct.
 -- This is also a good place to setup other settings (vim.opt)
 vim.g.mapleader = " "
 vim.g.maplocalleader = "\\"
 
+-- Author's key-mappings.
+do
+  vim.keymap.set('t', '<Esc>', '<C-\\><C-n>')
+  vim.keymap.set('t', '<Esc><Esc>', '<Esc>')
+  vim.keymap.set('n', '<Esc>', '<Cmd>nohlsearch<CR><Cmd>diffupdate<CR><Cmd>mode<CR>')
+  vim.keymap.set('n', 'q', '<Cmd>q<CR>')
+  vim.keymap.set('n', 'Q', '<Cmd>qall!<CR>')
+  vim.keymap.set({ 'n', 'x' }, ';', ':')
+  vim.keymap.set({ 'n', 'x' }, 'gj', 'gJ')
+  vim.keymap.set({ 'n', 'x' }, '<C-h>', '<C-o>zz')
+  vim.keymap.set({ 'n', 'x' }, '<C-l>', '<C-i>zz')
+  vim.keymap.set({ 'n', 'x' }, '<', '<LT><LT><Esc>')
+  vim.keymap.set({ 'n', 'x' }, '>', '>><Esc>')
+  vim.keymap.set({ 'n', 'x' }, 'H', '20h')
+  vim.keymap.set({ 'n', 'x' }, 'J', '10j')
+  vim.keymap.set({ 'n', 'x' }, 'K', '10k')
+  vim.keymap.set({ 'n', 'x' }, 'L', '20l')
+  vim.keymap.set({ 'n', 'x' }, '<Leader>h', '<C-w>h')
+  vim.keymap.set({ 'n', 'x' }, '<Leader>j', '<C-w>j')
+  vim.keymap.set({ 'n', 'x' }, '<Leader>k', '<C-w>k')
+  vim.keymap.set({ 'n', 'x' }, '<Leader>l', '<C-w>l')
+  vim.keymap.set({ 'n', 'x' }, '<Leader>H', '<Cmd>tabprev<CR>')
+  vim.keymap.set({ 'n', 'x' }, '<Leader>L', '<Cmd>tabnext<CR>')
+  vim.keymap.set({ 'n', 'x' }, '<Leader>t', '<Cmd>tabclose<CR>')
+  vim.keymap.set({ 'n', 'x' }, '<Tab>', '%', { remap = true })
+  vim.keymap.set('i', '<C-h>', '<Left>')
+  vim.keymap.set('i', '<C-l>', '<Right>')
+end
+
 -- Setup lazy.nvim
 require("lazy").setup({
   spec = {
     {
       "hrsh7th/nvim-deck",
-      dir = vim.fs.dirname(vim.fs.dirname(get_script_path())),
       config = function()
         local deck = require('deck')
 
@@ -40,6 +64,9 @@ require("lazy").setup({
           pattern = 'DeckStart',
           callback = function(e)
             local ctx = e.data.ctx --[[@as deck.Context]]
+            ctx.keymap('n', '<Esc>', function()
+              ctx.set_preview_mode(false)
+            end)
             ctx.keymap('n', '<Tab>', deck.action_mapping('choose_action'))
             ctx.keymap('n', '<C-l>', deck.action_mapping('refresh'))
             ctx.keymap('n', 'i', deck.action_mapping('prompt'))
@@ -56,12 +83,6 @@ require("lazy").setup({
             ctx.keymap('n', 'N', deck.action_mapping('create'))
             ctx.keymap('n', '<C-u>', deck.action_mapping('scroll_preview_up'))
             ctx.keymap('n', '<C-d>', deck.action_mapping('scroll_preview_down'))
-
-            -- If you want to start the filter by default, call ctx.prompt() here
-            ctx.prompt()
-
-            -- If you want to show preview by default, call ctx.set_preview_mode(true) here
-            ctx.set_preview_mode(true)
           end
         })
 
