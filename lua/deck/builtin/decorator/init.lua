@@ -69,19 +69,32 @@ decorators.selection = {
 }
 
 ---@type deck.Decorator
-decorators.filename = {
-  name = 'filename',
-  resolve = function(_, item)
-    return item.data.filename
-  end,
-  decorate = function(ctx, item, row)
-    local is_dir = vim.fn.isdirectory(item.data.filename) == 1
+do
+  local get_icon --[[@as (fun(category: string, filename: string):(string?, string?))?]]
+  vim.api.nvim_create_autocmd('OptionSet', {
+    pattern = 'runtimepath',
+    callback = function()
+      do
+        local ok, Icons = pcall(require, 'mini.icons')
+        if ok then
+          get_icon = function(category, filename)
+            return Icons.get(category, filename)
+          end
+        end
+      end
+    end
+  })
+  decorators.filename = {
+    name = 'filename',
+    resolve = function(_, item)
+      return item.data.filename
+    end,
+    decorate = function(ctx, item, row)
+      local is_dir = vim.fn.isdirectory(item.data.filename) == 1
 
-    -- icons decoration.
-    local ok, Icons = pcall(require, 'mini.icons')
-    if ok then
-      local icon, hl = Icons.get(is_dir and 'directory' or 'file', item.data.filename)
-      if icon and hl then
+      -- icons decoration.
+      local icon, hl = get_icon and get_icon(is_dir and 'dir' or 'file', item.data.filename)
+      if icon then
         vim.api.nvim_buf_set_extmark(ctx.buf, ctx.ns, row, 0, {
           virt_text = {
             -- padding for cursor col.
@@ -90,24 +103,24 @@ decorators.filename = {
           virt_text_pos = 'inline',
         })
       end
-    end
 
-    -- buffer related decoration.
-    local buf = vim.fn.bufnr(item.data.filename)
-    if not is_dir and buf ~= -1 then
-      local modified = vim.api.nvim_get_option_value('modified', { buf = buf })
-      vim.api.nvim_buf_set_extmark(ctx.buf, ctx.ns, row, 0, {
-        virt_text = {
-          { modified and '[+]' or '', 'SpecialKey' },
-          { ' ' },
-          { ('#%s'):format(buf),      'Comment' },
-        },
+      -- buffer related decoration.
+      local buf = vim.fn.bufnr(item.data.filename)
+      if not is_dir and buf ~= -1 then
+        local modified = vim.api.nvim_get_option_value('modified', { buf = buf })
+        vim.api.nvim_buf_set_extmark(ctx.buf, ctx.ns, row, 0, {
+          virt_text = {
+            { modified and '[+]' or '', 'SpecialKey' },
+            { ' ' },
+            { ('#%s'):format(buf),      'Comment' },
+          },
 
-        virt_text_pos = 'eol',
-        ephemeral = true
-      })
+          virt_text_pos = 'eol',
+          ephemeral = true
+        })
+      end
     end
-  end
-}
+  }
+end
 
 return decorators
