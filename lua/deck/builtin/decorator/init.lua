@@ -93,15 +93,17 @@ do
       local is_dir = vim.fn.isdirectory(item.data.filename) == 1
 
       -- icons decoration.
-      local icon, hl = get_icon and get_icon(is_dir and 'dir' or 'file', item.data.filename)
-      if icon then
-        vim.api.nvim_buf_set_extmark(ctx.buf, ctx.ns, row, 0, {
-          virt_text = {
-            -- padding for cursor col.
-            { ' ' }, { icon, hl }, { ' ' }
-          },
-          virt_text_pos = 'inline',
-        })
+      if get_icon then
+        local icon, hl = get_icon(is_dir and 'dir' or 'file', item.data.filename)
+        if icon then
+          vim.api.nvim_buf_set_extmark(ctx.buf, ctx.ns, row, 0, {
+            virt_text = {
+              -- padding for cursor col.
+              { ' ' }, { icon, hl }, { ' ' }
+            },
+            virt_text_pos = 'inline',
+          })
+        end
       end
 
       -- buffer related decoration.
