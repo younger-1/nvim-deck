@@ -152,10 +152,12 @@ function default_view.create(config)
       state.revision = next_revision
 
       -- update winheight.
+      local height_changed = false
       local curr_height = vim.api.nvim_win_get_height(state.win)
       local next_height = math.max(1, math.min(vim.api.nvim_buf_line_count(ctx.buf), config.max_height))
       if curr_height ~= next_height then
         vim.api.nvim_win_set_height(state.win, next_height)
+        height_changed = true
       end
 
       -- update statusline.
@@ -199,7 +201,8 @@ function default_view.create(config)
       end
 
       -- update preview.
-      if prev_revision.execute ~= next_revision.execute or prev_revision.query ~= next_revision.query or prev_revision.cursor ~= next_revision.cursor or prev_revision.preview_mode ~= next_revision.preview_mode then
+      local update_preview = height_changed and is_visible(state.win_preview)
+      if update_preview or prev_revision.execute ~= next_revision.execute or prev_revision.query ~= next_revision.query or prev_revision.cursor ~= next_revision.cursor or prev_revision.preview_mode ~= next_revision.preview_mode then
         local item = ctx.get_cursor_item()
         if not item or not ctx.get_preview_mode() or not ctx.get_previewer() then
           if is_visible(state.win_preview) then
@@ -209,8 +212,7 @@ function default_view.create(config)
         else
           local available_height = vim.o.lines - math.min(config.max_height, vim.api.nvim_buf_line_count(ctx.buf))
           local preview_height = math.floor(available_height * 0.8)
-          if not is_visible(state.win_preview) then
-            state.win_preview = vim.api.nvim_open_win(vim.api.nvim_create_buf(false, true), false, {
+          local win_config = {
               noautocmd = true,
               relative = 'editor',
               width = math.floor(vim.o.columns * 0.8),
@@ -219,12 +221,15 @@ function default_view.create(config)
               col = math.floor(vim.o.columns * 0.1),
               style = 'minimal',
               border = 'rounded',
-            })
+            }
+          if not is_visible(state.win_preview) then
+            state.win_preview = vim.api.nvim_open_win(vim.api.nvim_create_buf(false, true), false, win_config)
             vim.api.nvim_set_option_value('winhighlight', 'Normal:Normal,FloatBorder:Normal', { win = state.win_preview })
             vim.api.nvim_set_option_value('number', true, { win = state.win_preview })
             vim.api.nvim_set_option_value('numberwidth', 5, { win = state.win_preview })
           else
-            vim.api.nvim_win_set_height(state.win_preview, preview_height)
+            win_config.noautocmd = nil
+            vim.api.nvim_win_set_config(state.win_preview, win_config)
           end
           vim.api.nvim_set_option_value('modified', false, { buf = vim.api.nvim_win_get_buf(state.win_preview) })
           ctx.get_previewer().preview(ctx, item, { win = state.win_preview })
