@@ -63,6 +63,9 @@ return setmetatable({
     return {
       name = 'recent_dirs',
       execute = function(ctx)
+        if vim.fn.filereadable(self.entries_path) == 0 then
+          return ctx.done()
+        end
         Async.run(function()
           local contents = vim.split(IO.read_file(vim.fs.normalize(self.entries_path)):await(), '\n')
           for i = #contents, 1, -1 do
