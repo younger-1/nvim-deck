@@ -30,6 +30,10 @@ return setmetatable({
       return
     end
 
+    if vim.fn.filereadable(self.entries_path) == 0 then
+      vim.fn.writefile({}, self.entries_path)
+    end
+
     local seen = { [target_path] = true }
     local paths = {}
     for _, path in ipairs(vim.fn.readfile(self.entries_path)) do
