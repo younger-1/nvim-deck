@@ -57,6 +57,9 @@ vim.api.nvim_create_autocmd('User', {
   pattern = 'DeckStart',
   callback = function(e)
     local ctx = e.data.ctx --[[@as deck.Context]]
+    ctx.keymap('n', '<Esc>', function()
+      ctx.set_preview_mode(false)
+    end)
     ctx.keymap('n', '<Tab>', deck.action_mapping('choose_action'))
     ctx.keymap('n', '<C-l>', deck.action_mapping('refresh'))
     ctx.keymap('n', 'i', deck.action_mapping('prompt'))

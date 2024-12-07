@@ -82,8 +82,8 @@ function helper.open_preview_buffer(win, file)
   end)
   local win_config = vim.api.nvim_win_get_config(win)
   if win_config.relative then
-    win_config.footer = file.filename or ''
-    win_config.footer_pos = 'center'
+    win_config.footer = file.filename and vim.fn.fnamemodify(file.filename, ':~') or ''
+    win_config.footer_pos = 'left'
     vim.api.nvim_win_set_config(win, win_config)
   end
 end
