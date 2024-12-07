@@ -53,6 +53,18 @@ end
 -- Setup lazy.nvim
 require("lazy").setup({
   spec = {
+    "NStefan002/screenkey.nvim",
+    {
+      "echasnovski/mini.nvim",
+      lazy = false
+    },
+    {
+      "bluz71/vim-nightfly-colors",
+      lazy = false,
+      config = function()
+        vim.cmd.colorscheme('nightfly')
+      end
+    },
     {
       "hrsh7th/nvim-deck",
       config = function()

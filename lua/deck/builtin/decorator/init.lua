@@ -71,14 +71,17 @@ decorators.selection = {
 ---@type deck.Decorator
 do
   local get_icon --[[@as (fun(category: string, filename: string):(string?, string?))?]]
-  vim.api.nvim_create_autocmd('OptionSet', {
-    pattern = 'runtimepath',
+  vim.api.nvim_create_autocmd('BufEnter', {
     callback = function()
-      do
-        local ok, Icons = pcall(require, 'mini.icons')
-        if ok then
-          get_icon = function(category, filename)
-            return Icons.get(category, filename)
+      if vim.b.deck then
+        do -- mini.icons.
+          local ok, Icons = pcall(require, 'mini.icons')
+          if ok then
+            get_icon = function(category, filename)
+              return Icons.get(category, filename)
+            end
+          else
+            vim.print(Icons)
           end
         end
       end
