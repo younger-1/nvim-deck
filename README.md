@@ -3,6 +3,25 @@
 _nvim-deck_ : A plugin for displaying, filtering, and selecting items from
 customizable lists.
 
+<!-- panvimdoc-ignore-start -->
+
+# Demo
+
+<details>
+  <summary>Open project files</summary>
+  <video src="https://github.com/user-attachments/assets/69581231-6bb1-46fb-8320-ed4de9caa13e"></video>
+</details>
+<details>
+  <summary>Grep and Replace</summary>
+  <video src="https://github.com/user-attachments/assets/f038e149-f9ff-42ec-9114-9a84dfe88426"></video>
+</details>
+<details>
+  <summary>Git integration</summary>
+  <video src="https://github.com/user-attachments/assets/997bb045-d0b4-49f8-a09b-f1391c2a769b"></video>
+</details>
+
+<!-- panvimdoc-ignore-end -->
+
 # Concept
 
 nvim-deck revolves around four core concepts:
