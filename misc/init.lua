@@ -1,5 +1,5 @@
 -- Bootstrap lazy.nvim
-local lazypath = "/root/lazy/lazy.nvim"
+local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
   local lazyrepo = "https://github.com/folke/lazy.nvim.git"
   local out = vim.fn.system({ "git", "clone", "--filter=blob:none", "--branch=stable", lazyrepo, lazypath })
@@ -20,6 +20,17 @@ vim.opt.rtp:prepend(lazypath)
 -- This is also a good place to setup other settings (vim.opt)
 vim.g.mapleader = " "
 vim.g.maplocalleader = "\\"
+
+vim.o.hidden = true
+vim.o.backup = false
+vim.o.undodir = vim.fs.normalize('~/.vimundo')
+vim.o.undofile = true
+vim.o.swapfile = false
+vim.o.splitbelow = true
+vim.o.splitright = true
+vim.o.ignorecase = true
+vim.o.smartcase = true
+vim.o.virtualedit = 'all'
 
 -- Author's key-mappings.
 do
@@ -54,6 +65,10 @@ end
 require("lazy").setup({
   spec = {
     "NStefan002/screenkey.nvim",
+  {
+    "nvim-treesitter/nvim-treesitter",
+    lazy = false
+  },
     {
       "echasnovski/mini.nvim",
       lazy = false
@@ -67,6 +82,7 @@ require("lazy").setup({
     },
     {
       "hrsh7th/nvim-deck",
+      dir = vim.fn.isdirectory('/root/nvim-deck') and '/root/nvim-deck' or nil,
       config = function()
         local deck = require('deck')
 
