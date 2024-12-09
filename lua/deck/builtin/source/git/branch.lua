@@ -89,7 +89,14 @@ return function(option)
           Async.run(function()
             local item = ctx.get_action_items()[1]
             if item.data.remote then
-              git:exec_print({ 'git', 'merge', '--ff-only', ('%s/%s'):format(item.data.remotename, item.data.name) }):await()
+              git
+                :exec_print({
+                  'git',
+                  'merge',
+                  '--ff-only',
+                  ('%s/%s'):format(item.data.remotename, item.data.name),
+                })
+                :await()
             else
               git:exec_print({ 'git', 'merge', '--ff-only', item.data.name }):await()
             end
@@ -106,7 +113,14 @@ return function(option)
           Async.run(function()
             local item = ctx.get_action_items()[1]
             if item.data.remote then
-              git:exec_print({ 'git', 'merge', '--no-ff', ('%s/%s'):format(item.data.remotename, item.data.name) }):await()
+              git
+                :exec_print({
+                  'git',
+                  'merge',
+                  '--no-ff',
+                  ('%s/%s'):format(item.data.remotename, item.data.name),
+                })
+                :await()
             else
               git:exec_print({ 'git', 'merge', '--no-ff', item.data.name }):await()
             end
@@ -123,7 +137,14 @@ return function(option)
           Async.run(function()
             local item = ctx.get_action_items()[1]
             if item.data.remote then
-              git:exec_print({ 'git', 'merge', '--squash', ('%s/%s'):format(item.data.remotename, item.data.name) }):await()
+              git
+                :exec_print({
+                  'git',
+                  'merge',
+                  '--squash',
+                  ('%s/%s'):format(item.data.remotename, item.data.name),
+                })
+                :await()
             else
               git:exec_print({ 'git', 'merge', '--squash', item.data.name }):await()
             end
@@ -163,7 +184,15 @@ return function(option)
             for _, branch in ipairs(ctx.get_action_items()) do
               if not branch.data.current then
                 if branch.data.remote then
-                  git:exec_print({ 'git', 'push', branch.data.remotename, '--delete', branch.data.name }):await()
+                  git
+                    :exec_print({
+                      'git',
+                      'push',
+                      branch.data.remotename,
+                      '--delete',
+                      branch.data.name,
+                    })
+                    :await()
                 else
                   git:exec_print({ 'git', 'branch', '-D', branch.data.name }):await()
                 end
@@ -187,11 +216,13 @@ return function(option)
           return not item.data.remote
         end,
         execute = function(ctx)
-          git:push({
-            branch = ctx.get_action_items()[1].data
-          }):next(function()
-            ctx.execute()
-          end)
+          git
+            :push({
+              branch = ctx.get_action_items()[1].data,
+            })
+            :next(function()
+              ctx.execute()
+            end)
         end,
       },
       {
@@ -208,14 +239,16 @@ return function(option)
           return not item.data.remote
         end,
         execute = function(ctx)
-          git:push({
-            branch = ctx.get_action_items()[1].data,
-            force = true
-          }):next(function()
-            ctx.execute()
-          end)
+          git
+            :push({
+              branch = ctx.get_action_items()[1].data,
+              force = true,
+            })
+            :next(function()
+              ctx.execute()
+            end)
         end,
-      }
-    }
+      },
+    },
   }
 end

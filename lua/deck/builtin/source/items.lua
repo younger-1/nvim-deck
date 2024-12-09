@@ -31,6 +31,6 @@ return function(option)
         end
       end
       ctx.done()
-    end
+    end,
   }
 end

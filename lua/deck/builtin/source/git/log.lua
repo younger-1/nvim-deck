@@ -39,7 +39,7 @@ return function(option)
             return {
               log.author_date,
               log.author_name,
-              log.hash_short
+              log.hash_short,
             }
           end, { sep = ' │ ' })
           for i, item in ipairs(logs) do
@@ -82,26 +82,26 @@ return function(option)
             }))
             next_ctx.set_preview_mode(true)
           end
-        end
+        end,
       },
-    {
-      name = 'git.log.changeset_head',
-      resolve = function(ctx)
-        local item = ctx.get_cursor_item()
-        return item and #item.data.hash_parents == 1
-      end,
-      execute = function(ctx)
-        local item = ctx.get_cursor_item()
-        if item then
-          local next_ctx = require('deck').start(require('deck.builtin.source.git.changeset')({
-            cwd = option.cwd,
-            from_rev = item.data.hash,
-            to_rev = 'HEAD',
-          }))
-          next_ctx.set_preview_mode(true)
-        end
-      end
-    },
+      {
+        name = 'git.log.changeset_head',
+        resolve = function(ctx)
+          local item = ctx.get_cursor_item()
+          return item and #item.data.hash_parents == 1
+        end,
+        execute = function(ctx)
+          local item = ctx.get_cursor_item()
+          if item then
+            local next_ctx = require('deck').start(require('deck.builtin.source.git.changeset')({
+              cwd = option.cwd,
+              from_rev = item.data.hash,
+              to_rev = 'HEAD',
+            }))
+            next_ctx.set_preview_mode(true)
+          end
+        end,
+      },
       {
         name = 'git.log.reset_soft',
         resolve = function(ctx)
@@ -115,7 +115,7 @@ return function(option)
               ctx.execute()
             end)
           end
-        end
+        end,
       },
       {
         name = 'git.log.reset_hard',
@@ -130,7 +130,7 @@ return function(option)
               ctx.execute()
             end)
           end
-        end
+        end,
       },
       {
         name = 'git.log.revert',
@@ -146,7 +146,7 @@ return function(option)
                     format_item = function(m)
                       local log = m == 1 and p1 or p2
                       return ('%s %s %s %s'):format(log.author_date, log.author_name, log.hash_short, log.subject)
-                    end
+                    end,
                   }, resolve)
                 end):await()
                 if m then
@@ -158,7 +158,7 @@ return function(option)
             end
             ctx.execute()
           end)
-        end
+        end,
       },
     },
     previewers = {
@@ -171,15 +171,17 @@ return function(option)
         preview = function(_, item, env)
           Async.run(function()
             helper.open_preview_buffer(env.win, {
-              contents = git:get_unified_diff({
-                from_rev = item.data.hash_parents[1],
-                to_rev = item.data.hash,
-              }):sync(5000),
-              filetype = 'diff'
+              contents = git
+                :get_unified_diff({
+                  from_rev = item.data.hash_parents[1],
+                  to_rev = item.data.hash,
+                })
+                :sync(5000),
+              filetype = 'diff',
             })
           end)
-        end
-      }
+        end,
+      },
     },
     decorators = {
       {
@@ -189,15 +191,18 @@ return function(option)
           return item and item.data.body_raw
         end,
         decorate = function(ctx, item, row)
-          local lines = vim.iter(vim.split(item.data.body_raw:gsub('\n*$', ''), '\n')):map(function(text)
-            return { { ('  ') .. text, 'Comment' } }
-          end):totable()
+          local lines = vim
+            .iter(vim.split(item.data.body_raw:gsub('\n*$', ''), '\n'))
+            :map(function(text)
+              return { { '  ' .. text, 'Comment' } }
+            end)
+            :totable()
           table.insert(lines, { { '' } })
           vim.api.nvim_buf_set_extmark(ctx.buf, ctx.ns, row, 0, {
-            virt_lines = lines
+            virt_lines = lines,
           })
-        end
-      }
-    }
+        end,
+      },
+    },
   }
 end

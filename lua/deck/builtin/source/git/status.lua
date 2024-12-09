@@ -28,8 +28,10 @@ return function(option)
         local status_items = git:status():await() ---@type deck.builtin.source.git.Status[]
         local display_texts, highlights = helper.create_aligned_display_texts(status_items, function(status_item)
           if status_item.type == 'renamed' then
-            return { status_item.xy, ('%s <- %s'):format(git:to_relative(status_item.filename),
-              git:to_relative(status_item.filename_before)) }
+            return {
+              status_item.xy,
+              ('%s <- %s'):format(git:to_relative(status_item.filename), git:to_relative(status_item.filename_before)),
+            }
           end
           return { status_item.xy, git:to_relative(status_item.filename) }
         end, { sep = ' │ ' })
@@ -59,12 +61,14 @@ return function(option)
         execute = function(ctx)
           for _, item in ipairs(ctx.get_action_items()) do
             if item.data.type ~= 'untracked' or item.data.type ~= 'ignored' then
-              git:vimdiff({
-                filename = item.data.filename,
-              }):sync(5000)
+              git
+                :vimdiff({
+                  filename = item.data.filename,
+                })
+                :sync(5000)
             end
           end
-        end
+        end,
       },
       {
         name = 'git.status.checkout',
@@ -85,7 +89,7 @@ return function(option)
             end
             ctx.execute()
           end)
-        end
+        end,
       },
       {
         name = 'git.status.add',
@@ -98,7 +102,7 @@ return function(option)
             end
             ctx.execute()
           end)
-        end
+        end,
       },
       {
         name = 'git.status.rm',
@@ -111,7 +115,7 @@ return function(option)
             end
             ctx.execute()
           end)
-        end
+        end,
       },
       {
         name = 'git.status.reset',
@@ -124,7 +128,7 @@ return function(option)
             end
             ctx.execute()
           end)
-        end
+        end,
       },
       {
         name = 'git.status.commit',
@@ -136,13 +140,16 @@ return function(option)
           end
         end,
         execute = function(ctx)
-          local status_items = vim.iter(ctx.get_action_items()):map(function(item)
-            return item.data
-          end):totable()
+          local status_items = vim
+            .iter(ctx.get_action_items())
+            :map(function(item)
+              return item.data
+            end)
+            :totable()
           git:commit({ items = status_items }, function()
             ctx.execute()
           end)
-        end
+        end,
       },
       {
         name = 'git.status.commit_amend',
@@ -154,14 +161,17 @@ return function(option)
           end
         end,
         execute = function(ctx)
-          local status_items = vim.iter(ctx.get_action_items()):map(function(item)
-            return item.data
-          end):totable()
+          local status_items = vim
+            .iter(ctx.get_action_items())
+            :map(function(item)
+              return item.data
+            end)
+            :totable()
           git:commit({ items = status_items, amend = true }, function()
             ctx.execute()
           end)
-        end
-      }
+        end,
+      },
     },
     previewers = {
       {
@@ -174,15 +184,17 @@ return function(option)
         end,
         preview = function(_, item, env)
           helper.open_preview_buffer(env.win, {
-            contents = git:get_unified_diff({
-              from_rev = 'HEAD',
-              filename = item.data.filename
-            }):sync(5000),
+            contents = git
+              :get_unified_diff({
+                from_rev = 'HEAD',
+                filename = item.data.filename,
+              })
+              :sync(5000),
             filename = item.data.filename,
-            filetype = 'diff'
+            filetype = 'diff',
           })
-        end
-      }
-    }
+        end,
+      },
+    },
   }
 end

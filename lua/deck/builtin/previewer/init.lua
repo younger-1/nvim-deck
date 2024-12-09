@@ -11,14 +11,14 @@ previewer.filename = {
   end,
   preview = function(_, item, env)
     helper.open_preview_buffer(env.win, {
-      contents = vim.split(assert(io.open(item.data.filename, "r")):read('*a'), '\n'),
+      contents = vim.split(assert(io.open(item.data.filename, 'r')):read('*a'), '\n'),
       filename = item.data.filename,
       lnum = item.data.lnum,
       col = item.data.col,
       end_lnum = item.data.end_lnum,
       end_col = item.data.end_col,
     })
-  end
+  end,
 }
 
 ---bufnr previewer.
@@ -37,7 +37,7 @@ previewer.bufnr = {
       end_lnum = item.data.end_lnum,
       end_col = item.data.end_col,
     })
-  end
+  end,
 }
 
 return previewer

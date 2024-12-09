@@ -68,7 +68,7 @@ function default_view.create(config)
                 keepjumps = true,
                 keepmarks = true,
                 noautocmd = true,
-              }
+              },
             })
             vim.w.winfixwidth = true
           end
@@ -108,7 +108,7 @@ function default_view.create(config)
             if vim.api.nvim_get_mode().mode == 'c' then
               ctx.set_query(vim.fn.getcmdline())
             end
-          end)
+          end),
         })
         vim.fn.input('$ ', ctx.get_query())
         vim.api.nvim_del_autocmd(id)
@@ -123,11 +123,7 @@ function default_view.create(config)
       vim.api.nvim_win_call(state.win_preview, function()
         local topline = vim.fn.getwininfo(state.win_preview)[1].topline
         topline = math.max(1, topline + delta)
-        topline = math.min(
-          vim.api.nvim_buf_line_count(vim.api.nvim_win_get_buf(state.win_preview)) -
-          vim.api.nvim_win_get_height(state.win_preview) + 1,
-          topline
-        )
+        topline = math.min(vim.api.nvim_buf_line_count(vim.api.nvim_win_get_buf(state.win_preview)) - vim.api.nvim_win_get_height(state.win_preview) + 1, topline)
         vim.cmd.normal({
           ('%szt'):format(topline),
           bang = true,
@@ -136,7 +132,7 @@ function default_view.create(config)
             keepjumps = true,
             keepalt = true,
             noautocmd = true,
-          }
+          },
         })
       end)
     end,
@@ -163,12 +159,7 @@ function default_view.create(config)
 
       -- update statusline.
       if prev_revision.status ~= next_revision.status or prev_revision.items ~= next_revision.items or prev_revision.query ~= next_revision.query then
-        vim.api.nvim_set_option_value('statusline', ('[%s] %s/%s (%s)'):format(
-          ctx.name,
-          #ctx.get_filtered_items(),
-          #ctx.get_items(),
-          ctx.get_status() == Context.Status.Success and 'done' or 'progress'
-        ), {
+        vim.api.nvim_set_option_value('statusline', ('[%s] %s/%s (%s)'):format(ctx.name, #ctx.get_filtered_items(), #ctx.get_items(), ctx.get_status() == Context.Status.Success and 'done' or 'progress'), {
           win = state.win,
         })
       end
@@ -188,7 +179,7 @@ function default_view.create(config)
                 keepjumps = true,
                 keepalt = true,
                 noautocmd = true,
-              }
+              },
             })
           end)
         end
@@ -214,15 +205,15 @@ function default_view.create(config)
           local available_height = vim.o.lines - math.min(config.max_height, vim.api.nvim_buf_line_count(ctx.buf))
           local preview_height = math.floor(available_height * 0.8)
           local win_config = {
-              noautocmd = true,
-              relative = 'editor',
-              width = math.floor(vim.o.columns * 0.8),
-              height = preview_height,
-              row = math.max(1, math.floor(available_height * 0.1) - 2),
-              col = math.floor(vim.o.columns * 0.1),
-              style = 'minimal',
-              border = 'rounded',
-            }
+            noautocmd = true,
+            relative = 'editor',
+            width = math.floor(vim.o.columns * 0.8),
+            height = preview_height,
+            row = math.max(1, math.floor(available_height * 0.1) - 2),
+            col = math.floor(vim.o.columns * 0.1),
+            style = 'minimal',
+            border = 'rounded',
+          }
           if not is_visible(state.win_preview) then
             state.win_preview = vim.api.nvim_open_win(vim.api.nvim_create_buf(false, true), false, win_config)
             vim.api.nvim_set_option_value('wrap', false, { win = state.win_preview })

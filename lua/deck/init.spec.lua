@@ -13,7 +13,7 @@ local example1_source = {
       for i = 1, 30 do
         Async.timeout(8):await() -- delay first.
         ctx.item({
-          display_text = tostring(i)
+          display_text = tostring(i),
         })
       end
       ctx.done()
@@ -29,7 +29,7 @@ local example2_source = {
       for i = 1, 30 do
         Async.timeout(8):await() -- delay first.
         ctx.item({
-          display_text = tostring(i)
+          display_text = tostring(i),
         })
       end
       ctx.done()

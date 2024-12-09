@@ -33,7 +33,7 @@ return function()
           for _, item in ipairs(ctx.get_action_items()) do
             item.data.show()
           end
-        end
+        end,
       },
       {
         name = 'deck.history.dispose',
@@ -42,8 +42,8 @@ return function()
             item.data.dispose()
           end
           ctx.execute()
-        end
-      }
-    }
+        end,
+      },
+    },
   }
 end

@@ -6,7 +6,7 @@ local state = {
   ns = vim.api.nvim_create_namespace('deck.notify'),
   buf = vim.api.nvim_create_buf(false, true),
   win = nil,
-  timer = vim.uv.new_timer()
+  timer = vim.uv.new_timer(),
 }
 
 vim.api.nvim_set_decoration_provider(state.ns, {
@@ -34,7 +34,7 @@ vim.api.nvim_set_decoration_provider(state.ns, {
         offset = offset + #part[1]
       end
     end
-  end
+  end,
 })
 
 local notify = {}
@@ -122,9 +122,13 @@ local function render(max_width, max_height)
     vim.cmd.normal({ 'Gzb', bang = true })
 
     state.timer:stop()
-    state.timer:start(200, 0, vim.schedule_wrap(function()
-      render(max_width, max_height)
-    end))
+    state.timer:start(
+      200,
+      0,
+      vim.schedule_wrap(function()
+        render(max_width, max_height)
+      end)
+    )
   end)
 end
 

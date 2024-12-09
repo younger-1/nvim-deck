@@ -64,7 +64,7 @@ return function(option)
         '--column',
         '--line-number',
         '--sort',
-        'path'
+        'path',
       }
       if option.ignore_globs then
         for _, glob in ipairs(option.ignore_globs) do
@@ -78,7 +78,7 @@ return function(option)
         cwd = option.root_dir,
         env = {},
         buffering = System.LineBuffering.new({
-          ignore_empty = true
+          ignore_empty = true,
         }),
         on_stdout = function(text)
           local filename = text:match('^[^:]+')
@@ -89,28 +89,28 @@ return function(option)
             ctx.item({
               display_text = {
                 { ('%s (%s:%s): '):format(filename, lnum, col) },
-                { match,                                       'Comment' }
+                { match, 'Comment' },
               },
               data = {
                 filename = vim.fs.joinpath(option.root_dir, filename),
                 lnum = lnum,
                 col = col,
-              }
+              },
             })
           end
         end,
         on_stderr = function(text)
           notify.show({
-            { { ('[grep: stderr] %s'):format(text), 'ErrorMsg' } }
+            { { ('[grep: stderr] %s'):format(text), 'ErrorMsg' } },
           })
         end,
         on_exit = function()
           ctx.done()
-        end
+        end,
       }))
     end,
     actions = {
       require('deck').alias_action('default', 'open'),
-    }
+    },
   }
 end

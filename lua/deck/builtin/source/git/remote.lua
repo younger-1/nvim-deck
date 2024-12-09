@@ -51,7 +51,7 @@ return function(option)
               git:exec_print({ 'git', 'fetch', '--all', '--prune', item.data.name }):await()
             end
           end)
-        end
+        end,
       },
       {
         name = 'git.remote.create',
@@ -62,7 +62,7 @@ return function(option)
             git:exec_print({ 'git', 'remote', 'add', name, url }):await()
             ctx.execute()
           end)
-        end
+        end,
       },
       {
         name = 'git.remote.delete',
@@ -73,8 +73,8 @@ return function(option)
             end
             ctx.execute()
           end)
-        end
-      }
+        end,
+      },
     },
   }
 end

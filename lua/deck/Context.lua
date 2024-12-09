@@ -1,11 +1,11 @@
-local kit            = require('deck.kit')
-local notify         = require('deck.notify')
-local symbols        = require('deck.symbols')
+local kit = require('deck.kit')
+local notify = require('deck.notify')
+local symbols = require('deck.symbols')
 local ExecuteContext = require('deck.ExecuteContext')
-local Async          = require('deck.kit.Async')
+local Async = require('deck.kit.Async')
 
 ---@enum deck.Context.Status
-local Status         = {
+local Status = {
   Waiting = 'waiting',
   Running = 'running',
   Success = 'success',
@@ -88,15 +88,15 @@ local function create_buf(name)
   local buf = vim.api.nvim_create_buf(false, false)
   vim.api.nvim_buf_set_var(buf, 'deck', true)
   vim.api.nvim_buf_set_var(buf, 'deck_name', name)
-  vim.api.nvim_set_option_value("filetype", "deck", { buf = buf })
-  vim.api.nvim_set_option_value("buftype", "nofile", { buf = buf })
-  vim.api.nvim_set_option_value("bufhidden", "hide", { buf = buf })
+  vim.api.nvim_set_option_value('filetype', 'deck', { buf = buf })
+  vim.api.nvim_set_option_value('buftype', 'nofile', { buf = buf })
+  vim.api.nvim_set_option_value('bufhidden', 'hide', { buf = buf })
   vim.api.nvim_create_autocmd('BufWinEnter', {
     pattern = ('<buffer=%s>'):format(buf),
     callback = function()
       vim.api.nvim_set_option_value('conceallevel', 3, { win = 0 })
       vim.api.nvim_set_option_value('concealcursor', 'nvic', { win = 0 })
-    end
+    end,
   })
   return buf
 end
@@ -134,7 +134,7 @@ end
 local function autocmd(event, callback, option)
   local id = vim.api.nvim_create_autocmd(event, {
     pattern = option and option.pattern,
-    callback = callback
+    callback = callback,
   })
   return function()
     pcall(vim.api.nvim_del_autocmd, id)
@@ -213,7 +213,7 @@ function Context.create(id, sources, start_config)
           end
         end
       end
-    end
+    end,
   })
   events.dispose.on(function()
     if vim.api.nvim_buf_is_valid(context.buf) then
@@ -527,7 +527,6 @@ function Context.create(id, sources, start_config)
       render_throttle()
     end,
 
-
     ---Get specified item's selected state.
     get_selected = function(item)
       return not not state.select_map[item]
@@ -762,7 +761,7 @@ function Context.create(id, sources, start_config)
       end, {
         desc = 'deck.action',
         nowait = true,
-        buffer = context.buf
+        buffer = context.buf,
       })
     end,
 
@@ -778,7 +777,7 @@ function Context.create(id, sources, start_config)
         end
       end
       notify.show({
-        { { ('Available Action not found: %s'):format(name), 'WarningMsg' } }
+        { { ('Available Action not found: %s'):format(name), 'WarningMsg' } },
       })
     end,
 
@@ -830,35 +829,35 @@ function Context.create(id, sources, start_config)
       context.show()
     end
   end, {
-    pattern = ('<buffer=%s>'):format(context.buf)
+    pattern = ('<buffer=%s>'):format(context.buf),
   }))
 
   -- explicitly hide when buffer leaved.
   events.dispose.on(autocmd('BufWinLeave', function()
     context.hide()
   end, {
-    pattern = ('<buffer=%s>'):format(context.buf)
+    pattern = ('<buffer=%s>'):format(context.buf),
   }))
 
   -- dispose when buffer will be removed.
   events.dispose.on(autocmd('BufDelete', function()
     context.dispose()
   end, {
-    pattern = ('<buffer=%s>'):format(context.buf)
+    pattern = ('<buffer=%s>'):format(context.buf),
   }))
 
   -- exit.
   events.dispose.on(autocmd('VimLeave', function()
     context.dispose()
   end, {
-    pattern = ('<buffer=%s>'):format(context.buf)
+    pattern = ('<buffer=%s>'):format(context.buf),
   }))
 
   -- update cursor position.
   events.dispose.on(autocmd('CursorMoved', function()
     context.set_cursor(vim.api.nvim_win_get_cursor(0)[1])
   end, {
-    pattern = ('<buffer=%s>'):format(context.buf)
+    pattern = ('<buffer=%s>'):format(context.buf),
   }))
 
   -- re-render.
@@ -866,7 +865,7 @@ function Context.create(id, sources, start_config)
     context.set_cursor(vim.api.nvim_win_get_cursor(0)[1])
     render()
   end, {
-    pattern = ('<buffer=%s>'):format(context.buf)
+    pattern = ('<buffer=%s>'):format(context.buf),
   }))
 
   -- hide window after dispose.

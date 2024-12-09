@@ -3,7 +3,7 @@ local matcher = {}
 do
   local state = {
     query = '',
-    parsed = {}
+    parsed = {},
   }
 
   ---Default matcher.

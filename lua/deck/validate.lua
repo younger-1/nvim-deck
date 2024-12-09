@@ -39,9 +39,12 @@ end
 ---@param sources deck.Source[]
 ---@return deck.Source[]
 function validate.sources(sources)
-  return vim.iter(sources):map(function(source)
-    return validate.source(source)
-  end):totable()
+  return vim
+    .iter(sources)
+    :map(function(source)
+      return validate.source(source)
+    end)
+    :totable()
 end
 
 ---Validate source.

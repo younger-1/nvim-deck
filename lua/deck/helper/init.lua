@@ -65,13 +65,7 @@ function helper.open_preview_buffer(win, file)
       extmark_option.virt_text = { { '>', 'CurSearch' } }
       extmark_option.virt_text_pos = 'inline'
     end
-    vim.api.nvim_buf_set_extmark(
-      buf,
-      vim.api.nvim_create_namespace(('deck.helper.open_preview_buffer:%s'):format(buf)),
-      file.lnum - 1,
-      (file.col or 1) - 1,
-      extmark_option
-    )
+    vim.api.nvim_buf_set_extmark(buf, vim.api.nvim_create_namespace(('deck.helper.open_preview_buffer:%s'):format(buf)), file.lnum - 1, (file.col or 1) - 1, extmark_option)
   end
 
   -- set window.

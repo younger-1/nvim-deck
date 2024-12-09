@@ -159,8 +159,8 @@ local internal = {
       performance = {
         interrupt_interval = 8,
         interrupt_timeout = 8,
-      }
-    }
+      },
+    },
   },
 }
 
@@ -205,24 +205,21 @@ end
 ---@return deck.Context
 function deck.start(sources, start_config_specifier)
   sources = validate.sources(kit.to_array(sources))
-  start_config_specifier = validate.start_config(
-    kit.merge(start_config_specifier or {}, internal.config.default_start_config or {}) --[[@as deck.StartConfig]]
-  )
+  start_config_specifier = validate.start_config(kit.merge(start_config_specifier or {}, internal.config.default_start_config or {}) --[[@as deck.StartConfig]])
 
   -- create name.
   if not start_config_specifier.name then
-    start_config_specifier.name = vim.iter(sources):map(function(source)
-      return source.name
-    end):join('+')
+    start_config_specifier.name = vim
+      .iter(sources)
+      :map(function(source)
+        return source.name
+      end)
+      :join('+')
   end
 
   -- create context.
   internal.start_id = internal.start_id + 1
-  local context = Context.create(
-    internal.start_id,
-    sources,
-    start_config_specifier
-  )
+  local context = Context.create(internal.start_id, sources, start_config_specifier)
 
   -- manage history.
   if start_config_specifier.history then
@@ -263,7 +260,7 @@ function deck.start(sources, start_config_specifier)
     pattern = 'DeckStart',
     modeline = false,
     data = {
-      ctx = context
+      ctx = context,
     },
   })
 
@@ -277,7 +274,7 @@ function deck.start(sources, start_config_specifier)
       pattern = 'DeckStart:' .. source.name,
       modeline = false,
       data = {
-        ctx = context
+        ctx = context,
       },
     })
   end
@@ -435,7 +432,7 @@ function deck.register_start_preset(start_preset_or_name, start_fn_or_nil)
   if type(start_preset_or_name) == 'string' and type(start_fn_or_nil) == 'function' then
     deck.register_start_preset({
       name = start_preset_or_name,
-      start = start_fn_or_nil
+      start = start_fn_or_nil,
     })
     return
   end

@@ -32,7 +32,7 @@ return function(option)
       local display_texts, highlights = helper.create_aligned_display_texts(actions, function(action)
         return {
           action.name,
-          { action.desc, 'Comment' }
+          { action.desc, 'Comment' },
         }
       end)
       for i, action in ipairs(actions) do
@@ -40,8 +40,8 @@ return function(option)
           display_text = display_texts[i],
           highlights = highlights[i],
           data = {
-            action = action
-          }
+            action = action,
+          },
         })
       end
       ctx.done()
@@ -54,7 +54,7 @@ return function(option)
           local prev_ctx = option.context
           if #next_ctx.get_action_items() ~= 1 then
             notify.show({
-              { { 'Only one action can be executed at a time.', 'ErrorMsg' } }
+              { { 'Only one action can be executed at a time.', 'ErrorMsg' } },
             })
             return
           end
@@ -65,8 +65,8 @@ return function(option)
             item.data.action.execute(prev_ctx)
             next_ctx.dispose()
           end
-        end
-      }
-    }
+        end,
+      },
+    },
   }
 end

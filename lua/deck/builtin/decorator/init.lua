@@ -16,7 +16,7 @@ decorators.source_name = {
       },
       virt_text_pos = 'right_align',
     })
-  end
+  end,
 }
 
 ---@type deck.Decorator
@@ -36,7 +36,7 @@ decorators.highlights = {
         })
       end
     end
-  end
+  end,
 }
 
 ---@type deck.Decorator
@@ -54,7 +54,7 @@ decorators.query_matches = {
         ephemeral = true,
       })
     end
-  end
+  end,
 }
 
 ---@type deck.Decorator
@@ -65,7 +65,7 @@ decorators.selection = {
       sign_text = ctx.get_selected(item) and '*' or ' ',
       sign_hl_group = 'SignColumn',
     })
-  end
+  end,
 }
 
 ---@type deck.Decorator
@@ -85,7 +85,7 @@ do
           end
         end
       end
-    end
+    end,
   })
   decorators.filename = {
     name = 'filename',
@@ -102,7 +102,9 @@ do
           vim.api.nvim_buf_set_extmark(ctx.buf, ctx.ns, row, 0, {
             virt_text = {
               -- padding for cursor col.
-              { ' ' }, { icon, hl }, { ' ' }
+              { ' ' },
+              { icon, hl },
+              { ' ' },
             },
             virt_text_pos = 'inline',
           })
@@ -117,14 +119,14 @@ do
           virt_text = {
             { modified and '[+]' or '', 'SpecialKey' },
             { ' ' },
-            { ('#%s'):format(buf),      'Comment' },
+            { ('#%s'):format(buf), 'Comment' },
           },
 
           virt_text_pos = 'eol',
-          ephemeral = true
+          ephemeral = true,
         })
       end
-    end
+    end,
   }
 end
 

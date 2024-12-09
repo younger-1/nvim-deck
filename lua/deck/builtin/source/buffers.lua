@@ -41,16 +41,15 @@ return function(option)
         local bufname = vim.api.nvim_buf_get_name(buf)
         local acceptable = true
         acceptable = acceptable and not ignore_path_map[bufname]
-        acceptable = acceptable and
-            (option.nofile or vim.api.nvim_get_option_value('buftype', { buf = buf }) ~= 'nofile')
+        acceptable = acceptable and (option.nofile or vim.api.nvim_get_option_value('buftype', { buf = buf }) ~= 'nofile')
         if acceptable then
           local filename = vim.fn.filereadable(bufname) == 1 and bufname
           ctx.item({
             display_text = filename and vim.fn.fnamemodify(filename, ':~') or bufname,
             data = {
               bufnr = buf,
-              filename = filename
-            }
+              filename = filename,
+            },
           })
         end
       end
@@ -58,6 +57,6 @@ return function(option)
     end,
     actions = {
       require('deck').alias_action('default', 'open'),
-    }
+    },
   }
 end

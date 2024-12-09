@@ -28,7 +28,7 @@ return function()
         '--color',
         'never',
         '--sort',
-        'path'
+        'path',
       }
 
       local uniq = {}
@@ -59,7 +59,7 @@ return function()
           cwd = dir,
           env = {},
           buffering = System.LineBuffering.new({
-            ignore_empty = true
+            ignore_empty = true,
           }),
           on_stdout = function(text)
             local filename = text:match('^[^:]+')
@@ -69,18 +69,18 @@ return function()
             ctx.item({
               display_text = {
                 { ('%s (%s:%s): '):format(filename, lnum, col) },
-                { match,                                       'Comment' }
+                { match, 'Comment' },
               },
               data = {
                 filename = vim.fs.joinpath(dir, filename),
                 lnum = lnum,
                 col = col,
-              }
+              },
             })
           end,
           on_stderr = function(text)
             notify.show({
-              { { ('[helpgrep: stderr] %s'):format(text), 'ErrorMsg' } }
+              { { ('[helpgrep: stderr] %s'):format(text), 'ErrorMsg' } },
             })
           end,
           on_exit = function()
@@ -88,12 +88,12 @@ return function()
             if done_count >= #target_dirs then
               ctx.done()
             end
-          end
+          end,
         }))
       end
     end,
     actions = {
       require('deck').alias_action('default', 'open'),
-    }
+    },
   }
 end

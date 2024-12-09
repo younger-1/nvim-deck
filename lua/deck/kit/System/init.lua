@@ -59,7 +59,7 @@ function System.LineBuffering:create(callback)
       if #buffer > 0 then
         callback(table.concat(buffer, ''))
       end
-    end
+    end,
   }
 end
 
@@ -82,7 +82,7 @@ function System.DelimiterBuffering:create(callback)
     buffer = {},
     buffer_pos = 1,
     delimiter_pos = 1,
-    match_pos = nil --[[@as integer?]],
+    match_pos = nil,--[[@as integer?]]
   }
 
   local function len()
@@ -143,14 +143,11 @@ function System.DelimiterBuffering:create(callback)
       table.insert(state.buffer, data)
       buffer_len = len()
 
-      ::entrypoint::
       while state.buffer_pos <= buffer_len do
         local b = get(state.buffer_pos)
         local d = self.delimiter:sub(state.delimiter_pos, state.delimiter_pos)
         if b == d then
-          if state.delimiter_pos == 1 then
-            state.match_pos = state.buffer_pos
-          elseif state.delimiter_pos == delimiter_len then
+          if state.delimiter_pos == delimiter_len then
             local before, after = split(state.match_pos, state.buffer_pos)
             callback(table.concat(before, ''))
             state.buffer = after
@@ -158,10 +155,13 @@ function System.DelimiterBuffering:create(callback)
             state.delimiter_pos = 1
             state.match_pos = nil
             buffer_len = len()
-            goto entrypoint;
+          else
+            if state.delimiter_pos == 1 then
+              state.match_pos = state.buffer_pos
+            end
+            state.buffer_pos = state.buffer_pos + 1
+            state.delimiter_pos = state.delimiter_pos + 1
           end
-          state.buffer_pos = state.buffer_pos + 1
-          state.delimiter_pos = state.delimiter_pos + 1
         else
           state.buffer_pos = state.match_pos and state.match_pos + 1 or state.buffer_pos + 1
           state.delimiter_pos = 1
@@ -173,7 +173,7 @@ function System.DelimiterBuffering:create(callback)
       if #state.buffer > 0 then
         callback(table.concat(state.buffer, ''))
       end
-    end
+    end,
   }
   return buffer
 end
@@ -216,7 +216,7 @@ function System.PatternBuffering:create(callback)
       if #buffer > 0 then
         callback(table.concat(buffer, ''))
       end
-    end
+    end,
   }
 end
 
@@ -237,7 +237,7 @@ function System.RawBuffering:create(callback)
     end,
     close = function()
       -- noop.
-    end
+    end,
   }
 end
 
@@ -255,11 +255,11 @@ end
 ---@return fun(signal?: integer)
 function System.spawn(command, params)
   command = vim
-      .iter(command)
-      :filter(function(c)
-        return c ~= nil
-      end)
-      :totable()
+    .iter(command)
+    :filter(function(c)
+      return c ~= nil
+    end)
+    :totable()
 
   local cmd = command[1]
   local args = {}
@@ -346,30 +346,39 @@ function System.spawn(command, params)
 
   close = function(signal)
     local closing = { stdin_closing }
-    table.insert(closing, Async.new(function(resolve)
-      if not stdout:is_closing() then
-        stdout:close(resolve)
-      else
-        resolve()
-      end
-    end))
-    table.insert(closing, Async.new(function(resolve)
-      if not stderr:is_closing() then
-        stderr:close(resolve)
-      else
-        resolve()
-      end
-    end))
-    table.insert(closing, Async.new(function(resolve)
-      if signal and process:is_active() then
-        process:kill(signal)
-      end
-      if process and not process:is_closing() then
-        process:close(resolve)
-      else
-        resolve()
-      end
-    end))
+    table.insert(
+      closing,
+      Async.new(function(resolve)
+        if not stdout:is_closing() then
+          stdout:close(resolve)
+        else
+          resolve()
+        end
+      end)
+    )
+    table.insert(
+      closing,
+      Async.new(function(resolve)
+        if not stderr:is_closing() then
+          stderr:close(resolve)
+        else
+          resolve()
+        end
+      end)
+    )
+    table.insert(
+      closing,
+      Async.new(function(resolve)
+        if signal and process:is_active() then
+          process:kill(signal)
+        end
+        if process and not process:is_closing() then
+          process:close(resolve)
+        else
+          resolve()
+        end
+      end)
+    )
 
     local closing_task = Async.resolve()
     for _, task in ipairs(closing) do

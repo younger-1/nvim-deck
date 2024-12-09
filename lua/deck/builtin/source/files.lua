@@ -8,7 +8,7 @@ local function to_item(filename)
     display_text = vim.fn.fnamemodify(filename, ':~'):gsub('/$', ''),
     data = {
       filename = filename,
-    }
+    },
   }
 end
 
@@ -26,7 +26,7 @@ local function ripgrep(root_dir, ignore_globs, ctx)
     cwd = root_dir,
     env = {},
     buffering = System.LineBuffering.new({
-      ignore_empty = true
+      ignore_empty = true,
     }),
     on_stdout = function(text)
       ctx.item(to_item(vim.fs.joinpath(root_dir, text)))
@@ -36,15 +36,18 @@ local function ripgrep(root_dir, ignore_globs, ctx)
     end,
     on_exit = function()
       ctx.done()
-    end
+    end,
   }))
 end
 
 ---@type deck.builtin.source.files.Finder
 local function walk(root_dir, ignore_globs, ctx)
-  local ignore_glob_patterns = vim.iter(ignore_globs or {}):map(function(glob)
-    return vim.glob.to_lpeg(glob)
-  end):totable()
+  local ignore_glob_patterns = vim
+    .iter(ignore_globs or {})
+    :map(function(glob)
+      return vim.glob.to_lpeg(glob)
+    end)
+    :totable()
 
   IO.walk(root_dir, function(err, entry)
     if err then
@@ -118,6 +121,6 @@ return function(option)
     end,
     actions = {
       require('deck').alias_action('default', 'open'),
-    }
+    },
   }
 end

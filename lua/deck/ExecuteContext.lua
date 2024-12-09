@@ -42,7 +42,9 @@ function ExecuteContext.create(params)
         local texts = {} ---@type string[]
         local highlights = {} ---@type deck.Highlight[]
         local offset = 0
-        for _, virt_text in ipairs(item_specifier.display_text --[=[@as deck.VirtualText[]]=]) do
+        for _, virt_text in
+          ipairs(item_specifier.display_text --[=[@as deck.VirtualText[]]=])
+        do
           if type(virt_text) ~= 'table' or type(virt_text[1]) ~= 'string' then
             error('item.display_text must be string or deck.VirtualText[]')
           end
@@ -50,7 +52,7 @@ function ExecuteContext.create(params)
           table.insert(highlights, {
             [1] = offset,
             [2] = offset + #virt_text[1],
-            hl_group = virt_text[2]
+            hl_group = virt_text[2],
           })
           offset = offset + #virt_text[1]
         end
@@ -85,7 +87,7 @@ function ExecuteContext.create(params)
       for _, on_abort in ipairs(on_aborts) do
         on_abort()
       end
-    end
+    end,
   }
 
   return execute_context, controller

@@ -47,7 +47,7 @@ return setmetatable({
     table.insert(paths, target_path)
 
     vim.fn.writefile(paths, self.entries_path)
-  end
+  end,
 }, {
   ---@param option { ignore_paths?: string[] }
   __call = function(self, option)
@@ -74,8 +74,8 @@ return setmetatable({
               ctx.item({
                 display_text = vim.fn.fnamemodify(path, ':~'),
                 data = {
-                  filename = path
-                }
+                  filename = path,
+                },
               })
             end
           end
@@ -83,8 +83,8 @@ return setmetatable({
         end)
       end,
       actions = {
-        require('deck').alias_action('default', 'open')
-      }
+        require('deck').alias_action('default', 'open'),
+      },
     }
-  end
+  end,
 })

@@ -26,7 +26,7 @@ return function(option)
     events = {
       BufWinEnter = function(ctx)
         ctx.execute()
-      end
+      end,
     },
     execute = function(ctx)
       Async.run(function()
@@ -40,7 +40,7 @@ return function(option)
         table.insert(menu, {
           columns = {
             'status',
-            { 'show current status', 'Comment' }
+            { 'show current status', 'Comment' },
           },
           execute = function()
             require('deck').start(require('deck.builtin.source.git.status')({
@@ -52,7 +52,7 @@ return function(option)
         table.insert(menu, {
           columns = {
             'branch',
-            { 'show branches', 'Comment' }
+            { 'show branches', 'Comment' },
           },
           execute = function()
             require('deck').start(require('deck.builtin.source.git.branch')({
@@ -64,7 +64,7 @@ return function(option)
         table.insert(menu, {
           columns = {
             'log',
-            { 'show logs', 'Comment' }
+            { 'show logs', 'Comment' },
           },
           execute = function()
             require('deck').start(require('deck.builtin.source.git.log')({
@@ -76,7 +76,7 @@ return function(option)
         table.insert(menu, {
           columns = {
             'remote',
-            { 'show remotes', 'Comment' }
+            { 'show remotes', 'Comment' },
           },
           execute = function()
             require('deck').start(require('deck.builtin.source.git.remote')({
@@ -88,7 +88,7 @@ return function(option)
         table.insert(menu, {
           columns = {
             '@ fetch --all --prune',
-            { 'fetch all branches and prune', 'Comment' }
+            { 'fetch all branches and prune', 'Comment' },
           },
           execute = function()
             git:exec_print({ 'git', 'fetch', '--all', '--prune' })
@@ -101,7 +101,10 @@ return function(option)
             table.insert(menu, {
               columns = {
                 '@ pull',
-                { ('pull `%s` from `%s`'):format(current_branch.name, current_branch.upstream), 'Comment' }
+                {
+                  ('pull `%s` from `%s`'):format(current_branch.name, current_branch.upstream),
+                  'Comment',
+                },
               },
               branch = current_branch,
               ---@param action_ctx deck.Context
@@ -115,32 +118,42 @@ return function(option)
           table.insert(menu, {
             columns = {
               '@ push',
-              { ('push `%s` %s'):format(current_branch.name, current_branch.track or 'up-to-date'), 'Comment' }
+              {
+                ('push `%s` %s'):format(current_branch.name, current_branch.track or 'up-to-date'),
+                'Comment',
+              },
             },
             branch = current_branch,
             ---@param action_ctx deck.Context
             execute = function(action_ctx)
-              git:push({
-                branch = current_branch,
-              }):next(function()
-                action_ctx.execute()
-              end)
+              git
+                :push({
+                  branch = current_branch,
+                })
+                :next(function()
+                  action_ctx.execute()
+                end)
             end,
           })
           table.insert(menu, {
             columns = {
               '@ push --force',
-              { ('push --force `%s` %s'):format(current_branch.name, current_branch.track or 'up-to-date'), 'Comment' }
+              {
+                ('push --force `%s` %s'):format(current_branch.name, current_branch.track or 'up-to-date'),
+                'Comment',
+              },
             },
             branch = current_branch,
             ---@param action_ctx deck.Context
             execute = function(action_ctx)
-              git:push({
-                branch = current_branch,
-                force = true,
-              }):next(function()
-                action_ctx.execute()
-              end)
+              git
+                :push({
+                  branch = current_branch,
+                  force = true,
+                })
+                :next(function()
+                  action_ctx.execute()
+                end)
             end,
           })
         end
@@ -173,7 +186,7 @@ return function(option)
             item.data.execute(ctx)
           end
         end,
-      }
-    }
+      },
+    },
   }
 end

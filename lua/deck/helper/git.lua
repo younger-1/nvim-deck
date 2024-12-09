@@ -56,35 +56,37 @@ end
 ---@field push_url string
 ---@return deck.kit.Async.AsyncTask
 function Git:remote()
-  return self:exec({
-    'git',
-    'remote',
-    '--verbose',
-  }):next(function(out)
-    local remote_map = {} --[[@type table<string, deck.builtin.source.git.Remote>]]
-    return vim.iter(out.stdout):fold({}, function(acc, text)
-      local columns = vim.split(text, '\t')
+  return self
+    :exec({
+      'git',
+      'remote',
+      '--verbose',
+    })
+    :next(function(out)
+      local remote_map = {} --[[@type table<string, deck.builtin.source.git.Remote>]]
+      return vim.iter(out.stdout):fold({}, function(acc, text)
+        local columns = vim.split(text, '\t')
 
-      local remotename = columns[1]
-      if not remote_map[remotename] then
-        remote_map[remotename] = {
-          text = text,
-          name = remotename,
-          fetch_url = '',
-          push_url = '',
-        }
-        table.insert(acc, remote_map[remotename])
-      end
+        local remotename = columns[1]
+        if not remote_map[remotename] then
+          remote_map[remotename] = {
+            text = text,
+            name = remotename,
+            fetch_url = '',
+            push_url = '',
+          }
+          table.insert(acc, remote_map[remotename])
+        end
 
-      if columns[2]:find(' %(push%)$') then
-        remote_map[remotename].push_url = (columns[2]:gsub('%s*%(push%)$', ''))
-      elseif columns[2]:find(' %(fetch%)$') then
-        remote_map[remotename].fetch_url = (columns[2]:gsub('%s*%(fetch%)$', ''))
-      end
+        if columns[2]:find(' %(push%)$') then
+          remote_map[remotename].push_url = (columns[2]:gsub('%s*%(push%)$', ''))
+        elseif columns[2]:find(' %(fetch%)$') then
+          remote_map[remotename].fetch_url = (columns[2]:gsub('%s*%(fetch%)$', ''))
+        end
 
-      return acc
+        return acc
+      end)
     end)
-  end)
 end
 
 ---Get branch.
@@ -102,45 +104,46 @@ end
 ---@return deck.kit.Async.AsyncTask
 function Git:branch()
   local sep_count = 12
-  return self:exec({
-    'git',
-    'branch',
-    '--all',
-    '--sort=-committerdate',
-    '--sort=refname:rstrip=-2',
-    '--format=%(HEAD)%00%(refname:rstrip=-2)%00%(refname)%00%(push)%00%(push:remotename)%00%(push:track)%00%(push:trackshort)%00%(subject)' ..
-    ('%00'):rep(sep_count),
-  }, {
-    buffering = System.DelimiterBuffering.new({ delimiter = ('\0'):rep(sep_count) .. '\n' })
-  }):next(function(out)
-    ---Get remotename from rename.
-    ---@param refname string
-    ---@return string?
-    local function parse_remotename(refname)
-      if refname and refname:find('refs/remotes/') then
-        refname = (refname:gsub('refs/remotes/', ''))
-        return refname:sub(1, refname:find('/') - 1)
+  return self
+    :exec({
+      'git',
+      'branch',
+      '--all',
+      '--sort=-committerdate',
+      '--sort=refname:rstrip=-2',
+      '--format=%(HEAD)%00%(refname:rstrip=-2)%00%(refname)%00%(push)%00%(push:remotename)%00%(push:track)%00%(push:trackshort)%00%(subject)' .. ('%00'):rep(sep_count),
+    }, {
+      buffering = System.DelimiterBuffering.new({ delimiter = ('\0'):rep(sep_count) .. '\n' }),
+    })
+    :next(function(out)
+      ---Get remotename from rename.
+      ---@param refname string
+      ---@return string?
+      local function parse_remotename(refname)
+        if refname and refname:find('refs/remotes/') then
+          refname = (refname:gsub('refs/remotes/', ''))
+          return refname:sub(1, refname:find('/') - 1)
+        end
       end
-    end
 
-    local items = {}
-    for _, text in ipairs(out.stdout) do
-      local columns = vim.split(text, '\0')
-      local remotename = prevent_empty(columns[5] ~= '' and columns[5] or parse_remotename(columns[3]))
-      table.insert(items, {
-        text = text,
-        name = (columns[3]:gsub('^refs/heads/', ''):gsub(('^refs/remotes/%s/'):format(remotename or ''), '')),
-        upstream = prevent_empty(columns[4]),
-        remotename = remotename,
-        track = prevent_empty(columns[6]),
-        trackshort = prevent_empty(columns[7]),
-        current = columns[1] == '*',
-        remote = columns[2] == 'refs/remotes',
-        subject = columns[8],
-      })
-    end
-    return items
-  end)
+      local items = {}
+      for _, text in ipairs(out.stdout) do
+        local columns = vim.split(text, '\0')
+        local remotename = prevent_empty(columns[5] ~= '' and columns[5] or parse_remotename(columns[3]))
+        table.insert(items, {
+          text = text,
+          name = (columns[3]:gsub('^refs/heads/', ''):gsub(('^refs/remotes/%s/'):format(remotename or ''), '')),
+          upstream = prevent_empty(columns[4]),
+          remotename = remotename,
+          track = prevent_empty(columns[6]),
+          trackshort = prevent_empty(columns[7]),
+          current = columns[1] == '*',
+          remote = columns[2] == 'refs/remotes',
+          subject = columns[8],
+        })
+      end
+      return items
+    end)
 end
 
 ---Get status.
@@ -175,58 +178,60 @@ end
 ---@field filename string
 ---@return deck.kit.Async.AsyncTask
 function Git:status()
-  return self:exec({
-    'git',
-    'status',
-    '--porcelain=v2'
-  }):next(function(out)
-    --@see https://git-scm.com/docs/git-status#_changed_tracked_entries
-    local items = {}
-    for _, text in ipairs(out.stdout) do
-      local columns = vim.split(text, ' ')
-      if columns[1] == '1' then
-        table.insert(items, {
-          text = text,
-          type = 'modified',
-          xy = (columns[2]:gsub('%.', ' ')),
-          filename = vim.fs.joinpath(self.cwd, columns[9]),
-          staged = columns[2]:sub(2, 2) == '.',
-        })
-      elseif columns[1] == '2' then
-        local paths = vim.split(columns[10], '\t')
-        table.insert(items, {
-          text = text,
-          type = 'renamed',
-          xy = (columns[2]:gsub('%.', ' ')),
-          filename = vim.fs.joinpath(self.cwd, paths[1]),
-          filename_before = vim.fs.joinpath(self.cwd, paths[2]),
-          staged = columns[2]:sub(2, 2) == '.',
-        })
-      elseif columns[1] == 'u' then
-        table.insert(items, {
-          text = text,
-          type = 'unmerged',
-          xy = (columns[2]:gsub('%.', ' ')),
-          filename = vim.fs.joinpath(self.cwd, columns[11]),
-        })
-      elseif columns[1] == '?' then
-        table.insert(items, {
-          text = text,
-          type = 'untracked',
-          xy = columns[1] .. ' ',
-          filename = vim.fs.joinpath(self.cwd, columns[2]),
-        })
-      elseif columns[1] == '!' then
-        table.insert(items, {
-          text = text,
-          type = 'ignored',
-          xy = columns[1] .. ' ',
-          filename = vim.fs.joinpath(self.cwd, columns[2]),
-        })
+  return self
+    :exec({
+      'git',
+      'status',
+      '--porcelain=v2',
+    })
+    :next(function(out)
+      --@see https://git-scm.com/docs/git-status#_changed_tracked_entries
+      local items = {}
+      for _, text in ipairs(out.stdout) do
+        local columns = vim.split(text, ' ')
+        if columns[1] == '1' then
+          table.insert(items, {
+            text = text,
+            type = 'modified',
+            xy = (columns[2]:gsub('%.', ' ')),
+            filename = vim.fs.joinpath(self.cwd, columns[9]),
+            staged = columns[2]:sub(2, 2) == '.',
+          })
+        elseif columns[1] == '2' then
+          local paths = vim.split(columns[10], '\t')
+          table.insert(items, {
+            text = text,
+            type = 'renamed',
+            xy = (columns[2]:gsub('%.', ' ')),
+            filename = vim.fs.joinpath(self.cwd, paths[1]),
+            filename_before = vim.fs.joinpath(self.cwd, paths[2]),
+            staged = columns[2]:sub(2, 2) == '.',
+          })
+        elseif columns[1] == 'u' then
+          table.insert(items, {
+            text = text,
+            type = 'unmerged',
+            xy = (columns[2]:gsub('%.', ' ')),
+            filename = vim.fs.joinpath(self.cwd, columns[11]),
+          })
+        elseif columns[1] == '?' then
+          table.insert(items, {
+            text = text,
+            type = 'untracked',
+            xy = columns[1] .. ' ',
+            filename = vim.fs.joinpath(self.cwd, columns[2]),
+          })
+        elseif columns[1] == '!' then
+          table.insert(items, {
+            text = text,
+            type = 'ignored',
+            xy = columns[1] .. ' ',
+            filename = vim.fs.joinpath(self.cwd, columns[2]),
+          })
+        end
       end
-    end
-    return items
-  end)
+      return items
+    end)
 end
 
 ---Get log.
@@ -245,35 +250,38 @@ end
 ---@return deck.kit.Async.AsyncTask
 function Git:log(params)
   local sep_count = 12
-  return self:exec({
-    'git',
-    'log',
-    params.count and ('--max-count=%s'):format((params.count or 100) + 1),
-    params.offset and ('--skip=%s'):format(params.offset),
-    '--pretty=format:%H%x00%P%x00%an%x00%ae%x00%ai%x00%s%x00%b%x00%B' .. ('%x00'):rep(sep_count),
-  }, {
-    buffering = System.DelimiterBuffering.new({ delimiter = ('\0'):rep(sep_count) .. '\n' })
-  }):next(
-  ---@param out deck.builtin.source.git.Git.ExecOutput
-    function(out)
-      local items = {}
-      for _, text in ipairs(out.stdout) do
-        local columns = vim.split(text, '\0')
-        table.insert(items, {
-          text = text,
-          hash = columns[1],
-          hash_short = columns[1]:sub(1, 7),
-          hash_parents = vim.split(columns[2] or '', ' '),
-          author_name = columns[3],
-          author_email = columns[4],
-          author_date = columns[5],
-          subject = columns[6],
-          body = columns[7],
-          body_raw = (columns[8] or ''):gsub('\r\n', '\n'):gsub('\r', '\n'),
-        })
+  return self
+    :exec({
+      'git',
+      'log',
+      params.count and ('--max-count=%s'):format((params.count or 100) + 1),
+      params.offset and ('--skip=%s'):format(params.offset),
+      '--pretty=format:%H%x00%P%x00%an%x00%ae%x00%ai%x00%s%x00%b%x00%B' .. ('%x00'):rep(sep_count),
+    }, {
+      buffering = System.DelimiterBuffering.new({ delimiter = ('\0'):rep(sep_count) .. '\n' }),
+    })
+    :next(
+      ---@param out deck.builtin.source.git.Git.ExecOutput
+      function(out)
+        local items = {}
+        for _, text in ipairs(out.stdout) do
+          local columns = vim.split(text, '\0')
+          table.insert(items, {
+            text = text,
+            hash = columns[1],
+            hash_short = columns[1]:sub(1, 7),
+            hash_parents = vim.split(columns[2] or '', ' '),
+            author_name = columns[3],
+            author_email = columns[4],
+            author_date = columns[5],
+            subject = columns[6],
+            body = columns[7],
+            body_raw = (columns[8] or ''):gsub('\r\n', '\n'):gsub('\r', '\n'),
+          })
+        end
+        return items
       end
-      return items
-    end)
+    )
 end
 
 ---Get changeset.
@@ -286,27 +294,30 @@ end
 ---@param params { from_rev: string, to_rev?: string }
 ---@return deck.kit.Async.AsyncTask
 function Git:get_changeset(params)
-  return self:exec({
-    'git',
-    'diff',
-    '--name-status',
-    params.from_rev .. (params.to_rev and ('..' .. params.to_rev) or ''),
-  }):next(
-  ---@param out deck.builtin.source.git.Git.ExecOutput
-    function(out)
-      local items = {}
-      for _, text in ipairs(out.stdout) do
-        local columns = vim.split(text, '\t')
-        table.insert(items, {
-          text = text,
-          type = columns[1],
-          filename = vim.fs.joinpath(self.cwd, columns[2]),
-          from_rev = params.from_rev,
-          to_rev = params.to_rev,
-        })
+  return self
+    :exec({
+      'git',
+      'diff',
+      '--name-status',
+      params.from_rev .. (params.to_rev and ('..' .. params.to_rev) or ''),
+    })
+    :next(
+      ---@param out deck.builtin.source.git.Git.ExecOutput
+      function(out)
+        local items = {}
+        for _, text in ipairs(out.stdout) do
+          local columns = vim.split(text, '\t')
+          table.insert(items, {
+            text = text,
+            type = columns[1],
+            filename = vim.fs.joinpath(self.cwd, columns[2]),
+            from_rev = params.from_rev,
+            to_rev = params.to_rev,
+          })
+        end
+        return items
       end
-      return items
-    end)
+    )
 end
 
 ---Show file.
@@ -314,18 +325,21 @@ end
 ---@param rev string
 ---@return deck.kit.Async.AsyncTask
 function Git:show_file(filename, rev)
-  return self:exec({
-    'git',
-    'show',
-    rev .. ':' .. (filename:gsub(vim.pesc(self.cwd), '.')),
-  }):next(
-  ---@param out deck.builtin.source.git.Git.ExecOutput
-    function(out)
-      if out.stdout[#out.stdout] == '' then
-        table.remove(out.stdout, #out.stdout)
+  return self
+    :exec({
+      'git',
+      'show',
+      rev .. ':' .. (filename:gsub(vim.pesc(self.cwd), '.')),
+    })
+    :next(
+      ---@param out deck.builtin.source.git.Git.ExecOutput
+      function(out)
+        if out.stdout[#out.stdout] == '' then
+          table.remove(out.stdout, #out.stdout)
+        end
+        return out.stdout
       end
-      return out.stdout
-    end)
+    )
 end
 
 ---Show log.
@@ -333,52 +347,58 @@ end
 ---@return deck.kit.Async.AsyncTask
 function Git:show_log(rev)
   local sep_count = 12
-  return self:exec({
-    'git',
-    'show',
-    '--pretty=format:%H%x00%P%x00%an%x00%ae%x00%ai%x00%s%x00%b%x00%B' .. ('%x00'):rep(sep_count),
-    '--no-patch',
-    rev
-  }, {
-    buffering = System.DelimiterBuffering.new({ delimiter = ('\0'):rep(sep_count) .. '\n' })
-  }):next(
-  ---@param out deck.builtin.source.git.Git.ExecOutput
-    function(out)
-      if #out.stdout == 0 then
-        return
+  return self
+    :exec({
+      'git',
+      'show',
+      '--pretty=format:%H%x00%P%x00%an%x00%ae%x00%ai%x00%s%x00%b%x00%B' .. ('%x00'):rep(sep_count),
+      '--no-patch',
+      rev,
+    }, {
+      buffering = System.DelimiterBuffering.new({ delimiter = ('\0'):rep(sep_count) .. '\n' }),
+    })
+    :next(
+      ---@param out deck.builtin.source.git.Git.ExecOutput
+      function(out)
+        if #out.stdout == 0 then
+          return
+        end
+        local columns = vim.split(out.stdout[1], '\0')
+        return {
+          text = out.stdout[1],
+          hash = columns[1],
+          hash_short = columns[1]:sub(1, 7),
+          hash_parents = vim.split(columns[2] or '', ' '),
+          author_name = columns[3],
+          author_email = columns[4],
+          author_date = columns[5],
+          subject = columns[6],
+          body = columns[7],
+          body_raw = (columns[8] or ''):gsub('\r\n', '\n'):gsub('\r', '\n'),
+        }
       end
-      local columns = vim.split(out.stdout[1], '\0')
-      return {
-        text = out.stdout[1],
-        hash = columns[1],
-        hash_short = columns[1]:sub(1, 7),
-        hash_parents = vim.split(columns[2] or '', ' '),
-        author_name = columns[3],
-        author_email = columns[4],
-        author_date = columns[5],
-        subject = columns[6],
-        body = columns[7],
-        body_raw = (columns[8] or ''):gsub('\r\n', '\n'):gsub('\r', '\n'),
-      }
-    end)
+    )
 end
 
 ---Get unified diff.
 ---@param params { from_rev: string, to_rev?: string, filename?: string }
 ---@return deck.kit.Async.AsyncTask
 function Git:get_unified_diff(params)
-  return self:exec({
-    'git',
-    'diff',
-    '--unified=0',
-    params.from_rev .. (params.to_rev and ('..' .. params.to_rev) or ''),
-    params.filename and '--',
-    params.filename,
-  }):next(
-  ---@param out deck.builtin.source.git.Git.ExecOutput
-    function(out)
-      return out.stdout
-    end)
+  return self
+    :exec({
+      'git',
+      'diff',
+      '--unified=0',
+      params.from_rev .. (params.to_rev and ('..' .. params.to_rev) or ''),
+      params.filename and '--',
+      params.filename,
+    })
+    :next(
+      ---@param out deck.builtin.source.git.Git.ExecOutput
+      function(out)
+        return out.stdout
+      end
+    )
 end
 
 ---Open vimdiff.
@@ -390,7 +410,7 @@ function Git:vimdiff(params)
     if not exists then
       if not params.to_rev then
         notify.show({
-          { { 'filename must be filereadable when omitting from_rev', 'ErrorMsg' } }
+          { { 'filename must be filereadable when omitting from_rev', 'ErrorMsg' } },
         })
         return
       end
@@ -443,14 +463,15 @@ function Git:commit(params, callback)
       end
     end
 
-    local contents = self:exec(kit.concat({
-      'git',
-      'commit',
-      '--dry-run',
-      '--verbose',
-      params.amend and '--amend' or
-      '--',
-    }, filenames)):await().stdout
+    local contents = self
+      :exec(kit.concat({
+        'git',
+        'commit',
+        '--dry-run',
+        '--verbose',
+        params.amend and '--amend' or '--',
+      }, filenames))
+      :await().stdout
 
     local start_time = vim.uv.hrtime() / 1000000
     while IO.exists(vim.fs.joinpath(self.cwd, '.git', 'index.lock')):await() do
@@ -464,7 +485,7 @@ function Git:commit(params, callback)
       local log = self:log({ count = 1 }):await()[1] ---@type deck.builtin.source.git.Log
       if not log then
         notify.show({
-          { { 'Not found commit log', 'ErrorMsg' } }
+          { { 'Not found commit log', 'ErrorMsg' } },
         })
         return
       end
@@ -499,7 +520,7 @@ function Git:commit(params, callback)
           table.insert(messages, text)
         end
         vim.api.nvim_buf_set_lines(0, 0, -1, false, messages)
-      end
+      end,
     })
     vim.api.nvim_create_autocmd('BufWritePost', {
       once = true,
@@ -510,20 +531,21 @@ function Git:commit(params, callback)
           if yes_no == 'y' or yes_no == 'yes' then
             vim.cmd.tabclose()
 
-            IO.cp(vim.fs.joinpath(self.cwd, '.git', 'COMMIT_EDITMSG'),
-              vim.fs.joinpath(self.cwd, '.git', 'DECK_COMMIT_EDITMSG')):await()
-            self:exec_print(kit.concat({
-              'git',
-              'commit',
-              params.amend and '--amend' or nil,
-              '--file',
-              vim.fs.joinpath(self.cwd, '.git', 'DECK_COMMIT_EDITMSG'),
-              '--',
-            }, filenames)):await()
+            IO.cp(vim.fs.joinpath(self.cwd, '.git', 'COMMIT_EDITMSG'), vim.fs.joinpath(self.cwd, '.git', 'DECK_COMMIT_EDITMSG')):await()
+            self
+              :exec_print(kit.concat({
+                'git',
+                'commit',
+                params.amend and '--amend' or nil,
+                '--file',
+                vim.fs.joinpath(self.cwd, '.git', 'DECK_COMMIT_EDITMSG'),
+                '--',
+              }, filenames))
+              :await()
             IO.rm(vim.fs.joinpath(self.cwd, '.git', 'DECK_COMMIT_EDITMSG'), { recursive = false }):await()
           else
             notify.show({
-              { { 'Canceled', 'ModeMsg' } }
+              { { 'Canceled', 'ModeMsg' } },
             })
           end
           callback()
@@ -539,31 +561,35 @@ end
 function Git:push(params)
   return Async.run(function()
     if params.branch.upstream then
-      self:exec_print({
-        'git',
-        'push',
-        params.force and '--force' or nil,
-        params.branch.remotename,
-        params.branch.name
-      }):await()
+      self
+        :exec_print({
+          'git',
+          'push',
+          params.force and '--force' or nil,
+          params.branch.remotename,
+          params.branch.name,
+        })
+        :await()
     else
       local remotes = self:remote():await() --[=[@as deck.builtin.source.git.Remote[]]=]
       if #remotes == 0 then
         notify.show({
-          { { 'No remote found', 'ErrorMsg' } }
+          { { 'No remote found', 'ErrorMsg' } },
         })
         return
       end
 
       if #remotes == 1 then
-        self:exec_print({
-          'git',
-          'push',
-          params.force and '--force' or nil,
-          '--set-upstream',
-          remotes[1].name,
-          params.branch.name
-        }):await()
+        self
+          :exec_print({
+            'git',
+            'push',
+            params.force and '--force' or nil,
+            '--set-upstream',
+            remotes[1].name,
+            params.branch.name,
+          })
+          :await()
         return
       end
 
@@ -572,18 +598,20 @@ function Git:push(params)
           prompt = 'Select remote: ',
           format_item = function(remote)
             return remote.name
-          end
+          end,
         }, resolve)
       end):await()
       if remote then
-        self:exec_print({
-          'git',
-          'push',
-          params.force and '--force' or nil,
-          '--set-upstream',
-          remote.name,
-          params.branch.name
-        }):await()
+        self
+          :exec_print({
+            'git',
+            'push',
+            params.force and '--force' or nil,
+            '--set-upstream',
+            remote.name,
+            params.branch.name,
+          })
+          :await()
       end
     end
   end)
@@ -596,38 +624,47 @@ end
 function Git:exec_print(command, option)
   return Async.run(function()
     notify.show({
-      { { ('$ %s'):format(table.concat(vim.iter(command)
-        :filter(function(c)
-          return c
-        end)
-        :map(function(c)
-          c = tostring(c):gsub('\n', '\\n')
-          if c ~= vim.fn.escape(c, ' "') then
-            return ('"%s"'):format(vim.fn.escape(c, '"'))
-          else
-            return c
-          end
-        end)
-        :totable(), ' ')), 'ModeMsg' } }
+      {
+        {
+          ('$ %s'):format(table.concat(
+            vim
+              .iter(command)
+              :filter(function(c)
+                return c
+              end)
+              :map(function(c)
+                c = tostring(c):gsub('\n', '\\n')
+                if c ~= vim.fn.escape(c, ' "') then
+                  return ('"%s"'):format(vim.fn.escape(c, '"'))
+                else
+                  return c
+                end
+              end)
+              :totable(),
+            ' '
+          )),
+          'ModeMsg',
+        },
+      },
     })
     Async.new(function(resolve)
       local close --@type fun():void
       close = System.spawn(command, {
         cwd = self.cwd,
         buffering = option and option.buffering or System.LineBuffering.new({
-          ignore_empty = false
+          ignore_empty = false,
         }),
         on_stdout = kit.fast_schedule_wrap(function(text)
           if text ~= '' then
             notify.show({
-              { { text, 'Normal' } }
+              { { text, 'Normal' } },
             })
           end
         end),
         on_stderr = kit.fast_schedule_wrap(function(text)
           if text ~= '' then
             notify.show({
-              { { text, 'WarningMsg' } }
+              { { text, 'WarningMsg' } },
             })
           end
         end),
@@ -652,7 +689,7 @@ function Git:exec(command, option)
     close = System.spawn(command, {
       cwd = self.cwd,
       buffering = option and option.buffering or System.LineBuffering.new({
-        ignore_empty = false
+        ignore_empty = false,
       }),
       on_stdout = kit.fast_schedule_wrap(function(text)
         table.insert(stdouts, text)
