@@ -226,7 +226,7 @@ function default_view.create(config)
           if not is_visible(state.win_preview) then
             state.win_preview = vim.api.nvim_open_win(vim.api.nvim_create_buf(false, true), false, win_config)
             vim.api.nvim_set_option_value('wrap', false, { win = state.win_preview })
-            vim.api.nvim_set_option_value('winhighlight', 'Normal:Normal,FloatBorder:Normal', { win = state.win_preview })
+            vim.api.nvim_set_option_value('winhighlight', 'Normal:Normal,FloatBorder:Normal,FloatTitle:Normal,FloatFooter:Normal', { win = state.win_preview })
             vim.api.nvim_set_option_value('number', true, { win = state.win_preview })
             vim.api.nvim_set_option_value('numberwidth', 5, { win = state.win_preview })
           else
