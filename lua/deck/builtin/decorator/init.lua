@@ -80,8 +80,6 @@ do
             get_icon = function(category, filename)
               return Icons.get(category, filename)
             end
-          else
-            vim.print(Icons)
           end
         end
       end
