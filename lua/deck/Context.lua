@@ -824,40 +824,36 @@ function Context.create(id, sources, start_config)
     on_hide = events.hide.on,
   } --[[@as deck.Context]]
 
-  -- explicitly show when buffer entered.
-  events.dispose.on(autocmd({ 'BufWinEnter', 'TabEnter' }, function()
-    if state.revision.execute > #sources then
-      for _, source in ipairs(sources) do
-        if source.events and source.events.BufWinEnter then
-          source.events.BufWinEnter(context)
-        end
+  -- explicitly show when buffer shown.
+  events.dispose.on(autocmd('BufWinEnter', function()
+    for _, source in ipairs(sources) do
+      if source.events and source.events.BufWinEnter then
+        source.events.BufWinEnter(context)
       end
-      context.show()
     end
+    context.show()
   end, {
     pattern = ('<buffer=%s>'):format(context.buf),
   }))
 
-  -- explicitly hide when buffer leaved.
+  -- explicitly hide when buffer hidden.
   events.dispose.on(autocmd('BufWinLeave', function()
     context.hide()
   end, {
     pattern = ('<buffer=%s>'):format(context.buf),
   }))
 
-  -- dispose when buffer will be removed.
-  events.dispose.on(autocmd('BufDelete', function()
-    context.dispose()
-  end, {
-    pattern = ('<buffer=%s>'):format(context.buf),
-  }))
-
-  -- exit.
-  events.dispose.on(autocmd('VimLeave', function()
-    context.dispose()
-  end, {
-    pattern = ('<buffer=%s>'):format(context.buf),
-  }))
+  -- dispose.
+  do
+    events.dispose.on(autocmd('BufDelete', function()
+      context.dispose()
+    end, {
+      pattern = ('<buffer=%s>'):format(context.buf),
+    }))
+    events.dispose.on(autocmd('VimLeave', function()
+      context.dispose()
+    end))
+  end
 
   -- update cursor position.
   events.dispose.on(autocmd('CursorMoved', function()
@@ -867,8 +863,7 @@ function Context.create(id, sources, start_config)
   }))
 
   -- re-render.
-  events.dispose.on(autocmd({ 'WinResized', 'WinScrolled' }, function()
-    context.set_cursor(vim.api.nvim_win_get_cursor(0)[1])
+  events.dispose.on(autocmd({ 'BufEnter', 'WinResized', 'WinScrolled'  }, function()
     render()
   end, {
     pattern = ('<buffer=%s>'):format(context.buf),
