@@ -15,6 +15,7 @@ decorators.source_name = {
         { ' ' },
       },
       virt_text_pos = 'right_align',
+      hl_mode = 'combine',
     })
   end,
 }
@@ -32,6 +33,7 @@ decorators.highlights = {
           end_row = row,
           end_col = hi[2],
           hl_group = hi.hl_group,
+          hl_mode = 'combine',
           ephemeral = true,
         })
       end
@@ -51,6 +53,7 @@ decorators.query_matches = {
         end_row = row,
         end_col = match[2],
         hl_group = 'Search',
+        hl_mode = 'combine',
         ephemeral = true,
       })
     end
@@ -64,6 +67,7 @@ decorators.selection = {
     vim.api.nvim_buf_set_extmark(ctx.buf, ctx.ns, row, 0, {
       sign_text = ctx.get_selected(item) and '*' or ' ',
       sign_hl_group = 'SignColumn',
+      hl_mode = 'combine',
     })
   end,
 }
@@ -105,6 +109,7 @@ do
               { ' ' },
             },
             virt_text_pos = 'inline',
+            hl_mode = 'combine',
           })
         end
       end
@@ -121,6 +126,7 @@ do
           },
 
           virt_text_pos = 'eol',
+          hl_mode = 'combine',
           ephemeral = true,
         })
       end

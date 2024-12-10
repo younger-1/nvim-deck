@@ -200,6 +200,7 @@ return function(option)
           table.insert(lines, { { '' } })
           vim.api.nvim_buf_set_extmark(ctx.buf, ctx.ns, row, 0, {
             virt_lines = lines,
+            hl_mode = 'combine',
           })
         end,
       },
