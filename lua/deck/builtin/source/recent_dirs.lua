@@ -1,4 +1,4 @@
-local IO = require('deck.kit.IO')
+local VFile = require('deck.helper.vfile')
 local Async = require('deck.kit.Async')
 
 --[=[@doc
@@ -18,7 +18,7 @@ local Async = require('deck.kit.Async')
   desc = "Ignore paths."
 ]=]
 return setmetatable({
-  entries_path = vim.fs.normalize('~/.deck.recent_dirs'),
+  vfile = VFile.new(vim.fs.normalize('~/.deck.recent_dirs')),
   add = function(self, target_path)
     if not target_path then
       return
@@ -30,23 +30,19 @@ return setmetatable({
       return
     end
 
-    if vim.fn.filereadable(self.entries_path) == 0 then
-      vim.fn.writefile({}, self.entries_path)
-    end
-
     local seen = { [target_path] = true }
-    local paths = {}
-    for _, path in ipairs(vim.fn.readfile(self.entries_path)) do
-      if not seen[path] then
+    for i = #self.vfile.contents, 1, -1 do
+      local path = self.vfile.contents[i]
+      if seen[path] then
+        table.remove(self.vfile.contents, i)
+      else
         seen[path] = true
-        if vim.fn.isdirectory(path) == 1 then
-          table.insert(paths, path)
+        if vim.fn.isdirectory(path) == 0 then
+          table.remove(self.vfile.contents, i)
         end
       end
     end
-    table.insert(paths, target_path)
-
-    vim.fn.writefile(paths, self.entries_path)
+    table.insert(self.vfile.contents, target_path)
   end,
 }, {
   ---@param option { ignore_paths?: string[] }
@@ -63,11 +59,8 @@ return setmetatable({
     return {
       name = 'recent_dirs',
       execute = function(ctx)
-        if vim.fn.filereadable(self.entries_path) == 0 then
-          return ctx.done()
-        end
         Async.run(function()
-          local contents = vim.fn.readfile(self.entries_path)
+          local contents = self.vfile.contents
           for i = #contents, 1, -1 do
             local path = contents[i]
             if not ignore_path_map[path] then
