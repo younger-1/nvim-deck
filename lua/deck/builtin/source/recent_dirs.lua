@@ -67,7 +67,7 @@ return setmetatable({
           return ctx.done()
         end
         Async.run(function()
-          local contents = vim.split(IO.read_file(vim.fs.normalize(self.entries_path)):await(), '\n')
+          local contents = vim.fn.readfile(self.entries_path)
           for i = #contents, 1, -1 do
             local path = contents[i]
             if not ignore_path_map[path] then
