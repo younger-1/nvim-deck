@@ -49,7 +49,6 @@ do
       else
         local idx = text:find(q, 1, true)
         if not idx then
-          vim.print(text, q)
           matched = false
           break
         end
