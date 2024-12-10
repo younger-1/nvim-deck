@@ -1,3 +1,4 @@
+local kit = require('deck.kit')
 local notify = require('deck.notify')
 
 local action = {}
@@ -124,18 +125,18 @@ end
 
 --[=[@doc
   category = "action"
-  name = "delete_filename"
+  name = "delete_file"
   desc = """
-    Delete `item.data.filename`.\n
+    Delete `item.data.filename` from filesystem.\n
     If multiple items are selected, they will be deleted in order.
   """
 ]=]
-action.delete_filename = {
-  name = 'delete_filename',
-  desc = '(built-in) delete `item.data.filename`',
+action.delete_file = {
+  name = 'delete_file',
+  desc = '(built-in) delete `item.data.filename` from filesystem.',
   resolve = function(ctx)
     for _, item in ipairs(ctx.get_action_items()) do
-      if item.data.filename and vim.fn.filereadable(item.data.filename) == 1 then
+      if item.data.filename then
         return true
       end
     end
@@ -144,14 +145,14 @@ action.delete_filename = {
   execute = function(ctx)
     local targets = {}
     for _, item in ipairs(ctx.get_action_items()) do
-      if item.data.filename and vim.fn.filereadable(item.data.filename) == 1 then
+      if item.data.filename then
         table.insert(targets, item.data.filename)
       end
     end
     local yes_no = vim.fn.input(table.concat(targets, '\n') .. '\n-----\nfiles will be deleted (yes/no)? ')
     if yes_no == 'yes' then
       for _, target in ipairs(targets) do
-        vim.fn.delete(target)
+        vim.fn.delete(target, 'rf')
       end
     end
     ctx.execute()
@@ -160,15 +161,15 @@ action.delete_filename = {
 
 --[=[@doc
   category = "action"
-  name = "delete_bufnr"
+  name = "delete_buffer"
   desc = """
-    Delete `item.data.bufnr`.\n
+    Delete `item.data.bufnr` from buffers list.\n
     If multiple items are selected, they will be deleted in order.
   """
 ]=]
-action.delete_bufnr = {
-  name = 'delete_bufnr',
-  desc = '(built-in) delete `item.data.bufnr`',
+action.delete_buffer = {
+  name = 'delete_buffer',
+  desc = '(built-in) delete `item.data.bufnr` from buffers list',
   resolve = function(ctx)
     for _, item in ipairs(ctx.get_action_items()) do
       if item.data.bufnr and vim.api.nvim_buf_is_valid(item.data.bufnr) then
@@ -191,6 +192,30 @@ action.delete_bufnr = {
       end
     end
     ctx.execute()
+  end,
+}
+
+--[=[@doc
+  category = "action"
+  name = "print"
+  desc = "Print selected items."
+]=]
+---@type deck.Action
+action.print = {
+  name = 'print',
+  desc = '(built-in) print selected items',
+  execute = function(ctx)
+    local contents = {}
+    for _, item in ipairs(ctx.get_action_items()) do
+      local clone = kit.clone(item)
+      for k in pairs(clone) do
+        if type(k) == 'table' then
+          clone[k] = nil
+        end
+      end
+      table.insert(contents, clone)
+    end
+    vim.print(contents)
   end,
 }
 
@@ -413,11 +438,11 @@ action.substitute = {
       -1,
       false,
       vim
-        .iter(substitute_targets)
-        :map(function(target)
-          return target.line
-        end)
-        :totable()
+      .iter(substitute_targets)
+      :map(function(target)
+        return target.line
+      end)
+      :totable()
     )
     vim.api.nvim_buf_set_name(buf, 'substitute')
     vim.api.nvim_set_option_value('buftype', 'acwrite', { buf = buf })

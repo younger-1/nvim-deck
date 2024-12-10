@@ -1,4 +1,4 @@
 return {
-  source = {},
-  matches = {},
+  source = { sym = 'deck.source' },
+  matches = { sym = 'deck.matches' },
 }
