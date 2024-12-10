@@ -16,8 +16,23 @@ do
     if state.query ~= query then
       state.query = query
       state.parsed = {}
-      for _, q in ipairs(vim.split(query, ' ')) do
-        table.insert(state.parsed, q:lower())
+      local i = 1
+      local chunk = {}
+      while i <= #query do
+        local c = query:sub(i, i)
+        if c == '\\' then
+          table.insert(chunk, query:sub(i + 1, i + 1))
+          i = i + 1
+        elseif c ~= ' ' then
+          table.insert(chunk, c)
+        else
+          table.insert(state.parsed, table.concat(chunk, ''):lower())
+          chunk = {}
+        end
+        i = i + 1
+      end
+      if #chunk > 0 then
+        table.insert(state.parsed, table.concat(chunk, ''):lower())
       end
     end
 
@@ -26,7 +41,7 @@ do
     local matched = true
     local matches = {}
     for _, q in ipairs(state.parsed) do
-      if query:sub(1, 1) == '!' then
+      if q:sub(1, 1) == '!' then
         if q ~= '!' and text:find(q:sub(2), 1, true) then
           matched = false
           break
@@ -34,6 +49,7 @@ do
       else
         local idx = text:find(q, 1, true)
         if not idx then
+          vim.print(text, q)
           matched = false
           break
         end

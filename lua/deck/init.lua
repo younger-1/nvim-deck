@@ -205,16 +205,17 @@ end
 ---@return deck.Context
 function deck.start(sources, start_config_specifier)
   sources = validate.sources(kit.to_array(sources))
-  start_config_specifier = validate.start_config(kit.merge(start_config_specifier or {}, internal.config.default_start_config or {}) --[[@as deck.StartConfig]])
+  start_config_specifier = validate.start_config(kit.merge(start_config_specifier or {},
+    internal.config.default_start_config or {}) --[[@as deck.StartConfig]])
 
   -- create name.
   if not start_config_specifier.name then
     start_config_specifier.name = vim
-      .iter(sources)
-      :map(function(source)
-        return source.name
-      end)
-      :join('+')
+        .iter(sources)
+        :map(function(source)
+          return source.name
+        end)
+        :join('+')
   end
 
   -- create context.
@@ -228,6 +229,15 @@ function deck.start(sources, start_config_specifier)
       for i, c in ipairs(internal.history) do
         if c == context then
           table.remove(internal.history, i)
+          break
+        end
+      end
+    end)
+    context.on_show(function()
+      for i, c in ipairs(internal.history) do
+        if c == context then
+          table.remove(internal.history, i)
+          table.insert(internal.history, 1, context)
           break
         end
       end
