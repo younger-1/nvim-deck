@@ -416,7 +416,12 @@ function Context.create(id, sources, start_config)
           execute_source(source)
           local s = vim.uv.hrtime() / 1000000
           while (vim.uv.hrtime() / 1000000 - s) < 200 do
-            if #state.cache.buf_items >= max_height then
+            local success = state.source_state[source].status == Status.Success
+            if success then
+              break
+            end
+            local enough_items = #context.get_items() >= max_height
+            if enough_items then
               break
             end
             Async.timeout(32):await()
@@ -863,7 +868,7 @@ function Context.create(id, sources, start_config)
   }))
 
   -- re-render.
-  events.dispose.on(autocmd({ 'BufEnter', 'WinResized', 'WinScrolled'  }, function()
+  events.dispose.on(autocmd({ 'BufEnter', 'WinResized', 'WinScrolled' }, function()
     render()
   end, {
     pattern = ('<buffer=%s>'):format(context.buf),
