@@ -260,7 +260,10 @@ function Context.create(id, sources, start_config)
         for _, item in ipairs(filtered_items) do
           table.insert(contents, item.display_text)
         end
+        vim.api.nvim_set_option_value('modifiable', true, { buf = context.buf })
         vim.api.nvim_buf_set_lines(context.buf, 0, -1, false, contents)
+        vim.api.nvim_set_option_value('modifiable', false, { buf = context.buf })
+        vim.api.nvim_set_option_value('modified', false, { buf = context.buf })
         state.cache.buf_items = filtered_items
       elseif prev_revision.items ~= state.revision.items then
         -- append only (1-item is overwrote).
@@ -269,7 +272,10 @@ function Context.create(id, sources, start_config)
           state.cache.buf_items[i] = filtered_items[i]
           table.insert(contents, filtered_items[i].display_text)
         end
+        vim.api.nvim_set_option_value('modifiable', true, { buf = context.buf })
         vim.api.nvim_buf_set_lines(context.buf, count - 1, -1, false, contents)
+        vim.api.nvim_set_option_value('modifiable', false, { buf = context.buf })
+        vim.api.nvim_set_option_value('modified', false, { buf = context.buf })
       end
 
       -- force invoke `nvim_set_decoration_provider` callbacks.
