@@ -526,13 +526,13 @@ deck.start(require('deck.builtin.source.recent_dirs')({
     The actions listed are filtered by whether they are valid in the current
     context.
 
-- `delete_bufnr`
-  - Delete `item.data.bufnr`.
+- `delete_buffer`
+  - Delete `item.data.bufnr` from buffers list.
 
     If multiple items are selected, they will be deleted in order.
 
-- `delete_filename`
-  - Delete `item.data.filename`.
+- `delete_file`
+  - Delete `item.data.filename` from filesystem.
 
     If multiple items are selected, they will be deleted in order.
 
@@ -555,6 +555,9 @@ deck.start(require('deck.builtin.source.recent_dirs')({
   - Open `item.data.filename` or `item.data.bufnr`.
 
     Open at the recently normal window with vsplit.
+
+- `print`
+  - Print selected items.
 
 - `prompt`
   - Open filtering prompt
