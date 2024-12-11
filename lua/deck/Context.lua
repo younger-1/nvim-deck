@@ -203,14 +203,12 @@ function Context.create(id, sources, start_config)
         if bufnr == context.buf then
           vim.api.nvim_buf_clear_namespace(context.buf, context.ns, toprow, botrow + 1)
 
-          local now = vim.uv.hrtime() / 1000000
           for row = toprow, botrow do
             local item = state.cache.buf_items[row + 1]
             if item then
               -- create decoration cache.
-              if not item_decoration_cache[item] or (now - item_decoration_cache[item].time) > 5 * 1000 then
+              if not item_decoration_cache[item] then
                 item_decoration_cache[item] = {
-                  time = vim.uv.hrtime() / 1000000,
                   decorations = {},
                 }
                 for _, decorator in ipairs(context.get_decorators()) do
