@@ -67,7 +67,7 @@ function ExecuteContext.create(params)
         item_specifier.data = {}
       end
 
-      params.on_item(item_specifier)
+      params.on_item(item_specifier --[[@as deck.Item]])
     end,
 
     --- Noify done to main context.

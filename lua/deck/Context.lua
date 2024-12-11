@@ -196,25 +196,76 @@ function Context.create(id, sources, start_config)
   end
 
   --Setup decoration provider.
-  vim.api.nvim_set_decoration_provider(namespace, {
-    on_win = function(_, _, bufnr, toprow, botrow)
-      if bufnr ~= context.buf then
-        return
-      end
+  do
+    local item_decoration_cache = {}
+    vim.api.nvim_set_decoration_provider(namespace, {
+      on_win = function(_, _, bufnr, toprow, botrow)
+        if bufnr == context.buf then
+          vim.api.nvim_buf_clear_namespace(context.buf, context.ns, toprow, botrow + 1)
 
-      for row = toprow, botrow do
-        vim.api.nvim_buf_clear_namespace(context.buf, context.ns, row, row + 1)
-        local item = state.cache.buf_items[row + 1]
-        if item then
-          for _, decorator in ipairs(context.get_decorators()) do
-            if not decorator.resolve or decorator.resolve(context, item) then
-              decorator.decorate(context, item, row)
+          local now = vim.uv.hrtime() / 1000000
+          for row = toprow, botrow do
+            local item = state.cache.buf_items[row + 1]
+            if item then
+              -- create decoration cache.
+              if not item_decoration_cache[item] or (now - item_decoration_cache[item].time) > 5 * 1000 then
+                item_decoration_cache[item] = {
+                  time = vim.uv.hrtime() / 1000000,
+                  decorations = {},
+                }
+                for _, decorator in ipairs(context.get_decorators()) do
+                  if not decorator.dynamic then
+                    if not decorator.resolve or decorator.resolve(context, item) then
+                      for _, decoration in ipairs(kit.to_array(decorator.decorate(context, item))) do
+                        table.insert(item_decoration_cache[item].decorations, decoration)
+                      end
+                    end
+                  end
+                end
+              end
+
+              local decorations = kit.clone(item_decoration_cache[item].decorations)
+
+              -- create dynamic decoration.
+              for _, decorator in ipairs(context.get_decorators()) do
+                if decorator.dynamic then
+                  if not decorator.resolve or decorator.resolve(context, item) then
+                    for _, decoration in ipairs(kit.to_array(decorator.decorate(context, item))) do
+                      table.insert(decorations, decoration)
+                    end
+                  end
+                end
+              end
+
+              -- apply cached decoration.
+              for _, decoration in ipairs(decorations) do
+                vim.api.nvim_buf_set_extmark(context.buf, context.ns, row, decoration.col or 0, {
+                  end_row = decoration.end_col and row,
+                  end_col = decoration.end_col,
+                  hl_group = decoration.hl_group,
+                  hl_mode = 'combine',
+                  virt_text = decoration.virt_text,
+                  virt_text_pos = decoration.virt_text_pos,
+                  virt_text_win_col = decoration.virt_text_win_col,
+                  virt_text_hide = decoration.virt_text_hide,
+                  virt_text_repeat_linebreak = decoration.virt_text_repeat_linebreak,
+                  virt_lines = decoration.virt_lines,
+                  virt_lines_above = decoration.virt_lines_above,
+                  ephemeral = decoration.ephemeral,
+                  priority = decoration.priority,
+                  sign_text = decoration.sign_text,
+                  sign_hl_group = decoration.sign_hl_group,
+                  number_hl_group = decoration.number_hl_group,
+                  line_hl_group = decoration.line_hl_group,
+                  conceal = decoration.conceal,
+                })
+              end
             end
           end
         end
-      end
-    end,
-  })
+      end,
+    })
+  end
   events.dispose.on(function()
     if vim.api.nvim_buf_is_valid(context.buf) then
       vim.api.nvim_buf_clear_namespace(context.buf, context.ns, 0, -1)

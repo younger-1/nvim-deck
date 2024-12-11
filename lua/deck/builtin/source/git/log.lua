@@ -172,11 +172,11 @@ return function(option)
           Async.run(function()
             helper.open_preview_buffer(env.win, {
               contents = git
-                :get_unified_diff({
-                  from_rev = item.data.hash_parents[1],
-                  to_rev = item.data.hash,
-                })
-                :sync(5000),
+                  :get_unified_diff({
+                    from_rev = item.data.hash_parents[1],
+                    to_rev = item.data.hash,
+                  })
+                  :sync(5000),
               filetype = 'diff',
             })
           end)
@@ -190,18 +190,17 @@ return function(option)
           local item = ctx.get_cursor_item()
           return item and item.data.body_raw
         end,
-        decorate = function(ctx, item, row)
+        decorate = function(_, item)
           local lines = vim
-            .iter(vim.split(item.data.body_raw:gsub('\n*$', ''), '\n'))
-            :map(function(text)
-              return { { '  ' .. text, 'Comment' } }
-            end)
-            :totable()
+              .iter(vim.split(item.data.body_raw:gsub('\n*$', ''), '\n'))
+              :map(function(text)
+                return { { '  ' .. text, 'Comment' } }
+              end)
+              :totable()
           table.insert(lines, { { '' } })
-          vim.api.nvim_buf_set_extmark(ctx.buf, ctx.ns, row, 0, {
+          return {
             virt_lines = lines,
-            hl_mode = 'combine',
-          })
+          }
         end,
       },
     },

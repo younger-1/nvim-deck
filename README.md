@@ -280,19 +280,26 @@ require('deck').register_decorator({
     local display_text = item.display_text
     local s, e = display_text:find(dirname, 1, true)
     if s then
-      -- Hide the directory part (using conceal)
-      vim.api.nvim_buf_set_extmark(ctx.buf, ctx.ns, row, s - 1, {
-        end_row = row,
-        end_col = e + 1,
-        conceal = '',
-        ephemeral = true,
-      })
-      -- Display the directory name as a comment at the end of the line
-      vim.api.nvim_buf_set_extmark(ctx.buf, ctx.ns, row, 0, {
-        virt_text = { { dirname, 'Comment' } },
-        virt_text_pos = 'eol'
-      })
+      return {
+        -- Hide the directory part (using conceal)
+        {
+          row = row,
+          col = s - 1,
+          end_row = row,
+          end_col = e + 1,
+          conceal = '',
+          ephemeral = true,
+        },
+        -- Display the directory name as a comment at the end of the line
+        {
+          row = row,
+          col = 0,
+          virt_text = { { dirname, 'Comment' } },
+          virt_text_pos = 'eol'
+        }
+      }
     end
+    return {}
   end
 })
 ```

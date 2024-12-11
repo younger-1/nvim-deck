@@ -8,15 +8,13 @@ decorators.source_name = {
   resolve = function(ctx)
     return #ctx.get_source_names() > 1
   end,
-  decorate = function(ctx, item, row)
-    vim.api.nvim_buf_set_extmark(ctx.buf, ctx.ns, row, 0, {
-      virt_text = {
-        { ('%s'):format(item[symbols.source].name), 'Comment' },
-        { ' ' },
-      },
+  decorate = function(_, item)
+    return {
+      col = 0,
+      virt_text = { { ('%s'):format(item[symbols.source].name), 'Comment' } },
       virt_text_pos = 'right_align',
       hl_mode = 'combine',
-    })
+    }
   end,
 }
 
@@ -26,50 +24,54 @@ decorators.highlights = {
   resolve = function(_, item)
     return type(item.highlights) == 'table'
   end,
-  decorate = function(ctx, item, row)
+  decorate = function(_, item)
+    local decorations = {}
     for _, hi in ipairs(item.highlights or {}) do
       if hi.hl_group then
-        vim.api.nvim_buf_set_extmark(ctx.buf, ctx.ns, row, hi[1], {
-          end_row = row,
+        table.insert(decorations, {
+          col = hi[1],
           end_col = hi[2],
           hl_group = hi.hl_group,
-          hl_mode = 'combine',
           ephemeral = true,
         })
       end
     end
+    return decorations
   end,
 }
 
 ---@type deck.Decorator
 decorators.query_matches = {
   name = 'query_matches',
+  dynamic = true,
   resolve = function(_, item)
     return item[symbols.matches]
   end,
-  decorate = function(ctx, item, row)
+  decorate = function(_, item)
+    local decorations = {}
     for _, match in ipairs(item[symbols.matches]) do
-      vim.api.nvim_buf_set_extmark(ctx.buf, ctx.ns, row, match[1], {
-        end_row = row,
+      table.insert(decorations, {
+        col = match[1],
         end_col = match[2],
         hl_group = 'Search',
-        hl_mode = 'combine',
         ephemeral = true,
       })
     end
+    return decorations
   end,
 }
 
 ---@type deck.Decorator
 decorators.selection = {
   name = 'selection',
-  decorate = function(ctx, item, row)
-    vim.api.nvim_buf_set_extmark(ctx.buf, ctx.ns, row, 0, {
+  dynamic = true,
+  decorate = function(ctx, item)
+    return {
+      col = 0,
       sign_text = ctx.get_selected(item) and '*' or ' ',
       sign_hl_group = 'SignColumn',
-      hl_mode = 'combine',
-    })
-  end,
+    }
+  end
 }
 
 ---@type deck.Decorator
@@ -94,22 +96,18 @@ do
     resolve = function(_, item)
       return item.data.filename
     end,
-    decorate = function(ctx, item, row)
+    decorate = function(_, item)
+      local decorations = {}
       local is_dir = vim.fn.isdirectory(item.data.filename) == 1
 
       -- icons decoration.
       if get_icon then
         local icon, hl = get_icon(is_dir and 'directory' or 'file', item.data.filename)
         if icon then
-          vim.api.nvim_buf_set_extmark(ctx.buf, ctx.ns, row, 0, {
-            virt_text = {
-              -- padding for cursor col.
-              { ' ' },
-              { icon, hl },
-              { ' ' },
-            },
+          table.insert(decorations, {
+            col = 0,
+            virt_text = { { ' ' }, { icon, hl }, { ' ' } },
             virt_text_pos = 'inline',
-            hl_mode = 'combine',
           })
         end
       end
@@ -118,18 +116,16 @@ do
       local buf = vim.fn.bufnr(item.data.filename)
       if not is_dir and buf ~= -1 then
         local modified = vim.api.nvim_get_option_value('modified', { buf = buf })
-        vim.api.nvim_buf_set_extmark(ctx.buf, ctx.ns, row, 0, {
-          virt_text = {
-            { modified and '[+]' or '', 'SpecialKey' },
-            { ' ' },
-            { ('#%s'):format(buf), 'Comment' },
-          },
-
+        table.insert(decorations, {
+          col = 0,
+          virt_text = { { modified and '[+]' or '', 'SpecialKey' }, { ' ' }, { ('#%s'):format(buf), 'Comment' }, },
           virt_text_pos = 'eol',
           hl_mode = 'combine',
           ephemeral = true,
         })
       end
+
+      return decorations
     end,
   }
 end

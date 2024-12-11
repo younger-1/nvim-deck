@@ -12,6 +12,26 @@ local Context = require('deck.Context')
 ---@alias deck.Match { [1]: integer, [2]: integer }
 
 ---@doc.type
+---@class deck.Decoration
+---@field public col? integer
+---@field public end_col? integer
+---@field public hl_group? string
+---@field public virt_text? deck.VirtualText[]
+---@field public virt_text_pos? 'eol' | 'overlay' | 'right_align' | 'inline'
+---@field public virt_text_win_col? integer
+---@field public virt_text_hide? boolean
+---@field public virt_text_repeat_linebreak? boolean
+---@field public virt_lines? deck.VirtualText[][]
+---@field public virt_lines_above? boolean
+---@field public ephemeral? boolean
+---@field public priority? integer
+---@field public sign_text? string
+---@field public sign_hl_group? string
+---@field public number_hl_group? string
+---@field public line_hl_group? string
+---@field public conceal? boolean
+
+---@doc.type
 ---@alias deck.Matcher fun(query: string, text: string): boolean, deck.Match[]?
 
 ---@class deck.ItemSpecifier
@@ -63,6 +83,7 @@ local Context = require('deck.Context')
 ---@doc.type
 ---@class deck.Decorator
 ---@field public name string
+---@field public dynamic? boolean
 ---@field public resolve? deck.DecoratorResolveFunction
 ---@field public decorate deck.DecoratorDecorateFunction
 
@@ -70,7 +91,7 @@ local Context = require('deck.Context')
 ---@alias deck.DecoratorResolveFunction fun(ctx: deck.Context, item: deck.Item): any
 
 ---@doc.type
----@alias deck.DecoratorDecorateFunction fun(ctx: deck.Context, item: deck.Item, row: integer): any
+---@alias deck.DecoratorDecorateFunction fun(ctx: deck.Context, item: deck.Item): deck.Decoration|deck.Decoration[]
 
 ---@doc.type
 ---@class deck.Previewer
