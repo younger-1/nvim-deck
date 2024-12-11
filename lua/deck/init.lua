@@ -119,11 +119,13 @@ local Context = require('deck.Context')
 ---@field public performance { interrupt_interval: integer, interrupt_timeout: integer }
 
 ---@class deck.ConfigSpecifier
+---@field public guicursor? string
 ---@field public max_history_size? integer
 ---@field public default_start_config? deck.StartConfigSpecifier
 
 ---@doc.type
 ---@class deck.Config: deck.ConfigSpecifier
+---@field public guicursor? string
 ---@field public max_history_size integer
 ---@field public default_start_config? deck.StartConfigSpecifier
 
@@ -183,6 +185,12 @@ function deck.setup(config)
   end
 
   internal.config = kit.merge(kit.clone(config), internal.config)
+end
+
+---Return deck config.
+---@return deck.ConfigSpecifier
+function deck.get_config()
+  return kit.clone(internal.config)
 end
 
 --[=[@doc

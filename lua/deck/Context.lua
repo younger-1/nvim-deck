@@ -441,6 +441,18 @@ function Context.create(id, sources, start_config)
       vim.schedule(function()
         events.show.emit()
       end)
+      --[=[@doc
+        category = "autocmd"
+        name = "DeckShow"
+        desc = "Triggered after deck window shown."
+      --]=]
+      vim.api.nvim_exec_autocmds('User', {
+        pattern = 'DeckShow',
+        modeline = false,
+        data = {
+          ctx = context
+        },
+      })
     end,
 
     ---Hide context via given view.
@@ -449,6 +461,18 @@ function Context.create(id, sources, start_config)
       vim.schedule(function()
         events.hide.emit()
       end)
+      --[=[@doc
+        category = "autocmd"
+        name = "DeckHide"
+        desc = "Triggered after deck window hidden."
+      --]=]
+      vim.api.nvim_exec_autocmds('User', {
+        pattern = 'DeckHide',
+        modeline = false,
+        data = {
+          ctx = context
+        },
+      })
     end,
 
     ---Start prompt.
@@ -866,6 +890,25 @@ function Context.create(id, sources, start_config)
   end, {
     pattern = ('<buffer=%s>'):format(context.buf),
   }))
+
+  -- guicursor.
+  do
+    local config_guicursor = require('deck').get_config().guicursor
+    if config_guicursor then
+      local restore_guicursor = vim.o.guicursor
+      events.dispose.on(autocmd('BufEnter', function()
+        restore_guicursor = vim.o.guicursor
+        vim.api.nvim_set_option_value('guicursor', config_guicursor, {})
+      end, {
+        pattern = ('<buffer=%s>'):format(context.buf),
+      }))
+      events.dispose.on(autocmd('BufLeave', function()
+        vim.api.nvim_set_option_value('guicursor', restore_guicursor, {})
+      end, {
+        pattern = ('<buffer=%s>'):format(context.buf),
+      }))
+    end
+  end
 
   -- re-render.
   events.dispose.on(autocmd({ 'BufEnter', 'WinResized', 'WinScrolled' }, function()

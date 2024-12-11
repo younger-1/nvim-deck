@@ -129,6 +129,30 @@ end)
 
 !!! We strongly recommend using `lua-language-server` !!!
 
+### Appearance
+
+You can customize your nvim-deck appearance.
+
+1. guicursor
+
+```lua
+require('deck').setup({
+  guicursor = 'a:ver25',
+})
+```
+
+2. winhighlight
+
+````lua
+vim.api.nvim_create_autocmd('User', {
+  group = misc.group,
+  pattern = 'DeckShow',
+  callback = function()
+    vim.wo.winhighlight = 'CursorLine:Visual'
+  end
+})
+```
+
 ### Source
 
 The source is typed as |deck.Source|. The source can be executed by
