@@ -48,7 +48,7 @@ return setmetatable({
   ---@param option { ignore_paths?: string[] }
   __call = function(self, option)
     option = option or {}
-    option.ignore_paths = option.ignore_paths or { vim.fn.getcwd() }
+    option.ignore_paths = option.ignore_paths or {}
 
     local ignore_path_map = {}
     for _, ignore_path in ipairs(option.ignore_paths) do
