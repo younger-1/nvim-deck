@@ -1,4 +1,5 @@
 local helper = require('deck.helper')
+local IO = require('deck.kit.IO')
 local Git = require('deck.helper.git')
 local Async = require('deck.kit.Async')
 
@@ -28,12 +29,9 @@ return function(option)
         ctx.execute()
       end,
     },
-    execute = function(ctx)
+    execute = function(execute_context)
       Async.run(function()
         local branches = git:branch():await() --[=[@as deck.builtin.source.git.Branch[]]=]
-        local current_branch = vim.iter(branches):find(function(branch)
-          return branch.current
-        end) --[=[@as deck.builtin.source.git.Branch?]=]
 
         local menu = {}
 
@@ -95,7 +93,10 @@ return function(option)
           end,
         })
 
-        -- push current branch.
+        local current_branch = vim.iter(branches):find(function(branch)
+          return branch.current
+        end) --[=[@as deck.builtin.source.git.Branch?]=]
+
         if current_branch then
           if current_branch.upstream then
             table.insert(menu, {
@@ -127,12 +128,12 @@ return function(option)
             ---@param action_ctx deck.Context
             execute = function(action_ctx)
               git
-                :push({
-                  branch = current_branch,
-                })
-                :next(function()
-                  action_ctx.execute()
-                end)
+                  :push({
+                    branch = current_branch,
+                  })
+                  :next(function()
+                    action_ctx.execute()
+                  end)
             end,
           })
           table.insert(menu, {
@@ -147,13 +148,57 @@ return function(option)
             ---@param action_ctx deck.Context
             execute = function(action_ctx)
               git
-                :push({
-                  branch = current_branch,
-                  force = true,
-                })
-                :next(function()
-                  action_ctx.execute()
-                end)
+                  :push({
+                    branch = current_branch,
+                    force = true,
+                  })
+                  :next(function()
+                    action_ctx.execute()
+                  end)
+            end,
+          })
+        end
+
+        local is_rebasing = (
+          IO.is_directory(vim.fs.joinpath(git.cwd, '.git/rebase-apply')):await() or
+          IO.is_directory(vim.fs.joinpath(git.cwd, '.git/rebase-merge')):await()
+        )
+        if is_rebasing then
+          table.insert(menu, {
+            columns = {
+              '@ rebase --continue',
+              { 'continue commit', 'Comment' },
+            },
+            execute = function(ctx)
+              git:exec_print({ 'git', 'rebase', '--continue' }, {
+                env = {
+                  GIT_EDITOR = 'true',
+                }
+              }):next(function()
+                ctx.execute()
+              end)
+            end,
+          })
+          table.insert(menu, {
+            columns = {
+              '@ rebase --skip',
+              { 'skip commit', 'Comment' },
+            },
+            execute = function(ctx)
+              git:exec_print({ 'git', 'rebase', '--skip' }):next(function()
+                ctx.execute()
+              end)
+            end,
+          })
+          table.insert(menu, {
+            columns = {
+              '@ rebase --abort',
+              { 'abort rebase', 'Comment' },
+            },
+            execute = function(ctx)
+              git:exec_print({ 'git', 'rebase', '--abort' }):next(function()
+                ctx.execute()
+              end)
             end,
           })
         end
@@ -163,14 +208,14 @@ return function(option)
         end, { sep = ' │ ' })
 
         for i, item in ipairs(menu) do
-          ctx.item({
+          execute_context.item({
             display_text = display_texts[i],
             highlights = highlights[i],
             data = item,
           })
         end
 
-        ctx.done()
+        execute_context.done()
       end)
     end,
     actions = {

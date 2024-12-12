@@ -619,7 +619,7 @@ end
 
 ---Execute command and print.
 ---@param command string[]
----@param option? { buffering?: deck.kit.System.Buffering }
+---@param option? { buffering?: deck.kit.System.Buffering, env: { [string]: string } }
 ---@return deck.kit.Async.AsyncTask
 function Git:exec_print(command, option)
   return Async.run(function()
@@ -651,6 +651,7 @@ function Git:exec_print(command, option)
       local close --@type fun():void
       close = System.spawn(command, {
         cwd = self.cwd,
+        env = option and option.env or nil,
         buffering = option and option.buffering or System.LineBuffering.new({
           ignore_empty = false,
         }),
@@ -679,7 +680,7 @@ end
 
 ---Execute command.
 ---@param command string[]
----@param option? { buffering?: deck.kit.System.Buffering }
+---@param option? { buffering?: deck.kit.System.Buffering, env: { [string]: string } }
 ---@return deck.kit.Async.AsyncTask
 function Git:exec(command, option)
   return Async.new(function(resolve)
@@ -688,6 +689,7 @@ function Git:exec(command, option)
     local close --@type fun():void
     close = System.spawn(command, {
       cwd = self.cwd,
+      env = option and option.env or nil,
       buffering = option and option.buffering or System.LineBuffering.new({
         ignore_empty = false,
       }),
