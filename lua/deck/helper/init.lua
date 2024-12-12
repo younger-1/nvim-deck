@@ -34,15 +34,17 @@ function helper.open_preview_buffer(win, file)
   end
 
   -- treesitter syntax.
-  local ok, msg = pcall(function()
-    if filetype then
+  local ok, fallback = pcall(function()
+    if filetype and not vim.tbl_contains({ 'diff', 'gitcommit' }, filetype) then
       local lang = vim.treesitter.language.get_lang(filetype)
       if lang and lang ~= 'text' then
         vim.treesitter.start(buf, lang)
+        return false
       end
     end
+    return true
   end)
-  if not ok and msg then
+  if not ok or fallback then
     -- vim syntax.
     if filetype ~= 'text' then
       vim.api.nvim_buf_call(buf, function()
