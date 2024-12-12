@@ -434,12 +434,28 @@ deck.start(require('deck.builtin.source.git.changeset')({
 
 Show git log.
 
-| Name | Type   | Default | Description      |
-| ---- | ------ | ------- | ---------------- |
-| cwd  | string |         | Target git root. |
+| Name      | Type     | Default | Description       |
+| --------- | -------- | ------- | ----------------- |
+| cwd       | string   |         | Target git root.  |
+| max_count | integer? |         | Max count for log |
 
 ```lua
 deck.start(require('deck.builtin.source.git.log')({
+  cwd = vim.fn.getcwd(),
+}))
+```
+
+### git.reflog
+
+Show git reflog.
+
+| Name      | Type     | Default | Description          |
+| --------- | -------- | ------- | -------------------- |
+| cwd       | string   |         | Target git root.     |
+| max_count | integer? |         | Max count for reflog |
+
+```lua
+deck.start(require('deck.builtin.source.git.reflog')({
   cwd = vim.fn.getcwd(),
 }))
 ```
