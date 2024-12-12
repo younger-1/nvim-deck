@@ -143,7 +143,7 @@ require('deck').setup({
 
 2. winhighlight
 
-````lua
+```lua
 vim.api.nvim_create_autocmd('User', {
   group = misc.group,
   pattern = 'DeckShow',
