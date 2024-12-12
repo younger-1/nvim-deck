@@ -16,6 +16,11 @@ local Async = require('deck.kit.Async')
   name = "cwd"
   type = "string"
   desc = "Target git root."
+
+  [[options]]
+  name = "max_count"
+  type = "integer?"
+  desc = "Max count for log"
 ]=]
 ---@param option { cwd: string, max_count?: integer }
 return function(option)

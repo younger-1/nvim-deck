@@ -234,29 +234,18 @@ function Git:status()
     end)
 end
 
----Get log.
----@class deck.builtin.source.git.Log
----@field text string
----@field hash string
----@field hash_short string
----@field hash_parents string[]
----@field author_name string
----@field author_email string
----@field author_date string
----@field subject string
----@field body string
----@field body_raw string
+---Get reflog.
 ---@param params { count?: integer, offset?: integer }
 ---@return deck.kit.Async.AsyncTask
-function Git:log(params)
+function Git:reflog(params)
   local sep_count = 12
   return self
     :exec({
       'git',
-      'log',
+      'reflog',
       params.count and ('--max-count=%s'):format((params.count or 100) + 1),
       params.offset and ('--skip=%s'):format(params.offset),
-      '--pretty=format:%H%x00%P%x00%an%x00%ae%x00%ai%x00%s%x00%b%x00%B' .. ('%x00'):rep(sep_count),
+      '--pretty=format:%H%x00%P%x00%an%x00%ae%x00%ai%x00%s%x00%b%x00%B%x00%gD%x00%gd%x00%gs' .. ('%x00'):rep(sep_count),
     }, {
       buffering = System.DelimiterBuffering.new({ delimiter = ('\0'):rep(sep_count) .. '\n' }),
     })
@@ -277,6 +266,65 @@ function Git:log(params)
             subject = columns[6],
             body = columns[7],
             body_raw = (columns[8] or ''):gsub('\r\n', '\n'):gsub('\r', '\n'),
+            reflog_selector = columns[9],
+            reflog_selector_short = columns[10],
+            reflog_subject = columns[11],
+          })
+        end
+        return items
+      end
+    )
+end
+
+---Get log.
+---@class deck.builtin.source.git.Log
+---@field text string
+---@field hash string
+---@field hash_short string
+---@field hash_parents string[]
+---@field author_name string
+---@field author_email string
+---@field author_date string
+---@field subject string
+---@field body string
+---@field body_raw string
+---@field reflog_selector string
+---@field reflog_selector_short string
+---@field reflog_subject string
+---@param params { count?: integer, offset?: integer }
+---@return deck.kit.Async.AsyncTask
+function Git:log(params)
+  local sep_count = 12
+  return self
+    :exec({
+      'git',
+      'log',
+      params.count and ('--max-count=%s'):format((params.count or 100) + 1),
+      params.offset and ('--skip=%s'):format(params.offset),
+      '--pretty=format:%H%x00%P%x00%an%x00%ae%x00%ai%x00%s%x00%b%x00%B%x00%gD%x00%gd%x00%gs' .. ('%x00'):rep(sep_count),
+    }, {
+      buffering = System.DelimiterBuffering.new({ delimiter = ('\0'):rep(sep_count) .. '\n' }),
+    })
+    :next(
+      ---@param out deck.builtin.source.git.Git.ExecOutput
+      function(out)
+        local items = {}
+        for _, text in ipairs(out.stdout) do
+          local columns = vim.split(text, '\0')
+          table.insert(items, {
+            text = text,
+            hash = columns[1],
+            hash_short = columns[1]:sub(1, 7),
+            hash_parents = vim.split(columns[2] or '', ' '),
+            author_name = columns[3],
+            author_email = columns[4],
+            author_date = columns[5],
+            subject = columns[6],
+            body = columns[7],
+            body_raw = (columns[8] or ''):gsub('\r\n', '\n'):gsub('\r', '\n'),
+            reflog_selector = columns[9],
+            reflog_selector_short = columns[10],
+            reflog_subject = columns[11],
           })
         end
         return items

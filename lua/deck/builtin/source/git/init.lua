@@ -73,6 +73,18 @@ return function(option)
 
         table.insert(menu, {
           columns = {
+            'reflog',
+            { 'show reflogs', 'Comment' },
+          },
+          execute = function()
+            require('deck').start(require('deck.builtin.source.git.reflog')({
+              cwd = option.cwd,
+            }))
+          end,
+        })
+
+        table.insert(menu, {
+          columns = {
             'remote',
             { 'show remotes', 'Comment' },
           },
