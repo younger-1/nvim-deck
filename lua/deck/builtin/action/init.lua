@@ -44,9 +44,6 @@ do
         return false
       end,
       execute = function(ctx)
-        local prev_win = vim.api.nvim_get_current_win()
-        local prev_cursor = vim.api.nvim_win_get_cursor(prev_win)
-
         local win = vim.iter(win_history):find(function(win)
           return vim.api.nvim_win_is_valid(win) and vim.api.nvim_get_option_value('buftype', {
             buf = vim.api.nvim_win_get_buf(win),
@@ -77,9 +74,6 @@ do
 
         if not option.keep then
           ctx.hide()
-        else
-          vim.api.nvim_set_current_win(prev_win)
-          vim.api.nvim_win_set_cursor(prev_win, prev_cursor)
         end
       end,
     }
@@ -396,17 +390,14 @@ action.substitute = {
     return true
   end,
   execute = function(ctx)
-    ---@type { buf: number, filename: string, lnum: number, line: string }[]
+    ---@type { buf: number, filename: string, lnum: number, text: string }[]
     local substitute_targets = {}
 
     -- open all files.
     local buf_lines = {}
+    local filename_buf = {}
     for _, item in ipairs(ctx.get_action_items()) do
-      if not buf_lines[item.data.filename] then
-        buf_lines[item.data.filename] = {}
-      end
-      if not buf_lines[item.data.filename][item.data.lnum] then
-        buf_lines[item.data.filename][item.data.lnum] = true
+      if not filename_buf[item.data.filename] then
         vim.cmd.edit({
           item.data.filename,
           mods = {
@@ -415,34 +406,34 @@ action.substitute = {
             keepjumps = true,
           },
         })
-        if not vim.api.nvim_get_option_value('modified', { buf = 0 }) then
-          table.insert(substitute_targets, {
-            buf = vim.api.nvim_get_current_buf(),
-            filename = item.data.filename,
-            lnum = item.data.lnum,
-            line = vim.api.nvim_buf_get_lines(0, item.data.lnum - 1, item.data.lnum, false)[1] or '',
-          })
-        else
+        filename_buf[item.data.filename] = vim.api.nvim_get_current_buf()
+        if vim.api.nvim_get_option_value('modified', { buf = 0 }) then
           notify.show({
-            { { ('File "%s" is modified.'):format(item.data.filename), 'ErrorMsg' } },
+            { { ('Skip. File "%s" is modified.'):format(item.data.filename), 'ErrorMsg' } },
           })
         end
+      end
+
+      local buf = filename_buf[item.data.filename]
+      if not buf_lines[buf] then
+        buf_lines[buf] = {}
+      end
+      if not buf_lines[buf][item.data.lnum] then
+        buf_lines[buf][item.data.lnum] = true
+        table.insert(substitute_targets, {
+          buf = buf,
+          filename = item.data.filename,
+          lnum = item.data.lnum,
+          text = vim.api.nvim_buf_get_lines(buf, item.data.lnum - 1, item.data.lnum, false)[1] or '',
+        })
       end
     end
 
     -- create substitute buffer.
     local buf = vim.api.nvim_create_buf(false, true)
-    vim.api.nvim_buf_set_lines(
-      buf,
-      0,
-      -1,
-      false,
-      vim
-      .iter(substitute_targets)
-      :map(function(target)
-        return target.line
-      end)
-      :totable()
+    vim.api.nvim_buf_set_lines(buf, 0, -1, false, vim.iter(substitute_targets):map(function(target)
+      return target.text
+    end):totable()
     )
     vim.api.nvim_buf_set_name(buf, 'substitute')
     vim.api.nvim_set_option_value('buftype', 'acwrite', { buf = buf })
@@ -475,8 +466,11 @@ action.substitute = {
           for i, target in ipairs(substitute_targets) do
             vim.api.nvim_buf_call(target.buf, function()
               vim.api.nvim_buf_set_lines(target.buf, target.lnum - 1, target.lnum, false, { vim.api.nvim_buf_get_lines(buf, i - 1, i, false)[1] })
-              vim.cmd.write()
             end)
+          end
+          for _, b in pairs(filename_buf) do
+            vim.api.nvim_win_set_buf(0, b)
+            vim.cmd.write()
           end
           vim.api.nvim_win_hide(0)
         end,
