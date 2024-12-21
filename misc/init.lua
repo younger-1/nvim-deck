@@ -1,13 +1,13 @@
 -- Bootstrap lazy.nvim
-local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+local lazypath = vim.fn.stdpath('data') .. '/lazy/lazy.nvim'
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
-  local lazyrepo = "https://github.com/folke/lazy.nvim.git"
-  local out = vim.fn.system({ "git", "clone", "--filter=blob:none", "--branch=stable", lazyrepo, lazypath })
+  local lazyrepo = 'https://github.com/folke/lazy.nvim.git'
+  local out = vim.fn.system({ 'git', 'clone', '--filter=blob:none', '--branch=stable', lazyrepo, lazypath })
   if vim.v.shell_error ~= 0 then
     vim.api.nvim_echo({
-      { "Failed to clone lazy.nvim:\n", "ErrorMsg" },
-      { out,                            "WarningMsg" },
-      { "\nPress any key to exit..." },
+      { 'Failed to clone lazy.nvim:\n', 'ErrorMsg' },
+      { out, 'WarningMsg' },
+      { '\nPress any key to exit...' },
     }, true, {})
     vim.fn.getchar()
     os.exit(1)
@@ -18,8 +18,8 @@ vim.opt.rtp:prepend(lazypath)
 -- Make sure to setup `mapleader` and `maplocalleader` before
 -- loading lazy.nvim so that mappings are correct.
 -- This is also a good place to setup other settings (vim.opt)
-vim.g.mapleader = " "
-vim.g.maplocalleader = "\\"
+vim.g.mapleader = ' '
+vim.g.maplocalleader = '\\'
 
 vim.o.hidden = true
 vim.o.backup = false
@@ -62,26 +62,26 @@ do
 end
 
 -- Setup lazy.nvim
-require("lazy").setup({
+require('lazy').setup({
   spec = {
-    "NStefan002/screenkey.nvim",
-  {
-    "nvim-treesitter/nvim-treesitter",
-    lazy = false
-  },
+    'NStefan002/screenkey.nvim',
     {
-      "echasnovski/mini.nvim",
-      lazy = false
+      'nvim-treesitter/nvim-treesitter',
+      lazy = false,
     },
     {
-      "bluz71/vim-nightfly-colors",
+      'echasnovski/mini.nvim',
+      lazy = false,
+    },
+    {
+      'bluz71/vim-nightfly-colors',
       lazy = false,
       config = function()
         vim.cmd.colorscheme('nightfly')
-      end
+      end,
     },
     {
-      "hrsh7th/nvim-deck",
+      'hrsh7th/nvim-deck',
       dir = vim.fn.isdirectory('/root/nvim-deck') and '/root/nvim-deck' or nil,
       config = function()
         local deck = require('deck')
@@ -106,12 +106,12 @@ require("lazy").setup({
             ctx.keymap('n', '<CR>', deck.action_mapping('default'))
             ctx.keymap('n', 'o', deck.action_mapping('open'))
             ctx.keymap('n', 'O', deck.action_mapping('open_keep'))
-            ctx.keymap('n', 's', deck.action_mapping('open_s'))
-            ctx.keymap('n', 'v', deck.action_mapping('open_v'))
+            ctx.keymap('n', 's', deck.action_mapping('open_split'))
+            ctx.keymap('n', 'v', deck.action_mapping('open_vsplit'))
             ctx.keymap('n', 'N', deck.action_mapping('create'))
             ctx.keymap('n', '<C-u>', deck.action_mapping('scroll_preview_up'))
             ctx.keymap('n', '<C-d>', deck.action_mapping('scroll_preview_down'))
-          end
+          end,
         })
 
         vim.keymap.set('n', '<Leader>ff', '<Cmd>Deck files<CR>', { desc = 'Show recent files, buffers, and more' })
@@ -133,8 +133,8 @@ require("lazy").setup({
             ctx.do_action('default')
           end
         end)
-      end
-    }
+      end,
+    },
   },
   -- automatically check for plugin updates
   checker = { enabled = true },

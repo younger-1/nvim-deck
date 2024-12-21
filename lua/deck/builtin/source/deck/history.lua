@@ -23,7 +23,7 @@ return function()
     end,
     actions = {
       require('deck').alias_action('default', 'deck.history.resume'),
-      require('deck').alias_action('delete', 'deck.history.delete'),
+      require('deck').alias_action('delete', 'deck.history.dispose'),
       {
         name = 'deck.history.resume',
         resolve = function(ctx)
