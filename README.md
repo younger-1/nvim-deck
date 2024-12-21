@@ -90,8 +90,8 @@ vim.api.nvim_create_autocmd('User', {
     ctx.keymap('n', '<CR>', deck.action_mapping('default'))
     ctx.keymap('n', 'o', deck.action_mapping('open'))
     ctx.keymap('n', 'O', deck.action_mapping('open_keep'))
-    ctx.keymap('n', 's', deck.action_mapping('open_s'))
-    ctx.keymap('n', 'v', deck.action_mapping('open_v'))
+    ctx.keymap('n', 's', deck.action_mapping('open_split'))
+    ctx.keymap('n', 'v', deck.action_mapping('open_vsplit'))
     ctx.keymap('n', 'N', deck.action_mapping('create'))
     ctx.keymap('n', '<C-u>', deck.action_mapping('scroll_preview_up'))
     ctx.keymap('n', '<C-d>', deck.action_mapping('scroll_preview_down'))
@@ -556,7 +556,7 @@ List recent files.
 | ignore_paths | string[]? | []      | Ignore paths. |
 
 ```lua
-deck.start(require('deck.builtin.source.recent_dirs')({
+deck.start(require('deck.builtin.source.recent_files')({
   ignore_paths = { '**/node_modules/', '**/.git/' },
 }))
 ```
