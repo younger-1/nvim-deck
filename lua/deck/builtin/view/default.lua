@@ -216,17 +216,17 @@ function default_view.create(config)
           }
           if not is_visible(state.win_preview) then
             state.win_preview = vim.api.nvim_open_win(vim.api.nvim_create_buf(false, true), false, win_config)
-            vim.api.nvim_set_option_value('wrap', false, { win = state.win_preview })
-            vim.api.nvim_set_option_value('winhighlight', 'Normal:Normal,FloatBorder:Normal,FloatTitle:Normal,FloatFooter:Normal', { win = state.win_preview })
-            vim.api.nvim_set_option_value('number', true, { win = state.win_preview })
-            vim.api.nvim_set_option_value('numberwidth', 5, { win = state.win_preview })
-            vim.api.nvim_set_option_value('scrolloff', 0, { win = state.win_preview })
           else
             win_config.noautocmd = nil
             vim.api.nvim_win_set_config(state.win_preview, win_config)
           end
-          vim.api.nvim_set_option_value('modified', false, { buf = vim.api.nvim_win_get_buf(state.win_preview) })
           ctx.get_previewer().preview(ctx, item, { win = state.win_preview })
+          vim.api.nvim_set_option_value('wrap', false, { win = state.win_preview })
+          vim.api.nvim_set_option_value('winhighlight', 'Normal:Normal,FloatBorder:Normal,FloatTitle:Normal,FloatFooter:Normal', { win = state.win_preview })
+          vim.api.nvim_set_option_value('number', true, { win = state.win_preview })
+          vim.api.nvim_set_option_value('numberwidth', 5, { win = state.win_preview })
+          vim.api.nvim_set_option_value('scrolloff', 0, { win = state.win_preview })
+          vim.api.nvim_set_option_value('modified', false, { buf = vim.api.nvim_win_get_buf(state.win_preview) })
         end
       end
 
