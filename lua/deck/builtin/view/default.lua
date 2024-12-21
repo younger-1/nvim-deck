@@ -220,6 +220,7 @@ function default_view.create(config)
             vim.api.nvim_set_option_value('winhighlight', 'Normal:Normal,FloatBorder:Normal,FloatTitle:Normal,FloatFooter:Normal', { win = state.win_preview })
             vim.api.nvim_set_option_value('number', true, { win = state.win_preview })
             vim.api.nvim_set_option_value('numberwidth', 5, { win = state.win_preview })
+            vim.api.nvim_set_option_value('scrolloff', 0, { win = state.win_preview })
           else
             win_config.noautocmd = nil
             vim.api.nvim_win_set_config(state.win_preview, win_config)
