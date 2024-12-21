@@ -6,7 +6,7 @@ local Async = require('deck.kit.Async')
   name = "recent_files"
   desc = "List recent files."
   example = """
-    deck.start(require('deck.builtin.source.recent_dirs')({
+    deck.start(require('deck.builtin.source.recent_files')({
       ignore_paths = { '**/node_modules/', '**/.git/' },
     }))
   """
