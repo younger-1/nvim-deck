@@ -966,6 +966,22 @@ function Context.create(id, sources, start_config)
     pattern = ('<buffer=%s>'):format(context.buf),
   }))
 
+  -- close preview window.
+  do
+    local preview_mode = context.get_preview_mode()
+    events.dispose.on(autocmd('BufLeave', function()
+      preview_mode = context.get_preview_mode()
+      context.set_preview_mode(false)
+    end, {
+      pattern = ('<buffer=%s>'):format(context.buf),
+    }))
+    events.dispose.on(autocmd('BufEnter', function()
+      context.set_preview_mode(preview_mode)
+    end, {
+      pattern = ('<buffer=%s>'):format(context.buf),
+    }))
+  end
+
   -- hide window after dispose.
   events.dispose.on(function()
     context.hide()
