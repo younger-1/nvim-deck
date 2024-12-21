@@ -358,7 +358,7 @@ function FloatingWindow:_update_scrollbar()
       do
         self._scrollbar_track_win = show_or_move(self._scrollbar_track_win, self._scrollbar_track_buf, {
           row = win_config.row + border_size.top,
-          col = win_config.col + viewport.outer_width - (border_size.right),
+          col = win_config.col + viewport.outer_width - border_size.right,
           width = 1,
           height = viewport.inner_height,
           style = 'minimal',
@@ -371,7 +371,7 @@ function FloatingWindow:_update_scrollbar()
         local thumb_row = math.floor(viewport.inner_height * (topline / viewport.content_height))
         self._scrollbar_thumb_win = show_or_move(self._scrollbar_thumb_win, self._scrollbar_thumb_buf, {
           row = win_config.row + border_size.top + thumb_row,
-          col = win_config.col + viewport.outer_width - (border_size.right),
+          col = win_config.col + viewport.outer_width - border_size.right,
           width = 1,
           height = thumb_height,
           style = 'minimal',
