@@ -556,7 +556,7 @@ List recent files.
 | ignore_paths | string[]? | []      | Ignore paths. |
 
 ```lua
-deck.start(require('deck.builtin.source.recent_files')({
+deck.start(require('deck.builtin.source.recent_dirs')({
   ignore_paths = { '**/node_modules/', '**/.git/' },
 }))
 ```
