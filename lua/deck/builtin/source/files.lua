@@ -16,7 +16,7 @@ end
 
 ---@type deck.builtin.source.files.Finder
 local function ripgrep(root_dir, ignore_globs, ctx)
-  local command = { 'rg', '--files' }
+  local command = { 'rg', '--files', '-.' }
   for _, glob in ipairs(ignore_globs or {}) do
     table.insert(command, '--glob')
     table.insert(command, '!' .. glob)
