@@ -1,39 +1,55 @@
 local kit = require('deck.kit')
 
----Compute border size.
----@param border nil | string | string[]
----@return { top: integer, right: integer, bottom: integer, left: integer }
-local function compute_border_size(border)
-  if not border then
-    return { top = 0, right = 0, bottom = 0, left = 0 }
-  end
-  if type(border) == 'string' then
-    if border == 'none' then
-      return { top = 0, right = 0, bottom = 0, left = 0 }
-    elseif border == 'single' then
-      return { top = 1, right = 1, bottom = 1, left = 1 }
-    elseif border == 'double' then
-      return { top = 2, right = 2, bottom = 2, left = 2 }
-    elseif border == 'rounded' then
-      return { top = 1, right = 1, bottom = 1, left = 1 }
-    elseif border == 'solid' then
-      return { top = 1, right = 1, bottom = 1, left = 1 }
-    elseif border == 'shadow' then
-      return { top = 0, right = 1, bottom = 1, left = 0 }
-    end
-    return { top = 0, right = 0, bottom = 0, left = 0 }
-  end
-  local chars = border --[=[@as string[]]=]
-  while #chars < 8 do
-    chars = kit.concat(chars, chars)
-  end
-  return {
-    top = vim.fn.strdisplaywidth(chars[2]),
-    right = vim.fn.strdisplaywidth(chars[4]),
-    bottom = vim.fn.strdisplaywidth(chars[6]),
-    left = vim.fn.strdisplaywidth(chars[8]),
-  }
-end
+---@alias deck.kit.Vim.FloatingWindow.WindowKind 'main' | 'scrollbar_track' | 'scrollbar_thumb'
+
+---@class deck.kit.Vim.FloatingWindow.BorderSize
+---@field public top integer
+---@field public left integer
+---@field public right integer
+---@field public bottom integer
+---@field public h integer
+---@field public v integer
+
+---@class deck.kit.Vim.FloatingWindow.ContentSize
+---@field public width integer
+---@field public height integer
+
+---@class deck.kit.Vim.FloatingWindow.Config
+---@field public row integer 0-indexed utf-8
+---@field public col integer 0-indexed utf-8
+---@field public width integer
+---@field public height integer
+---@field public border? string | string[]
+---@field public anchor? "NW" | "NE" | "SW" | "SE"
+---@field public style? string
+---@field public zindex? integer
+
+---@class deck.kit.Vim.FloatingWindow.Viewport
+---@field public row integer
+---@field public col integer
+---@field public inner_width integer window inner width
+---@field public inner_height integer window inner height
+---@field public outer_width integer window outer width that includes border and scrollbar width
+---@field public outer_height integer window outer height that includes border width
+---@field public border_size deck.kit.Vim.FloatingWindow.BorderSize
+---@field public content_size deck.kit.Vim.FloatingWindow.ContentSize
+---@field public scrollbar boolean
+---@field public ui_width integer
+---@field public ui_height integer
+---@field public border string | string[] | nil
+
+---@class deck.kit.Vim.FloatingWindow
+---@field private _augroup string
+---@field private _buf_option table<string, { [string]: any }>
+---@field private _win_option table<string, { [string]: any }>
+---@field private _buf integer
+---@field private _scrollbar_track_buf integer
+---@field private _scrollbar_thumb_buf integer
+---@field private _win? integer
+---@field private _scrollbar_track_win? integer
+---@field private _scrollbar_thumb_win? integer
+local FloatingWindow = {}
+FloatingWindow.__index = FloatingWindow
 
 ---Returns true if the window is visible
 ---@param win? integer
@@ -54,7 +70,7 @@ end
 ---@param config deck.kit.Vim.FloatingWindow.Config
 ---@return integer
 local function show_or_move(win, buf, config)
-  local border_size = compute_border_size(config.border)
+  local border_size = FloatingWindow.get_border_size(config.border)
   if config.anchor == 'NE' then
     config.col = config.col - config.width - border_size.right - border_size.left
   elseif config.anchor == 'SW' then
@@ -62,7 +78,6 @@ local function show_or_move(win, buf, config)
   elseif config.anchor == 'SE' then
     config.row = config.row - config.height - border_size.top - border_size.bottom
     config.col = config.col - config.width - border_size.right - border_size.left
-  else
   end
   config.anchor = 'NW'
 
@@ -103,38 +118,104 @@ local function hide(win)
   end
 end
 
----@class deck.kit.Vim.FloatingWindow.Config
----@field public row integer 0-indexed utf-8
----@field public col integer 0-indexed utf-8
----@field public width integer
----@field public height integer
----@field public border? string | string[]
----@field public anchor? "NW" | "NE" | "SW" | "SE"
----@field public style? string
----@field public zindex? integer
+---Get border size.
+---@param border nil | string | string[]
+---@return deck.kit.Vim.FloatingWindow.BorderSize
+function FloatingWindow.get_border_size(border)
+  local maybe_border_size = (function()
+    if not border then
+      return { top = 0, right = 0, bottom = 0, left = 0 }
+    end
+    if type(border) == 'string' then
+      if border == 'none' then
+        return { top = 0, right = 0, bottom = 0, left = 0 }
+      elseif border == 'single' then
+        return { top = 1, right = 1, bottom = 1, left = 1 }
+      elseif border == 'double' then
+        return { top = 2, right = 2, bottom = 2, left = 2 }
+      elseif border == 'rounded' then
+        return { top = 1, right = 1, bottom = 1, left = 1 }
+      elseif border == 'solid' then
+        return { top = 1, right = 1, bottom = 1, left = 1 }
+      elseif border == 'shadow' then
+        return { top = 0, right = 1, bottom = 1, left = 0 }
+      end
+      return { top = 0, right = 0, bottom = 0, left = 0 }
+    end
+    local chars = border --[=[@as string[]]=]
+    while #chars < 8 do
+      chars = kit.concat(chars, chars)
+    end
+    return {
+      top = vim.api.nvim_strwidth(chars[2]),
+      right = vim.fn.nvim_strwidth(chars[4]),
+      bottom = vim.fn.nvim_strwidth(chars[6]),
+      left = vim.fn.nvim_strwidth(chars[8]),
+    }
+  end)()
+  maybe_border_size.v = maybe_border_size.top + maybe_border_size.bottom
+  maybe_border_size.h = maybe_border_size.left + maybe_border_size.right
+  return maybe_border_size
+end
 
----@class deck.kit.Vim.FloatingWindow.Viewport
----@field public content_width integer buffer content width
----@field public content_height integer buffer content height
----@field public inner_width integer window inner width
----@field public inner_height integer window inner height
----@field public outer_width integer window outer width that includes border and scrollbar width
----@field public outer_height integer window outer height that includes border width
----@field public border_size { top: integer, right: integer, bottom: integer, left: integer }
----@field public scrollbar boolean
+---Get content size.
+---@param contents string[]
+---@param wrap boolean
+---@param max_width integer
+---@return deck.kit.Vim.FloatingWindow.ContentSize
+function FloatingWindow.get_content_size(contents, wrap, max_width)
+  local text_widths = {} ---@type integer[]
 
----@class deck.kit.Vim.FloatingWindow
----@field private _augroup string
----@field private _buf_option table<string, { [string]: any }>
----@field private _win_option table<string, { [string]: any }>
----@field private _buf integer
----@field private _scrollbar_track_buf integer
----@field private _scrollbar_thumb_buf integer
----@field private _win? integer
----@field private _scrollbar_track_win? integer
----@field private _scrollbar_thumb_win? integer
-local FloatingWindow = {}
-FloatingWindow.__index = FloatingWindow
+  --- compute content width.
+  local content_width --[=[@as integer]=]
+  do
+    local max_text_width = 0
+    for i, text in ipairs(contents) do
+      text_widths[i] = vim.api.nvim_strwidth(text)
+      max_text_width = math.max(max_text_width, text_widths[i])
+    end
+    content_width = max_text_width
+  end
+
+  --- compute content height.
+  local content_height --[=[@as integer]=]
+  do
+    if wrap then
+      local height = 0
+      for _, text_width in ipairs(text_widths) do
+        height = height + math.max(1, math.ceil(text_width / max_width))
+      end
+      content_height = height
+    else
+      content_height = #text_widths
+    end
+  end
+
+  return {
+    width = content_width,
+    height = content_height,
+  }
+end
+
+---Guess viewport information.
+---@param params { border_size: deck.kit.Vim.FloatingWindow.BorderSize, content_size: deck.kit.Vim.FloatingWindow.ContentSize, max_outer_width: integer, max_outer_height: integer }
+---@return { inner_width: integer, inner_height: integer, outer_width: integer, outer_height: integer, scrollbar: boolean }
+function FloatingWindow.compute_restricted_size(params)
+  local inner_size = {
+    width = math.min(params.content_size.width, params.max_outer_width - params.border_size.h),
+    height = math.min(params.content_size.height, params.max_outer_height - params.border_size.v),
+  }
+
+  local scrollbar = inner_size.height < params.content_size.height
+
+  return {
+    outer_width = inner_size.width + params.border_size.h + (scrollbar and 1 or 0),
+    outer_height = inner_size.height + params.border_size.v,
+    inner_width = inner_size.width,
+    inner_height = inner_size.height,
+    scrollbar = scrollbar,
+  }
+end
 
 ---Create window.
 ---@return deck.kit.Vim.FloatingWindow
@@ -154,7 +235,7 @@ end
 ---Set window option.
 ---@param key string
 ---@param value any
----@param kind? 'main' | 'scrollbar_track' | 'scrollbar_thumb'
+---@param kind? deck.kit.Vim.FloatingWindow.WindowKind
 function FloatingWindow:set_win_option(key, value, kind)
   kind = kind or 'main'
   self._win_option[kind] = self._win_option[kind] or {}
@@ -164,7 +245,7 @@ end
 
 ---Get window option.
 ---@param key string
----@param kind? 'main' | 'scrollbar_track' | 'scrollbar_thumb'
+---@param kind? deck.kit.Vim.FloatingWindow.WindowKind
 ---@return any
 function FloatingWindow:get_win_option(key, kind)
   kind = kind or 'main'
@@ -182,7 +263,7 @@ end
 ---Set buffer option.
 ---@param key string
 ---@param value any
----@param kind? 'main' | 'scrollbar_track' | 'scrollbar_thumb'
+---@param kind? deck.kit.Vim.FloatingWindow.WindowKind
 function FloatingWindow:set_buf_option(key, value, kind)
   kind = kind or 'main'
   self._buf_option[kind] = self._buf_option[kind] or {}
@@ -192,7 +273,7 @@ end
 
 ---Get window option.
 ---@param key string
----@param kind? 'main' | 'scrollbar_track' | 'scrollbar_thumb'
+---@param kind? deck.kit.Vim.FloatingWindow.WindowKind
 ---@return any
 function FloatingWindow:get_buf_option(key, kind)
   kind = kind or 'main'
@@ -208,24 +289,26 @@ function FloatingWindow:get_buf_option(key, kind)
 end
 
 ---Returns the related bufnr.
-function FloatingWindow:get_buf()
+---@param kind? deck.kit.Vim.FloatingWindow.WindowKind
+---@return integer
+function FloatingWindow:get_buf(kind)
+  if kind == 'scrollbar_track' then
+    return self._scrollbar_track_buf
+  elseif kind == 'scrollbar_thumb' then
+    return self._scrollbar_thumb_buf
+  end
   return self._buf
 end
 
----Returns scrollbar track bufnr.
----@return integer
-function FloatingWindow:get_scrollbar_track_buf()
-  return self._scrollbar_track_buf
-end
-
----Returns scrollbar thumb bufnr.
----@return integer
-function FloatingWindow:get_scrollbar_thumb_buf()
-  return self._scrollbar_thumb_buf
-end
-
 ---Returns the current win.
-function FloatingWindow:get_win()
+---@param kind? deck.kit.Vim.FloatingWindow.WindowKind
+---@return integer?
+function FloatingWindow:get_win(kind)
+  if kind == 'scrollbar_track' then
+    return self._scrollbar_track_win
+  elseif kind == 'scrollbar_thumb' then
+    return self._scrollbar_thumb_win
+  end
   return self._win
 end
 
@@ -287,58 +370,38 @@ function FloatingWindow:is_visible()
   return is_visible(self._win)
 end
 
----Conpute border size.
----@param border nil | string | string[]
----@return { top: integer, right: integer, bottom: integer, left: integer }
-function FloatingWindow:compute_border_size(border)
-  return compute_border_size(border)
-end
-
----Conpute window viewport.
----@param config { area_width: integer, area_height: integer, border: string | string[] }
+---Get window viewport.
+---NOTE: this method can only be called if window is showing.
 ---@return deck.kit.Vim.FloatingWindow.Viewport
-function FloatingWindow:compute_viewport(config)
-  local border_size = compute_border_size(config.border)
-  local text_widths = {} --[=[@as integer[]]=]
-
-  -- calculate content width.
-  local content_width --[=[@as integer]=]
-  do
-    local max_text_width = 0
-    for i, text in ipairs(vim.api.nvim_buf_get_lines(self._buf, 0, -1, false)) do
-      text_widths[i] = vim.fn.strdisplaywidth(text)
-      max_text_width = math.max(max_text_width, text_widths[i])
-    end
-    content_width = max_text_width
+function FloatingWindow:get_viewport()
+  if not self:is_visible() then
+    error('this method can only be called if window is showing.')
   end
 
-  -- calculate content height.
-  local content_height --[=[@as integer]=]
-  do
-    if self:get_win_option('wrap') then
-      local max_possible_inner_width = config.area_width - border_size.left - border_size.right
-      local height = 0
-      for _, text_width in ipairs(text_widths) do
-        height = height + math.max(1, math.ceil(text_width / max_possible_inner_width))
-      end
-      content_height = height
-    else
-      content_height = #text_widths
-    end
-  end
+  local win_config = vim.api.nvim_win_get_config(self:get_win() --[[@as integer]])
+  local border_size = FloatingWindow.get_border_size(win_config.border)
+  local content_size = FloatingWindow.get_content_size(
+    vim.api.nvim_buf_get_lines(self:get_buf(), 0, -1, false),
+    self:get_win_option('wrap'),
+    win_config.width
+  )
+  local scrollbar = win_config.height < content_size.height
 
-  local inner_height = math.min(content_height, config.area_height - border_size.top - border_size.bottom)
-  local scrollbar = content_height > inner_height
-  local inner_width = math.min(content_width, config.area_width - border_size.left - border_size.right - (scrollbar and 1 or 0))
+  local ui_width = border_size.left + border_size.right + (scrollbar and 1 or 0)
+  local ui_height = border_size.top + border_size.bottom
   return {
-    content_width = content_width,
-    content_height = content_height,
-    inner_width = inner_width,
-    inner_height = inner_height,
-    outer_width = inner_width + border_size.left + border_size.right + (scrollbar and 1 or 0),
-    outer_height = inner_height + border_size.top + border_size.bottom,
+    row = win_config.row,
+    col = win_config.col,
+    inner_width = win_config.width,
+    inner_height = win_config.height,
+    outer_width = win_config.width + ui_width,
+    outer_height = win_config.height + ui_height,
+    ui_width = ui_width,
+    ui_height = ui_height,
     border_size = border_size,
+    content_size = content_size,
     scrollbar = scrollbar,
+    border = win_config.border,
   }
 end
 
@@ -346,19 +409,14 @@ end
 function FloatingWindow:_update_scrollbar()
   if is_visible(self._win) then
     local win_config = vim.api.nvim_win_get_config(self._win)
-    local border_size = compute_border_size(win_config.border)
+    local border_size = FloatingWindow.get_border_size(win_config.border)
 
-    local viewport = self:compute_viewport({
-      area_width = win_config.width + border_size.left + border_size.right,
-      area_height = win_config.height + border_size.top + border_size.bottom,
-      border = win_config.border,
-    })
-
+    local viewport = self:get_viewport()
     if viewport.scrollbar then
       do
         self._scrollbar_track_win = show_or_move(self._scrollbar_track_win, self._scrollbar_track_buf, {
           row = win_config.row + border_size.top,
-          col = win_config.col + viewport.outer_width - border_size.right,
+          col = win_config.col + viewport.outer_width - 1,
           width = 1,
           height = viewport.inner_height,
           style = 'minimal',
@@ -367,11 +425,13 @@ function FloatingWindow:_update_scrollbar()
       end
       do
         local topline = vim.fn.getwininfo(self._win)[1].topline
-        local thumb_height = math.ceil(viewport.inner_height * (viewport.inner_height / viewport.content_height))
-        local thumb_row = math.floor(viewport.inner_height * (topline / viewport.content_height))
+        local ratio = topline / (viewport.content_size.height - viewport.inner_height)
+        local thumb_height = math.ceil(viewport.inner_height / viewport.content_size.height * viewport.inner_height)
+        local thumb_row = math.floor((viewport.inner_height - thumb_height) * ratio)
+        thumb_row = math.min(viewport.inner_height - thumb_height, thumb_row)
         self._scrollbar_thumb_win = show_or_move(self._scrollbar_thumb_win, self._scrollbar_thumb_buf, {
           row = win_config.row + border_size.top + thumb_row,
-          col = win_config.col + viewport.outer_width - border_size.right,
+          col = win_config.col + viewport.outer_width - 1,
           width = 1,
           height = thumb_height,
           style = 'minimal',

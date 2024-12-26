@@ -93,15 +93,15 @@ end
 ---@param option? { sep?: string }
 ---@return string[], deck.Highlight[]
 function helper.create_aligned_display_texts(items, callback, option)
-  local strdisplaywidth ---@type fun(string: string): integer
+  local get_strwidth ---@type fun(string: string): integer
   do
     local cache = {}
-    strdisplaywidth = function(str)
+    get_strwidth = function(str)
       str = str or ''
       if cache[str] then
         return cache[str]
       end
-      cache[str] = vim.fn.strdisplaywidth(str)
+      cache[str] = vim.api.nvim_strwidth(str)
       return cache[str]
     end
   end
@@ -117,7 +117,7 @@ function helper.create_aligned_display_texts(items, callback, option)
     for j, column in ipairs(columns) do
       column = normalize_display_text(column)
       column_definitions[j] = column_definitions[j] or { max_width = 0, columns = {} }
-      column_definitions[j].max_width = math.max(column_definitions[j].max_width, strdisplaywidth(column[1]))
+      column_definitions[j].max_width = math.max(column_definitions[j].max_width, get_strwidth(column[1]))
       column_definitions[j].columns[i] = column
     end
   end
@@ -147,7 +147,7 @@ function helper.create_aligned_display_texts(items, callback, option)
       if j == #column_definitions then
         table.insert(display_text, column[1])
       else
-        local padding = (' '):rep(column_definition.max_width - strdisplaywidth(column[1]))
+        local padding = (' '):rep(column_definition.max_width - get_strwidth(column[1]))
         local padded = ('%s%s'):format(column[1], padding)
         table.insert(display_text, padded)
         table.insert(display_text, sep[1])

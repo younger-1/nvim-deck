@@ -93,7 +93,7 @@ local function render(max_width, max_height)
     local width = max_width
     local height = 0
     for _, line in ipairs(lines) do
-      height = height + math.ceil(math.max(vim.fn.strdisplaywidth(line), 1) / width)
+      height = height + math.ceil(math.max(vim.api.nvim_strwidth(line), 1) / width)
     end
     height = math.max(1, math.min(max_height, height))
 
