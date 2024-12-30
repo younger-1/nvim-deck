@@ -835,7 +835,7 @@ function Context.create(id, sources, start_config)
         end
 
         return false
-      end, 16)
+      end, 0)
     end,
 
     ---Set keymap to the deck buffer.
