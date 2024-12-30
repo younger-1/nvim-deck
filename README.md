@@ -542,6 +542,9 @@ List recent directories.
 | ignore_paths | string[]? | []      | Ignore paths. |
 
 ```lua
+require('deck.builtin.source.recent_dirs'):setup({
+  path = '~/.deck.recent_dirs'
+})
 deck.start(require('deck.builtin.source.recent_dirs')({
   ignore_paths = { '**/node_modules/', '**/.git/' },
 }))
@@ -556,6 +559,9 @@ List recent files.
 | ignore_paths | string[]? | []      | Ignore paths. |
 
 ```lua
+require('deck.builtin.source.recent_files'):setup({
+  path = '~/.deck.recent_files'
+})
 deck.start(require('deck.builtin.source.recent_files')({
   ignore_paths = { '**/node_modules/', '**/.git/' },
 }))
