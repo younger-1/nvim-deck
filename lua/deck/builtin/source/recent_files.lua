@@ -6,6 +6,9 @@ local Async = require('deck.kit.Async')
   name = "recent_files"
   desc = "List recent files."
   example = """
+    require('deck.builtin.source.recent_files'):setup({
+      path = '~/.deck.recent_files'
+    })
     deck.start(require('deck.builtin.source.recent_files')({
       ignore_paths = { '**/node_modules/', '**/.git/' },
     }))
@@ -19,6 +22,20 @@ local Async = require('deck.kit.Async')
 ]=]
 return setmetatable({
   vfile = VFile.new(vim.fs.normalize('~/.deck.recent_files')),
+
+  ---Setup.
+  ---@param config { path: string }
+  setup = function(self, config)
+    local path = vim.fs.normalize(config.path)
+    if vim.fn.filereadable(path) == 0 then
+      error('`config.path` must be readable file.')
+    end
+    self.vfile = VFile.new(path)
+  end,
+
+  ---Add entry.
+  ---@param self unknown
+  ---@param target_path string
   add = function(self, target_path)
     if not target_path then
       return
