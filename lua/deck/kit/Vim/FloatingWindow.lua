@@ -201,9 +201,11 @@ function FloatingWindow.get_content_size(params)
       content_height = vim.api.nvim_buf_line_count(params.bufnr)
     end
 
-    for _, extmark in ipairs(vim.api.nvim_buf_get_extmarks(params.bufnr, -1, 0, -1, {
-      details = true,
-    })) do
+    for _, extmark in
+      ipairs(vim.api.nvim_buf_get_extmarks(params.bufnr, -1, 0, -1, {
+        details = true,
+      }))
+    do
       if extmark[4] and extmark[4].virt_lines then
         content_height = content_height + #extmark[4].virt_lines
       end
@@ -419,7 +421,7 @@ function FloatingWindow:get_viewport()
     bufnr = self:get_buf(),
     wrap = self:get_win_option('wrap'),
     max_inner_width = win_config.width,
-    markdown = self:get_config().markdown
+    markdown = self:get_config().markdown,
   })
   local scrollbar = win_config.height < content_size.height
 
@@ -460,14 +462,14 @@ function FloatingWindow:_update_scrollbar()
       do
         local topline = vim.fn.getwininfo(self._win)[1].topline
         local ratio = topline / (viewport.content_size.height - viewport.inner_height)
-        local thumb_height = math.ceil(viewport.inner_height / viewport.content_size.height * viewport.inner_height)
-        local thumb_row = math.floor((viewport.inner_height - thumb_height) * ratio)
-        thumb_row = math.min(viewport.inner_height - thumb_height, thumb_row)
+        local thumb_height = viewport.inner_height / viewport.content_size.height * viewport.inner_height
+        local thumb_row = (viewport.inner_height - thumb_height) * ratio
+        thumb_row = math.floor(math.min(viewport.inner_height - thumb_height, thumb_row))
         self._scrollbar_thumb_win = show_or_move(self._scrollbar_thumb_win, self._scrollbar_thumb_buf, {
           row = viewport.row + viewport.border_size.top + thumb_row,
           col = viewport.col + viewport.outer_width - 1,
           width = 1,
-          height = thumb_height,
+          height = math.ceil(thumb_height),
           style = 'minimal',
           zindex = viewport.zindex + 2,
         })

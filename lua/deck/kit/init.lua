@@ -277,8 +277,8 @@ end
 ---@param tbl2 T
 ---@return T
 function kit.merge(tbl1, tbl2)
-  local is_dict1 = kit.is_dict(tbl1)
-  local is_dict2 = kit.is_dict(tbl2)
+  local is_dict1 = kit.is_dict(tbl1) and getmetatable(tbl1) == nil
+  local is_dict2 = kit.is_dict(tbl2) and getmetatable(tbl2) == nil
   if is_dict1 and is_dict2 then
     local new_tbl = {}
     for k, v in pairs(tbl2) do

@@ -2,12 +2,12 @@ local LSP = require('deck.kit.LSP')
 local AsyncTask = require('deck.kit.Async.AsyncTask')
 
 ---@class deck.kit.LSP.Client
----@field public client table
+---@field public client vim.lsp.Client
 local Client = {}
 Client.__index = Client
 
 ---Create LSP Client wrapper.
----@param client table
+---@param client vim.lsp.Client
 ---@return deck.kit.LSP.Client
 function Client.new(client)
   local self = setmetatable({}, Client)
