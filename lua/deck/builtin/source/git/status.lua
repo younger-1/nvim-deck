@@ -64,6 +64,7 @@ return function(option)
               git
                 :vimdiff({
                   filename = item.data.filename,
+                  filename_before = item.data.filename_before,
                 })
                 :sync(5000)
             end

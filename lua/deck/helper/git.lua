@@ -450,7 +450,7 @@ function Git:get_unified_diff(params)
 end
 
 ---Open vimdiff.
----@param params { filename: string, from_rev?: string, to_rev?: string }
+---@param params { filename: string, filename_before?: string, from_rev?: string, to_rev?: string }
 ---@return deck.kit.Async.AsyncTask
 function Git:vimdiff(params)
   return Async.run(function()
@@ -481,7 +481,7 @@ function Git:vimdiff(params)
     end
 
     vim.cmd.tabnew()
-    open_rev(params.filename, params.from_rev or 'HEAD')
+    open_rev(params.filename_before or params.filename, params.from_rev or 'HEAD')
     vim.cmd.diffthis()
 
     vim.cmd.vnew()
