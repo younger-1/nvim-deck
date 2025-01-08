@@ -77,6 +77,7 @@ function default_view.create(config)
         -- setup window.
         vim.api.nvim_win_set_var(0, 'deck_builtin_view_default', true)
         vim.api.nvim_set_option_value('wrap', false, { win = 0 })
+        vim.api.nvim_set_option_value('number', false, { win = 0 })
 
         vim.cmd.buffer({ ctx.buf, bang = true })
 
