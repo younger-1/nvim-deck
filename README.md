@@ -533,6 +533,18 @@ deck.start(require('deck.builtin.source.items')({
 }))
 ```
 
+### lines
+
+Show buffer lines.
+
+_No options_
+
+```lua
+deck.start(require('deck.builtin.source.lines')({
+  bufnrs = { vim.api.nvim_get_current_buf() },
+}))
+```
+
 ### recent_dirs
 
 List recent directories.

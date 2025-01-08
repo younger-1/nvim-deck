@@ -569,6 +569,19 @@ Listing any provided items.
 <
 
 
+LINES ~
+
+Show buffer lines.
+
+_No options_
+
+>lua
+    deck.start(require('deck.builtin.source.lines')({
+      bufnrs = { vim.api.nvim_get_current_buf() },
+    }))
+<
+
+
 RECENT_DIRS ~
 
 List recent directories.
