@@ -61,6 +61,13 @@ function easy.setup(config)
       })
     end)
 
+    -- Register `lines` start preset.
+    deck.register_start_preset('lines', function()
+      deck.start({
+        require('deck.builtin.source.lines')(),
+      })
+    end)
+
     -- Register `grep` start preset.
     deck.register_start_preset('grep', function()
       local pattern = vim.fn.input('grep: ')

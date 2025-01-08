@@ -55,26 +55,29 @@ return function(option)
               return
             end
 
-            for capture, node, metadata, _ in state.highlighter_query:query():iter_captures(root_node, bufnr, row, root_end_row + 1) do
-              ---@diagnostic disable-next-line: invisible
-              local hl_id = state.highlighter_query:get_hl_from_capture(capture)
-              if hl_id then
+            for capture, node, metadata, _ in state.highlighter_query:query():iter_captures(root_node, bufnr, row, row + 1) do
+              if capture then
                 local start_row, start_col, end_row, end_col = node:range(false)
                 if end_row < row then
                   return
                 end
-                if start_row <= row and row <= end_row then
-                  start_col = start_row == row and start_col or 0
-                  end_col = end_row == row and end_col or #item.data.text
 
-                  local conceal = metadata.conceal or metadata[capture] and metadata[capture].conceal
-                  table.insert(extmarks, {
-                    col = start_col,
-                    end_col = end_col,
-                    hl_group = hl_id,
-                    priority = tonumber(metadata.priority or metadata[capture] and metadata[capture].priority),
-                    conceal = conceal,
-                  })
+                ---@diagnostic disable-next-line: invisible
+                local hl_id = state.highlighter_query:get_hl_from_capture(capture)
+                if hl_id then
+                  if start_row <= row and row <= end_row then
+                    start_col = start_row == row and start_col or 0
+                    end_col = end_row == row and end_col or #item.data.text
+
+                    local conceal = metadata.conceal or metadata[capture] and metadata[capture].conceal
+                    table.insert(extmarks, {
+                      col = start_col,
+                      end_col = end_col,
+                      hl_group = hl_id,
+                      priority = tonumber(metadata.priority or metadata[capture] and metadata[capture].priority),
+                      conceal = conceal,
+                    })
+                  end
                 end
               end
             end
