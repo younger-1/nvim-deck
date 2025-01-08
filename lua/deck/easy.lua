@@ -63,9 +63,10 @@ function easy.setup(config)
 
     -- Register `lines` start preset.
     deck.register_start_preset('lines', function()
-      deck.start({
+      local ctx = deck.start({
         require('deck.builtin.source.lines')(),
       })
+      ctx.set_preview_mode(true)
     end)
 
     -- Register `grep` start preset.
