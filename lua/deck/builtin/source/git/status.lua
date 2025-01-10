@@ -62,11 +62,11 @@ return function(option)
           for _, item in ipairs(ctx.get_action_items()) do
             if item.data.type ~= 'untracked' or item.data.type ~= 'ignored' then
               git
-                :vimdiff({
-                  filename = item.data.filename,
-                  filename_before = item.data.filename_before,
-                })
-                :sync(5000)
+                  :vimdiff({
+                    filename = item.data.filename,
+                    filename_before = item.data.filename_before,
+                  })
+                  :sync(5000)
             end
           end
         end,
@@ -92,6 +92,46 @@ return function(option)
           end)
         end,
       },
+      {
+        name = 'git.status.checkout_ours',
+        resolve = function(ctx)
+          for _, item in ipairs(ctx.get_action_items()) do
+            if item.data.type == 'unmerged' then
+              return true
+            end
+          end
+        end,
+        execute = function(ctx)
+          Async.run(function()
+            for _, item in ipairs(ctx.get_action_items()) do
+              if item.data.type == 'unmerged' then
+                git:exec_print({ 'git', 'checkout', '--ours', item.data.filename }):await()
+              end
+            end
+            ctx.execute()
+          end)
+        end,
+      },
+    {
+      name = 'git.status.checkout_theirs',
+      resolve = function(ctx)
+        for _, item in ipairs(ctx.get_action_items()) do
+          if item.data.type == 'unmerged' then
+            return true
+          end
+        end
+      end,
+      execute = function(ctx)
+        Async.run(function()
+          for _, item in ipairs(ctx.get_action_items()) do
+            if item.data.type == 'unmerged' then
+              git:exec_print({ 'git', 'checkout', '--theirs', item.data.filename }):await()
+            end
+          end
+          ctx.execute()
+        end)
+      end,
+    },
       {
         name = 'git.status.add',
         execute = function(ctx)
@@ -142,11 +182,11 @@ return function(option)
         end,
         execute = function(ctx)
           local status_items = vim
-            .iter(ctx.get_action_items())
-            :map(function(item)
-              return item.data
-            end)
-            :totable()
+              .iter(ctx.get_action_items())
+              :map(function(item)
+                return item.data
+              end)
+              :totable()
           git:commit({ items = status_items }, function()
             ctx.execute()
           end)
@@ -163,11 +203,11 @@ return function(option)
         end,
         execute = function(ctx)
           local status_items = vim
-            .iter(ctx.get_action_items())
-            :map(function(item)
-              return item.data
-            end)
-            :totable()
+              .iter(ctx.get_action_items())
+              :map(function(item)
+                return item.data
+              end)
+              :totable()
           git:commit({ items = status_items, amend = true }, function()
             ctx.execute()
           end)
@@ -186,11 +226,11 @@ return function(option)
         preview = function(_, item, env)
           helper.open_preview_buffer(env.win, {
             contents = git
-              :get_unified_diff({
-                from_rev = 'HEAD',
-                filename = item.data.filename,
-              })
-              :sync(5000),
+                :get_unified_diff({
+                  from_rev = 'HEAD',
+                  filename = item.data.filename,
+                })
+                :sync(5000),
             filename = item.data.filename,
             filetype = 'diff',
           })
