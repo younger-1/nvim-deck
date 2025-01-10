@@ -961,7 +961,9 @@ function Context.create(id, sources, start_config)
 
   -- re-render.
   events.dispose.on(autocmd({ 'BufEnter', 'WinResized', 'WinScrolled' }, function()
-    render()
+    vim.schedule(function()
+      render()
+    end)
   end, {
     pattern = ('<buffer=%s>'):format(context.buf),
   }))
