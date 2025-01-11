@@ -1001,7 +1001,7 @@ Start deck with given sources.
     ---@class deck.Source
     ---@field public name string
     ---@field public dynamic? boolean
-    ---@field public events? { Start?: fun(ctx: deck.Context), BufWinEnter?: fun(ctx: deck.Context) }
+    ---@field public events? { Start?: fun(ctx: deck.Context), BufWinEnter?: fun(ctx: deck.Context, env: { first: boolean }) }
     ---@field public execute deck.SourceExecuteFunction
     ---@field public actions? deck.Action[]
     ---@field public decorators? deck.Decorator[]
@@ -1017,6 +1017,7 @@ Start deck with given sources.
     ---@field public matcher deck.Matcher
     ---@field public history boolean
     ---@field public performance { interrupt_interval: integer, interrupt_timeout: integer }
+    ---@field public dedup boolean
 <
 
 *deck.StartPreset*
