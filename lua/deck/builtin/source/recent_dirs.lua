@@ -1,6 +1,8 @@
 local VFile = require('deck.helper.vfile')
 local Async = require('deck.kit.Async')
 
+local pruned = false
+
 --[=[@doc
   category = "source"
   name = "recent_dirs"
@@ -8,6 +10,11 @@ local Async = require('deck.kit.Async')
   example = """
     require('deck.builtin.source.recent_dirs'):setup({
       path = '~/.deck.recent_dirs'
+    })
+    vim.api.nvim_create_autocmd('DirChanged', {
+      callback = function(e)
+        require('deck.builtin.source.recent_dirs'):add(e.cwd)
+      end,
     })
     deck.start(require('deck.builtin.source.recent_dirs')({
       ignore_paths = { '**/node_modules/', '**/.git/' },
@@ -33,6 +40,19 @@ return setmetatable({
     self.vfile = VFile.new(path)
   end,
 
+  ---Prune entries (remove duplicates and non-existent entries).
+  ---@param self unknown
+  prune = function(self)
+    local seen = {}
+    for i = #self.vfile.contents, 1, -1 do
+      local path = self.vfile.contents[i]
+      if seen[path] or vim.fn.isdirectory(path) == 0 then
+        table.remove(self.vfile.contents, i)
+      end
+      seen[path] = true
+    end
+  end,
+
   ---Add entry.
   ---@param self unknown
   ---@param target_path string
@@ -52,12 +72,8 @@ return setmetatable({
       local path = self.vfile.contents[i]
       if seen[path] then
         table.remove(self.vfile.contents, i)
-      else
-        seen[path] = true
-        if vim.fn.isdirectory(path) == 0 then
-          table.remove(self.vfile.contents, i)
-        end
       end
+      seen[path] = true
     end
     table.insert(self.vfile.contents, target_path)
   end,
@@ -70,6 +86,11 @@ return setmetatable({
     local ignore_path_map = {}
     for _, ignore_path in ipairs(option.ignore_paths) do
       ignore_path_map[ignore_path] = true
+    end
+
+    if not pruned then
+      self:prune()
+      pruned = true
     end
 
     ---@type deck.Source
