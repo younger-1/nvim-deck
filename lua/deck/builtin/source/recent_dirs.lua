@@ -1,4 +1,5 @@
 local VFile = require('deck.helper.vfile')
+local IO = require('deck.kit.IO')
 local Async = require('deck.kit.Async')
 
 local pruned = false
@@ -97,19 +98,45 @@ return setmetatable({
     return {
       name = 'recent_dirs',
       execute = function(ctx)
+        local sync_count = vim.o.lines
+        local contents = self.vfile.contents
         Async.run(function()
-          local contents = self.vfile.contents
-          for i = #contents, 1, -1 do
+          local i = #contents
+          -- sync items.
+          while i > 0 do
             local path = contents[i]
             if not ignore_path_map[path] then
-              ctx.item({
-                display_text = vim.fn.fnamemodify(path, ':~'),
-                data = {
-                  filename = path,
-                },
-              })
+              if vim.fn.isdirectory(path) == 1 then
+                ctx.item({
+                  display_text = vim.fn.fnamemodify(path, ':~'),
+                  data = {
+                    filename = path,
+                  },
+                })
+                sync_count = sync_count - 1
+              end
             end
+            if sync_count == 0 then
+              break
+            end
+            i = i - 1
           end
+          -- async items.
+          while i > 0 do
+            local path = contents[i]
+            if not ignore_path_map[path] then
+              if IO.exists(path):await() then
+                ctx.item({
+                  display_text = vim.fn.fnamemodify(path, ':~'),
+                  data = {
+                    filename = path,
+                  },
+                })
+              end
+            end
+            i = i - 1
+          end
+
           ctx.done()
         end)
       end,
