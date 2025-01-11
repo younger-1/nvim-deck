@@ -557,6 +557,11 @@ List recent directories.
 require('deck.builtin.source.recent_dirs'):setup({
   path = '~/.deck.recent_dirs'
 })
+vim.api.nvim_create_autocmd('DirChanged', {
+  callback = function(e)
+    require('deck.builtin.source.recent_dirs'):add(e.cwd)
+  end,
+})
 deck.start(require('deck.builtin.source.recent_dirs')({
   ignore_paths = { '**/node_modules/', '**/.git/' },
 }))
@@ -573,6 +578,14 @@ List recent files.
 ```lua
 require('deck.builtin.source.recent_files'):setup({
   path = '~/.deck.recent_files'
+})
+vim.api.nvim_create_autocmd('BufEnter', {
+  callback = function()
+    local bufname = vim.api.nvim_buf_get_name(0)
+    if vim.fn.filereadable(bufname) == 1 then
+      require('deck.builtin.source.recent_files'):add(vim.fs.normalize(bufname))
+    end
+  end,
 })
 deck.start(require('deck.builtin.source.recent_files')({
   ignore_paths = { '**/node_modules/', '**/.git/' },
