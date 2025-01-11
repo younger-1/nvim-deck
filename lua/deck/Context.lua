@@ -33,6 +33,7 @@ local Status = {
 ---@field query string
 ---@field select_all boolean
 ---@field select_map table<deck.Item, boolean|nil>
+---@field dedup_map table<string, boolean>
 ---@field preview_mode boolean
 ---@field revision deck.Context.Revision
 ---@field source_state table<deck.Source, deck.Context.SourceState>
@@ -170,6 +171,7 @@ function Context.create(id, sources, start_config)
     query = '',
     select_all = false,
     select_map = {},
+    dedup_map = {},
     preview_mode = false,
     revision = {
       execute = 0,
@@ -288,7 +290,8 @@ function Context.create(id, sources, start_config)
       local filtered_items = context.get_filtered_items()
       local re_execute = prev_revision.execute ~= state.revision.execute and state.revision.execute > #sources
 
-      -- wait for items are enough to render for re-executing.
+      -- If the number of items is insufficient after re-execution, the display update will be delayed (this is called debounce).
+      -- This mainly contributes to the stability of the display while the dynamic source query is being rewritten.
       if re_execute and view.is_visible(context) then
         local not_enough = #filtered_items < vim.api.nvim_win_get_height(view.get_win() --[[@as integer]])
         local execute_time = 0
@@ -303,6 +306,7 @@ function Context.create(id, sources, start_config)
         end
       end
 
+      -- TODO: we can create `BufferManager` for incremental item update.
       if count == 0 or #sources > 1 or re_execute or prev_revision.query ~= state.revision.query then
         -- full update.
         local contents = {}
@@ -334,6 +338,7 @@ function Context.create(id, sources, start_config)
         ui_watched = true,
       })
 
+      -- memoize rendered revision.
       prev_revision = kit.clone(state.revision)
 
       return true
@@ -374,6 +379,14 @@ function Context.create(id, sources, start_config)
           return state.query
         end,
         on_item = function(item)
+          if start_config.dedup then
+            local dedup_key = item.dedup_id or item.display_text
+            if state.dedup_map[dedup_key] then
+              return
+            end
+            state.dedup_map[dedup_key] = true
+          end
+
           item[symbols.source] = source
 
           table.insert(state.source_state[source].items, item)
@@ -438,6 +451,7 @@ function Context.create(id, sources, start_config)
       state = kit.clone(state)
       state.select_all = false
       state.select_map = {}
+      state.dedup_map = {}
       state.revision.execute = state.revision.execute + 1
       state.revision.status = state.revision.status + 1
       state.revision.cursor = state.revision.cursor + 1
@@ -903,16 +917,18 @@ function Context.create(id, sources, start_config)
   } --[[@as deck.Context]]
 
   -- explicitly show when buffer shown.
-  events.dispose.on(autocmd('BufWinEnter', function()
-    for _, source in ipairs(sources) do
-      if source.events and source.events.BufWinEnter then
-        source.events.BufWinEnter(context)
+  do
+    events.dispose.on(autocmd('BufWinEnter', function()
+      for _, source in ipairs(sources) do
+        if source.events and source.events.BufWinEnter then
+          source.events.BufWinEnter(context, { first = first })
+        end
       end
-    end
-    context.show()
-  end, {
-    pattern = ('<buffer=%s>'):format(context.buf),
-  }))
+      context.show()
+    end, {
+      pattern = ('<buffer=%s>'):format(context.buf),
+    }))
+  end
 
   -- explicitly hide when buffer hidden.
   events.dispose.on(autocmd('BufWinLeave', function()

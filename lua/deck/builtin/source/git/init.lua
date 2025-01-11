@@ -25,8 +25,10 @@ return function(option)
   return {
     name = 'git',
     events = {
-      BufWinEnter = function(ctx)
-        ctx.execute()
+      BufWinEnter = function(ctx, env)
+        if not env.first then
+          ctx.execute()
+        end
       end,
     },
     execute = function(execute_context)

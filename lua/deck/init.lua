@@ -38,6 +38,7 @@ local Context = require('deck.Context')
 ---@field public display_text string|(deck.VirtualText[])
 ---@field public highlights? deck.Highlight[]
 ---@field public filter_text? string
+---@field public dedup_id? string
 ---@field public data? table
 
 ---@doc.type
@@ -49,7 +50,7 @@ local Context = require('deck.Context')
 ---@class deck.Source
 ---@field public name string
 ---@field public dynamic? boolean
----@field public events? { Start?: fun(ctx: deck.Context), BufWinEnter?: fun(ctx: deck.Context) }
+---@field public events? { Start?: fun(ctx: deck.Context), BufWinEnter?: fun(ctx: deck.Context, env: { first: boolean }) }
 ---@field public execute deck.SourceExecuteFunction
 ---@field public actions? deck.Action[]
 ---@field public decorators? deck.Decorator[]
@@ -130,6 +131,7 @@ local Context = require('deck.Context')
 ---@field public decorators? deck.Decorator[]
 ---@field public previewers? deck.Previewer[]
 ---@field public performance? { interrupt_interval: integer, interrupt_timeout: integer }
+---@field public dedup? boolean
 
 ---@doc.type
 ---@class deck.StartConfig: deck.StartConfigSpecifier
@@ -138,6 +140,7 @@ local Context = require('deck.Context')
 ---@field public matcher deck.Matcher
 ---@field public history boolean
 ---@field public performance { interrupt_interval: integer, interrupt_timeout: integer }
+---@field public dedup boolean
 
 ---@class deck.ConfigSpecifier
 ---@field public guicursor? string
@@ -183,6 +186,7 @@ local internal = {
         interrupt_interval = 8,
         interrupt_timeout = 8,
       },
+      dedup = true,
     },
   },
 }
