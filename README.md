@@ -1138,6 +1138,7 @@ Start deck with given sources.
 ---@field public history boolean
 ---@field public performance { interrupt_interval: integer, interrupt_timeout: integer }
 ---@field public dedup boolean
+---@field public parse_query fun(query: string, source: deck.Source): { filter: string, dynamic: string }
 ```
 
 ```vimdoc
