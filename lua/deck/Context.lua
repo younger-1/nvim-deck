@@ -282,6 +282,10 @@ function Context.create(id, sources, start_config)
   local update_buf
   ---@type fun(source: deck.Source)
   local execute_source
+  ---@type fun()
+  local redraw_debounced = kit.debounce(vim.schedule_wrap(function()
+    vim.cmd.redraw()
+  end), 16)
 
   ---Update buffer content.
   do
@@ -883,6 +887,7 @@ function Context.create(id, sources, start_config)
         if action.name == name then
           if not action.resolve or action.resolve(context) then
             action.execute(context)
+            redraw_debounced()
             return
           end
         end
