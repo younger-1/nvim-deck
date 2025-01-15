@@ -161,6 +161,12 @@ local internal = {
   ---@type integer
   start_id = 0,
 
+  ---@type integer
+  augroup = vim.api.nvim_create_augroup('deck', {
+    clear = true,
+  }),
+
+  ---@type deck.StartPreset[]
   start_presets = {},
 
   ---@type deck.Action[]
@@ -227,6 +233,31 @@ function deck.setup(config)
   end
 
   internal.config = kit.merge(kit.clone(config), internal.config)
+
+
+  -- guicursor.
+  do
+    local config_guicursor = require('deck').get_config().guicursor
+    if config_guicursor then
+      local restore_guicursor = nil
+      vim.api.nvim_create_autocmd('SafeState', {
+        group = internal.augroup,
+        callback = function()
+        if vim.b.deck then
+          if restore_guicursor == nil then
+            restore_guicursor = vim.o.guicursor
+            vim.api.nvim_set_option_value('guicursor', config_guicursor, {})
+          end
+        else
+          if restore_guicursor then
+            vim.api.nvim_set_option_value('guicursor', restore_guicursor, {})
+            restore_guicursor = nil
+          end
+        end
+        end
+      })
+    end
+  end
 end
 
 ---Return deck config.

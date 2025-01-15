@@ -975,26 +975,6 @@ function Context.create(id, sources, start_config)
     pattern = ('<buffer=%s>'):format(context.buf),
   }))
 
-  -- guicursor.
-  do
-    local config_guicursor = require('deck').get_config().guicursor
-    if config_guicursor then
-      local restore_guicursor = nil
-      events.dispose.on(autocmd('SafeState', function()
-        if vim.api.nvim_get_current_buf() == context.buf then
-          restore_guicursor = restore_guicursor or vim.o.guicursor
-          vim.api.nvim_set_option_value('guicursor', config_guicursor, {})
-        else
-          vim.api.nvim_set_option_value('guicursor', restore_guicursor, {})
-          restore_guicursor = nil
-        end
-      end))
-      context.on_dispose(function()
-        vim.api.nvim_set_option_value('guicursor', restore_guicursor, {})
-      end)
-    end
-  end
-
   -- re-render.
   events.dispose.on(autocmd({ 'BufEnter', 'WinResized', 'WinScrolled' }, function()
     vim.schedule(function()
