@@ -131,10 +131,11 @@ end
 ---Create autocmd and return dispose function.
 ---@param event string|string[]
 ---@param callback fun(e: table)
----@param option? { pattern?: string }
+---@param option? { pattern?: string, once?: boolean }
 ---@return fun()
 local function autocmd(event, callback, option)
   local id = vim.api.nvim_create_autocmd(event, {
+    once = option and option.once,
     pattern = option and option.pattern,
     callback = callback,
   })
@@ -978,18 +979,19 @@ function Context.create(id, sources, start_config)
   do
     local config_guicursor = require('deck').get_config().guicursor
     if config_guicursor then
-      local restore_guicursor = vim.o.guicursor
-      events.dispose.on(autocmd('BufEnter', function()
-        restore_guicursor = vim.o.guicursor
-        vim.api.nvim_set_option_value('guicursor', config_guicursor, {})
-      end, {
-        pattern = ('<buffer=%s>'):format(context.buf),
-      }))
-      events.dispose.on(autocmd('BufLeave', function()
+      local restore_guicursor = nil
+      events.dispose.on(autocmd('SafeState', function()
+        if vim.api.nvim_get_current_buf() == context.buf then
+          restore_guicursor = restore_guicursor or vim.o.guicursor
+          vim.api.nvim_set_option_value('guicursor', config_guicursor, {})
+        else
+          vim.api.nvim_set_option_value('guicursor', restore_guicursor, {})
+          restore_guicursor = nil
+        end
+      end))
+      context.on_dispose(function()
         vim.api.nvim_set_option_value('guicursor', restore_guicursor, {})
-      end, {
-        pattern = ('<buffer=%s>'):format(context.buf),
-      }))
+      end)
     end
   end
 

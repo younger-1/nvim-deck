@@ -1,4 +1,6 @@
 local kit = require('deck.kit')
+local Async = require('deck.kit.Async')
+local Keymap = require('deck.kit.Vim.Keymap')
 local validate = require('deck.validate')
 local Context = require('deck.Context')
 
@@ -628,6 +630,50 @@ function deck.remove_previewers(predicate)
       table.remove(internal.previewers, i)
     end
   end
+end
+
+--Can be used to `vim.ui.select` replacement.
+---@generic T
+---@param items T[]
+---@param opts { prompt?: string, format_item?: fun(item: T): string }
+---@param on_choice fun(item: T?, idx: integer?)
+---@diagnostic disable-next-line: duplicate-set-field
+function deck.ui_select(items, opts, on_choice)
+  local ctx = deck.start({ {
+    name = opts.prompt or 'vim.ui.select',
+    execute = function(ctx)
+      for idx, item in ipairs(items) do
+        ctx.item({
+          display_text = opts.format_item and opts.format_item(item) or tostring(item),
+          data = {
+            idx = idx,
+            item = item
+          }
+        })
+      end
+      ctx.done()
+    end,
+    actions = {
+      {
+        name = 'default',
+        execute = function(ctx)
+          Async.run(function()
+            ctx.hide()
+            Keymap.send(Keymap.termcodes('<Esc>')):await()
+            Keymap.send(Keymap.to_sendable(function()
+              local item = ctx.get_cursor_item()
+              if item then
+                on_choice(item.data.item, item.data.idx)
+              else
+                on_choice(nil, nil)
+              end
+            end)):await()
+          end)
+        end
+      }
+    }
+  } })
+  ctx.prompt()
 end
 
 return deck
