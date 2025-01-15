@@ -3,6 +3,38 @@ local symbols = require('deck.symbols')
 local decorators = {}
 
 ---@type deck.Decorator
+decorators.signs = {
+  name = 'signs',
+  dynamic = true,
+  decorate = function(ctx, item)
+    local signs = {}
+    if ctx.get_selected(item) then
+      table.insert(signs, '│')
+    else
+      table.insert(signs, ' ')
+    end
+    if ctx.get_cursor_item() == item then
+      table.insert(signs, '»')
+    else
+      table.insert(signs, ' ')
+    end
+    return {
+      {
+        col = 0,
+        sign_text = table.concat(signs),
+        sign_hl_group = 'SignColumn',
+      },
+      {
+        col = 0,
+        virt_text = { { '  ' } },
+        virt_text_pos = 'inline',
+        priority = 100
+      }
+    }
+  end
+}
+
+---@type deck.Decorator
 decorators.source_name = {
   name = 'source_name',
   resolve = function(ctx)
@@ -62,19 +94,6 @@ decorators.query_matches = {
 }
 
 ---@type deck.Decorator
-decorators.selection = {
-  name = 'selection',
-  dynamic = true,
-  decorate = function(ctx, item)
-    return {
-      col = 0,
-      sign_text = ctx.get_selected(item) and '*' or ' ',
-      sign_hl_group = 'SignColumn',
-    }
-  end
-}
-
----@type deck.Decorator
 do
   local get_icon --[[@as (fun(category: string, filename: string):(string?, string?))?]]
   vim.api.nvim_create_autocmd('BufEnter', {
@@ -106,7 +125,7 @@ do
         if icon then
           table.insert(decorations, {
             col = 0,
-            virt_text = { { ' ' }, { icon, hl }, { ' ' } },
+            virt_text = { { icon, hl }, { ' ' } },
             virt_text_pos = 'inline',
           })
         end

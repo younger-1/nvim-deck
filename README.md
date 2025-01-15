@@ -76,6 +76,8 @@ vim.api.nvim_create_autocmd('User', {
   pattern = 'DeckStart',
   callback = function(e)
     local ctx = e.data.ctx --[[@as deck.Context]]
+
+    -- normal-mode mapping.
     ctx.keymap('n', '<Esc>', function()
       ctx.set_preview_mode(false)
     end)
@@ -95,6 +97,20 @@ vim.api.nvim_create_autocmd('User', {
     ctx.keymap('n', 'N', deck.action_mapping('create'))
     ctx.keymap('n', '<C-u>', deck.action_mapping('scroll_preview_up'))
     ctx.keymap('n', '<C-d>', deck.action_mapping('scroll_preview_down'))
+
+    -- cmdline-mode mapping.
+    ctx.keymap('c', '<C-y>', function()
+      vim.api.nvim_feedkeys(vim.keycode('<Esc>'), 'n', true)
+      vim.schedule(function()
+        ctx.do_action('default')
+      end)
+    end)
+    ctx.keymap('c', '<C-j>', function()
+      ctx.set_cursor(ctx.get_cursor() + 1)
+    end)
+    ctx.keymap('c', '<C-k>', function()
+      ctx.set_cursor(ctx.get_cursor() - 1)
+    end)
 
     -- If you want to start the filter by default, call ctx.prompt() here
     ctx.prompt()
