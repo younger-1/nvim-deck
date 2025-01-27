@@ -48,7 +48,7 @@ do
           return vim.api.nvim_win_is_valid(win) and vim.api.nvim_get_option_value('buftype', {
             buf = vim.api.nvim_win_get_buf(win),
           }) == ''
-        end) or vim.api.nvim_get_current_win()
+        end) or win_history[1] or vim.api.nvim_get_current_win()
         for _, item in ipairs(ctx.get_action_items()) do
           vim.api.nvim_set_current_win(win)
 

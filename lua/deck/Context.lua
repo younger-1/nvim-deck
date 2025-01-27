@@ -1,4 +1,5 @@
 local kit = require('deck.kit')
+local misc = require('deck.misc')
 local notify = require('deck.notify')
 local symbols = require('deck.symbols')
 local ExecuteContext = require('deck.ExecuteContext')
@@ -83,67 +84,6 @@ local Status = {
 ---@field on_hide fun(callback: fun())
 ---@field on_dispose fun(callback: fun()): fun()
 
----Create deck buffer.
----@param name string
----@return integer
-local function create_buf(name)
-  local buf = vim.api.nvim_create_buf(false, false)
-  vim.api.nvim_buf_set_var(buf, 'deck', true)
-  vim.api.nvim_buf_set_var(buf, 'deck_name', name)
-  vim.api.nvim_set_option_value('filetype', 'deck', { buf = buf })
-  vim.api.nvim_set_option_value('buftype', 'nofile', { buf = buf })
-  vim.api.nvim_set_option_value('bufhidden', 'hide', { buf = buf })
-  vim.api.nvim_create_autocmd('BufWinEnter', {
-    pattern = ('<buffer=%s>'):format(buf),
-    callback = function()
-      vim.api.nvim_set_option_value('conceallevel', 3, { win = 0 })
-      vim.api.nvim_set_option_value('concealcursor', 'nvic', { win = 0 })
-    end,
-  })
-  return buf
-end
-
----Create pub/sub pairs.
----@return { on: (fun(callback: fun(...)): fun()), emit: fun(...) }
-local function create_events()
-  local callbacks = {}
-
-  return {
-    on = function(callback)
-      table.insert(callbacks, callback)
-      return function()
-        for i, v in ipairs(callbacks) do
-          if v == callback then
-            table.remove(callbacks, i)
-            break
-          end
-        end
-      end
-    end,
-    emit = function(...)
-      for _, callback in ipairs(callbacks) do
-        callback(...)
-      end
-    end,
-  }
-end
-
----Create autocmd and return dispose function.
----@param event string|string[]
----@param callback fun(e: table)
----@param option? { pattern?: string, once?: boolean }
----@return fun()
-local function autocmd(event, callback, option)
-  local id = vim.api.nvim_create_autocmd(event, {
-    once = option and option.once,
-    pattern = option and option.pattern,
-    callback = callback,
-  })
-  return function()
-    pcall(vim.api.nvim_del_autocmd, id)
-  end
-end
-
 local Context = {}
 
 Context.Status = Status
@@ -155,14 +95,14 @@ Context.Status = Status
 function Context.create(id, sources, start_config)
   sources = kit.to_array(sources) --[=[@as deck.Source[]]=]
 
-  local buf = create_buf(start_config.name)
+  local buf = misc.create_deck_buf(start_config.name)
   local namespace = vim.api.nvim_create_namespace(('deck.%s'):format(buf))
   local context ---@type deck.Context
 
   local events = {
-    dispose = create_events(),
-    show = create_events(),
-    hide = create_events(),
+    dispose = misc.create_events(),
+    show = misc.create_events(),
+    hide = misc.create_events(),
   }
 
   local view = start_config.view()
@@ -937,12 +877,15 @@ function Context.create(id, sources, start_config)
 
   -- explicitly show when buffer shown.
   do
-    events.dispose.on(autocmd('BufWinEnter', function()
+    local first = true
+    events.dispose.on(misc.autocmd('BufWinEnter', function()
       for _, source in ipairs(sources) do
         if source.events and source.events.BufWinEnter then
           source.events.BufWinEnter(context, { first = first })
         end
       end
+      first = false
+
       context.show()
     end, {
       pattern = ('<buffer=%s>'):format(context.buf),
@@ -950,7 +893,7 @@ function Context.create(id, sources, start_config)
   end
 
   -- explicitly hide when buffer hidden.
-  events.dispose.on(autocmd('BufWinLeave', function()
+  events.dispose.on(misc.autocmd('BufWinLeave', function()
     context.hide()
   end, {
     pattern = ('<buffer=%s>'):format(context.buf),
@@ -958,25 +901,25 @@ function Context.create(id, sources, start_config)
 
   -- dispose.
   do
-    events.dispose.on(autocmd('BufDelete', function()
+    events.dispose.on(misc.autocmd('BufDelete', function()
       context.dispose()
     end, {
       pattern = ('<buffer=%s>'):format(context.buf),
     }))
-    events.dispose.on(autocmd('VimLeave', function()
+    events.dispose.on(misc.autocmd('VimLeave', function()
       context.dispose()
     end))
   end
 
   -- update cursor position.
-  events.dispose.on(autocmd('CursorMoved', function()
+  events.dispose.on(misc.autocmd('CursorMoved', function()
     context.set_cursor(vim.api.nvim_win_get_cursor(0)[1])
   end, {
     pattern = ('<buffer=%s>'):format(context.buf),
   }))
 
   -- re-render.
-  events.dispose.on(autocmd({ 'BufEnter', 'WinResized', 'WinScrolled' }, function()
+  events.dispose.on(misc.autocmd({ 'BufEnter', 'WinResized', 'WinScrolled' }, function()
     vim.schedule(function()
       render()
     end)
@@ -987,13 +930,13 @@ function Context.create(id, sources, start_config)
   -- close preview window.
   do
     local preview_mode = context.get_preview_mode()
-    events.dispose.on(autocmd('BufLeave', function()
+    events.dispose.on(misc.autocmd('BufLeave', function()
       preview_mode = context.get_preview_mode()
       context.set_preview_mode(false)
     end, {
       pattern = ('<buffer=%s>'):format(context.buf),
     }))
-    events.dispose.on(autocmd('BufEnter', function()
+    events.dispose.on(misc.autocmd('BufEnter', function()
       context.set_preview_mode(preview_mode)
     end, {
       pattern = ('<buffer=%s>'):format(context.buf),

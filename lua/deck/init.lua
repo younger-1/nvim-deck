@@ -234,7 +234,6 @@ function deck.setup(config)
 
   internal.config = kit.merge(kit.clone(config), internal.config)
 
-
   -- guicursor.
   do
     local config_guicursor = require('deck').get_config().guicursor
