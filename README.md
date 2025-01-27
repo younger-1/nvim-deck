@@ -645,6 +645,11 @@ deck.start(require('deck.builtin.source.recent_files')({
 
     Open at the recently normal window with split.
 
+- `open_tabnew`
+  - Open `item.data.filename` or `item.data.bufnr`.
+
+    Open at the new tabpage.
+
 - `open_vsplit`
   - Open `item.data.filename` or `item.data.bufnr`.
 
