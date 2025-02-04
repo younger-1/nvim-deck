@@ -508,12 +508,10 @@ deck.start(require('deck.builtin.source.git.status')({
 
 Grep files under specified root directory. (required `ripgrep`)
 
-| Name         | Type      | Default | Description                                                                                   |
-| ------------ | --------- | ------- | --------------------------------------------------------------------------------------------- |
-| root_dir     | string    |         | Target root directory.                                                                        |
-| pattern      | string?   |         | Grep pattern. If you omit this option, you must set `dynamic` option to true.                 |
-| dynamic      | boolean?  | false   | If true, use dynamic pattern. If you set this option to false, you must set `pattern` option. |
-| ignore_globs | string[]? | []      | Ignore glob patterns.                                                                         |
+| Name         | Type      | Default | Description            |
+| ------------ | --------- | ------- | ---------------------- |
+| root_dir     | string    |         | Target root directory. |
+| ignore_globs | string[]? | []      | Ignore glob patterns.  |
 
 ```lua
 deck.start(require('deck.builtin.source.grep')({
@@ -686,6 +684,9 @@ deck.start(require('deck.builtin.source.recent_files')({
 - `toggle_select_all`
   - Toggle selected state of all items.
 
+- `write_buffer`
+  - Write modified `item.data.bufnr` or `item.data.filename` that has buffer.
+
 - `yank`
   - Yank item.display_text field to default register.
 
@@ -704,7 +705,7 @@ deck.start(require('deck.builtin.source.recent_files')({
 - `DeckStart`
   - Triggered when deck starts.
 
-- `DeckStart:{source_name}`
+- `DeckStart:{source.name}`
   - Triggered when deck starts for source.
 
 <!-- auto-generate-e:autocmd -->
@@ -1024,17 +1025,23 @@ Start deck with given sources.
 ---@field ns integer
 ---@field buf integer
 ---@field name string
+---@field get_config fun(): deck.StartConfig
 ---@field execute fun()
 ---@field is_visible fun(): boolean
 ---@field show fun()
 ---@field hide fun()
+---@field focus fun()
 ---@field prompt fun()
 ---@field scroll_preview fun(delta: integer)
 ---@field get_status fun(): deck.Context.Status
+---@field is_filtering fun(): boolean
+---@field is_syncing fun(): boolean
 ---@field get_cursor fun(): integer
 ---@field set_cursor fun(cursor: integer)
 ---@field get_query fun(): string
 ---@field set_query fun(query: string)
+---@field get_matcher_query fun(): string
+---@field get_dynamic_query fun(): string
 ---@field set_selected fun(item: deck.Item, selected: boolean)
 ---@field get_selected fun(item: deck.Item): boolean
 ---@field set_select_all fun(select_all: boolean)
@@ -1045,13 +1052,12 @@ Start deck with given sources.
 ---@field get_cursor_item fun(): deck.Item?
 ---@field get_action_items fun(): deck.Item[]
 ---@field get_filtered_items fun(): deck.Item[]
+---@field get_rendered_items fun(): deck.Item[]
 ---@field get_selected_items fun(): deck.Item[]
 ---@field get_actions fun(): deck.Action[]
 ---@field get_decorators fun(): deck.Decorator[]
 ---@field get_previewer fun(): deck.Previewer?
----@field get_revision fun(): deck.Context.Revision
----@field get_source_names fun(): string[]
----@field sync fun(option: { count: integer })
+---@field sync fun()
 ---@field keymap fun(mode: string, lhs: string, rhs: fun(ctx: deck.Context))
 ---@field do_action fun(name: string)
 ---@field dispose fun()
@@ -1083,7 +1089,7 @@ Start deck with given sources.
 ---@field public sign_hl_group? string
 ---@field public number_hl_group? string
 ---@field public line_hl_group? string
----@field public conceal? boolean
+---@field public conceal? string
 ```
 
 ```vimdoc
@@ -1145,6 +1151,7 @@ Start deck with given sources.
 ---@field public actions? deck.Action[]
 ---@field public decorators? deck.Decorator[]
 ---@field public previewers? deck.Previewer[]
+---@field public parse_query? deck.ParseQuery
 ```
 
 ```vimdoc
@@ -1157,9 +1164,9 @@ Start deck with given sources.
 ---@field public view fun(): deck.View
 ---@field public matcher deck.Matcher
 ---@field public history boolean
----@field public performance { interrupt_interval: integer, interrupt_timeout: integer }
+---@field public performance { sync_timeout_ms: integer, filter_bugdet_ms: integer, filter_batch_size: integer, render_delay_ms: integer, render_bugdet_ms: integer, render_batch_size: integer, interrupt_ms: integer }
 ---@field public dedup boolean
----@field public parse_query fun(query: string, source: deck.Source): { filter: string, dynamic: string }
+---@field public query string
 ```
 
 ```vimdoc
@@ -1185,8 +1192,6 @@ Start deck with given sources.
 ---@field public hide fun(ctx: deck.Context)
 ---@field public prompt fun(ctx: deck.Context)
 ---@field public scroll_preview fun(ctx: deck.Context, delta: integer)
----@field public render fun(ctx: deck.Context)
 ```
 
 <!-- auto-generate-e:type -->
-
