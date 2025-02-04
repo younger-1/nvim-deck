@@ -1,4 +1,5 @@
 local kit = require('deck.kit')
+local x = require('deck.x')
 local notify = require('deck.notify')
 
 local action = {}
@@ -199,6 +200,37 @@ action.delete_buffer = {
     ctx.execute()
   end,
 }
+
+--[=[@doc
+  category = "action"
+  name = "write_buffer"
+  desc = "Write modified `item.data.bufnr` or `item.data.filename` that has buffer."
+]=]
+action.write_buffer = {
+  name = 'write_buffer',
+  desc = '(built-in) write modified `item.data.bufnr`.',
+  resolve = function(ctx)
+    for _, item in ipairs(ctx.get_action_items()) do
+      local bufnr = x.resolve_bufnr(item)
+      if bufnr ~= -1 and vim.api.nvim_get_option_value('modified', { buf = bufnr }) then
+        return true
+      end
+    end
+    return false
+  end,
+  execute = function(ctx)
+    for _, item in ipairs(ctx.get_action_items()) do
+      local bufnr = x.resolve_bufnr(item)
+      if bufnr ~= -1 and vim.api.nvim_get_option_value('modified', { buf = bufnr }) then
+        vim.api.nvim_buf_call(bufnr, function()
+          vim.cmd.write()
+        end)
+      end
+    end
+    ctx.execute()
+  end,
+}
+
 
 --[=[@doc
   category = "action"
@@ -476,7 +508,13 @@ action.substitute = {
           vim.api.nvim_set_option_value('modified', false, { buf = buf })
           for i, target in ipairs(substitute_targets) do
             vim.api.nvim_buf_call(target.buf, function()
-              vim.api.nvim_buf_set_lines(target.buf, target.lnum - 1, target.lnum, false, { vim.api.nvim_buf_get_lines(buf, i - 1, i, false)[1] })
+              vim.api.nvim_buf_set_lines(
+                target.buf,
+                target.lnum - 1,
+                target.lnum,
+                false,
+                { vim.api.nvim_buf_get_lines(buf, i - 1, i, false)[1] }
+              )
             end)
           end
           for _, b in pairs(filename_buf) do

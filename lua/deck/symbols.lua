@@ -1,5 +1,6 @@
 return {
   source = { sym = 'deck.source' },
-  matches = { sym = 'deck.matches' },
-  item_cache = { sym = 'deck.item_cache' },
+  query_matches = { sym = 'deck.query_matches' },
+  display_text_lower = { sym = 'deck.display_text_lower' },
+  filter_text_lower = { sym = 'deck.filter_text_lower' },
 }

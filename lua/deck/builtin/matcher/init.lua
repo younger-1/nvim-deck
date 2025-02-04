@@ -1,21 +1,22 @@
 local matcher = {}
 
+local Empty = {}
+
+-- matcher.default.
 do
-  local state = {
+  local parse_query_cache = {
     query = '',
     parsed = {},
+    queries = {},
   }
 
-  ---Default matcher.
-  ---@type deck.Matcher
-  function matcher.default(query, text)
-    if query == '' then
-      return true, {}
-    end
+  ---@return { negated: boolean, query: string }[]
+  local function parse_query(query)
+    if parse_query_cache.query ~= query then
+      parse_query_cache.query = query
 
-    if state.query ~= query then
-      state.query = query
-      state.parsed = {}
+      -- create parsed.
+      parse_query_cache.parsed = {}
       local i = 1
       local chunk = {}
       while i <= #query do
@@ -25,62 +26,103 @@ do
           i = i + 1
         elseif c ~= ' ' then
           table.insert(chunk, c)
-        else
-          table.insert(state.parsed, table.concat(chunk, ''):lower())
+        elseif #chunk > 0 then
+          table.insert(parse_query_cache.parsed, table.concat(chunk, ''):lower())
           chunk = {}
         end
         i = i + 1
       end
       if #chunk > 0 then
-        table.insert(state.parsed, table.concat(chunk, ''):lower())
+        table.insert(parse_query_cache.parsed, table.concat(chunk, ''):lower())
+      end
+
+      -- create queries.
+      parse_query_cache.queries = {}
+      for _, q in ipairs(parse_query_cache.parsed) do
+        if q:sub(1, 1) == '!' then
+          table.insert(parse_query_cache.queries, {
+            negated = true,
+            query = q:sub(2),
+          })
+        else
+          table.insert(parse_query_cache.queries, {
+            negated = false,
+            query = q,
+          })
+        end
       end
     end
-
-    text = text:lower()
-
-    local matched = true
-    local matches = {}
-    for _, q in ipairs(state.parsed) do
-      if q:sub(1, 1) == '!' then
-        if q ~= '!' and text:find(q:sub(2), 1, true) then
-          matched = false
-          break
-        end
-      else
-        local idx = text:find(q, 1, true)
-        if not idx then
-          matched = false
-          break
-        end
-        table.insert(matches, { idx - 1, idx + #q - 1 })
-      end
-      if not matched then
-        break
-      end
-    end
-    return matched, matches
+    return parse_query_cache.queries
   end
+
+  matcher.default = {
+    ---@type deck.Matcher.MatchFunction
+    match = function(query, text)
+      if query == '' then
+        return 1
+      end
+
+      local matched = true
+      for _, q in ipairs(parse_query(query)) do
+        if q.negated then
+          if q.query ~= '' and text:find(q.query, 1, true) then
+            matched = false
+            break
+          end
+        elseif q.query ~= '' then
+          local idx = text:find(q.query, 1, true)
+          if not idx then
+            matched = false
+            break
+          end
+        end
+        if not matched then
+          return 0
+        end
+      end
+      return matched and 1 or 0
+    end,
+    ---@type deck.Matcher.DecorFunction
+    decor = function(query, text)
+      if query == '' then
+        return Empty
+      end
+
+      local matches = {}
+      for _, q in ipairs(parse_query(query)) do
+        if not q.negated and q.query ~= '' then
+          local idx = text:find(q.query, 1, true)
+          if idx then
+            table.insert(matches, { idx - 1, idx - 1 + #q.query })
+          end
+        end
+      end
+      return matches
+    end
+  }
 end
 
----Default matcher.
----@type deck.Matcher
-function matcher.fuzzy(query, text)
-  if query == '' then
-    return true, {}
-  end
-  local m = vim.fn.matchfuzzypos({ text }, query)
-  if m[1] and m[1][1] then
-    local matches = {}
-    for _, v in ipairs(m[2][1]) do
-      if matches[#matches] and matches[#matches][2] + 1 == v then
-        matches[#matches][2] = v + 1
-      else
-        table.insert(matches, { v, v + 1 })
+-- matcher.fuzzy.
+do
+  matcher.fuzzy = {
+    ---@type deck.Matcher.MatchFunction
+    match = function(query, text)
+      return vim.fn.matchfuzzypos({ text }, query)[3][1] or 0
+    end,
+    ---@type deck.Matcher.DecorFunction
+    decor = function(query, text)
+      local chars = vim.fn.matchfuzzypos({ text }, query)[2][1] or {}
+      local matches = {}
+      for _, char in ipairs(chars) do
+        if matches[#matches] and matches[#matches][2] == char - 1 then
+          matches[#matches][2] = char + 1
+        else
+          table.insert(matches, { char, char + 1 })
+        end
       end
+      return matches
     end
-    return true, matches
-  end
-  return false
+  }
 end
 
 return matcher

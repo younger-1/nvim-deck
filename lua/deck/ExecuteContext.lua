@@ -13,6 +13,7 @@ local ExecuteContext = {}
 ---@param params deck.ExecuteContext.Params
 ---@return deck.ExecuteContext, deck.ExecuteContext.Controller
 function ExecuteContext.create(params)
+  local done = false
   local aborted = false
   local on_aborts = {}
 
@@ -28,7 +29,7 @@ function ExecuteContext.create(params)
       table.insert(on_aborts, callback)
     end,
 
-    ---Get current query for dynamic source.
+    ---Get current query.
     get_query = params.get_query,
 
     ---Noify item to main context.
@@ -43,10 +44,10 @@ function ExecuteContext.create(params)
         local highlights = {} ---@type deck.Highlight[]
         local offset = 0
         for _, virt_text in
-          ipairs(item_specifier.display_text --[=[@as deck.VirtualText[]]=])
+        ipairs(item_specifier.display_text --[=[@as deck.VirtualText[]]=])
         do
           if type(virt_text) ~= 'table' or type(virt_text[1]) ~= 'string' then
-            error('item.display_text must be string or deck.VirtualText[]')
+            error('item.display_text must be string or deck.VirtualText[] ' .. vim.inspect(virt_text))
           end
           table.insert(texts, virt_text[1])
           table.insert(highlights, {
@@ -59,7 +60,7 @@ function ExecuteContext.create(params)
         item_specifier.display_text = table.concat(texts, '')
         item_specifier.highlights = highlights
       elseif type(item_specifier.display_text) ~= 'string' then
-        error('item.display_text must be string or deck.VirtualText[]')
+        error('item.display_text must be string or deck.VirtualText[] ' .. vim.inspect(item_specifier.display_text))
       end
 
       -- check & normalize data.
@@ -72,10 +73,16 @@ function ExecuteContext.create(params)
 
     --- Noify done to main context.
     done = function()
-      if aborted then
-        return
-      end
-      params.on_done()
+      vim.schedule(function()
+        if aborted then
+          return
+        end
+        if done then
+          return
+        end
+        done = true
+        params.on_done()
+      end)
     end,
   } --[[@as deck.ExecuteContext]]
 
@@ -87,6 +94,7 @@ function ExecuteContext.create(params)
       for _, on_abort in ipairs(on_aborts) do
         on_abort()
       end
+      params.on_done()
     end,
   }
 

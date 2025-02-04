@@ -1,4 +1,5 @@
 local symbols = require('deck.symbols')
+local Icon    = require('deck.x.Icon')
 
 local decorators = {}
 
@@ -9,7 +10,7 @@ decorators.signs = {
   decorate = function(ctx, item)
     local signs = {}
     if ctx.get_selected(item) then
-      table.insert(signs, '│')
+      table.insert(signs, '▌')
     else
       table.insert(signs, ' ')
     end
@@ -32,22 +33,6 @@ decorators.signs = {
       }
     }
   end
-}
-
----@type deck.Decorator
-decorators.source_name = {
-  name = 'source_name',
-  resolve = function(ctx)
-    return #ctx.get_source_names() > 1
-  end,
-  decorate = function(_, item)
-    return {
-      col = 0,
-      virt_text = { { ('%s'):format(item[symbols.source].name), 'Comment' } },
-      virt_text_pos = 'right_align',
-      hl_mode = 'combine',
-    }
-  end,
 }
 
 ---@type deck.Decorator
@@ -76,12 +61,33 @@ decorators.highlights = {
 decorators.query_matches = {
   name = 'query_matches',
   dynamic = true,
-  resolve = function(_, item)
-    return item[symbols.matches]
+  resolve = function(ctx)
+    return ctx.get_config().matcher.decor
   end,
-  decorate = function(_, item)
+  decorate = function(ctx, item)
+    item[symbols.display_text_lower] = item[symbols.display_text_lower] or item.display_text:lower()
+
+    item[symbols.query_matches] = item[symbols.query_matches] or { matches = {} }
+    if item[symbols.query_matches].query ~= ctx.get_matcher_query() then
+      item[symbols.query_matches].query = ctx.get_matcher_query()
+
+      if item[symbols.query_matches].query == '' then
+        -- clear highlights if query is empty.
+        item[symbols.query_matches].matches = {}
+      else
+        -- update highlights.
+        local matches = ctx.get_config().matcher.decor(
+          ctx.get_matcher_query(),
+          item[symbols.display_text_lower]
+        )
+        if #matches > 0 then
+          item[symbols.query_matches].matches = matches
+        end
+      end
+    end
+
     local decorations = {}
-    for _, match in ipairs(item[symbols.matches]) do
+    for _, match in ipairs(item[symbols.query_matches].matches) do
       table.insert(decorations, {
         col = match[1],
         end_col = match[2],
@@ -95,21 +101,6 @@ decorators.query_matches = {
 
 ---@type deck.Decorator
 do
-  local get_icon --[[@as (fun(category: string, filename: string):(string?, string?))?]]
-  vim.api.nvim_create_autocmd('BufEnter', {
-    callback = function()
-      if vim.b.deck then
-        do -- mini.icons.
-          local ok, Icons = pcall(require, 'mini.icons')
-          if ok then
-            get_icon = function(category, filename)
-              return Icons.get(category, filename)
-            end
-          end
-        end
-      end
-    end,
-  })
   decorators.filename = {
     name = 'filename',
     resolve = function(_, item)
@@ -117,23 +108,20 @@ do
     end,
     decorate = function(_, item)
       local decorations = {}
-      local is_dir = vim.fn.isdirectory(item.data.filename) == 1
 
       -- icons decoration.
-      if get_icon then
-        local icon, hl = get_icon(is_dir and 'directory' or 'file', item.data.filename)
-        if icon then
-          table.insert(decorations, {
-            col = 0,
-            virt_text = { { icon, hl }, { ' ' } },
-            virt_text_pos = 'inline',
-          })
-        end
+      local icon, hl = Icon.filename(item.data.filename)
+      if icon then
+        table.insert(decorations, {
+          col = 0,
+          virt_text = { { icon, hl }, { ' ' } },
+          virt_text_pos = 'inline',
+        })
       end
 
       -- buffer related decoration.
-      local buf = vim.fn.bufnr(item.data.filename)
-      if not is_dir and buf ~= -1 then
+      local buf = vim.fn.bufnr(item.data.filename, false)
+      if buf ~= -1 and vim.fn.isdirectory(item.data.filename) ~= 1 then
         local modified = vim.api.nvim_get_option_value('modified', { buf = buf })
         table.insert(decorations, {
           col = 0,

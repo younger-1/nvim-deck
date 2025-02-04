@@ -19,17 +19,6 @@ local System = require('deck.kit.System')
   desc = "Target root directory."
 
   [[options]]
-  name = "pattern"
-  type = "string?"
-  desc = "Grep pattern. If you omit this option, you must set `dynamic` option to true."
-
-  [[options]]
-  name = "dynamic"
-  type = "boolean?"
-  default = "false"
-  desc = "If true, use dynamic pattern. If you set this option to false, you must set `pattern` option."
-
-  [[options]]
   name = "ignore_globs"
   type = "string[]?"
   default = "[]"
@@ -37,23 +26,23 @@ local System = require('deck.kit.System')
 ]=]
 ---@class deck.builtin.source.grep.Option
 ---@field root_dir string
----@field pattern? string
----@field dynamic? boolean
 ---@field ignore_globs? string[]
 ---@param option deck.builtin.source.grep.Option
 return function(option)
-  if type(option.dynamic) == 'boolean' and not option.dynamic then
-    error('dynamic option must be true. alternatively, you can specify `option.pattern` instead.')
-  elseif not option.dynamic and (type(option.pattern) ~= 'string' or #option.pattern == 0) then
-    error('pattern option must be a non-empty string.')
+  local function parse_query(query)
+    local dynamic_query, matcher_query = unpack(vim.split(query, '  '))
+    return {
+      dynamic_query = (dynamic_query or ''):gsub('^%s+', ''):gsub('%s+$', ''),
+      matcher_query = (matcher_query or ''):gsub('^%s+', ''):gsub('%s+$', ''),
+    }
   end
 
   ---@type deck.Source
   return {
     name = 'grep',
-    dynamic = option.dynamic,
+    parse_query = parse_query,
     execute = function(ctx)
-      local query = option.dynamic and ctx.get_query() or option.pattern or ''
+      local query = parse_query(ctx.get_query()).dynamic_query
       if query == '' then
         return ctx.done()
       end
@@ -89,7 +78,7 @@ return function(option)
             ctx.item({
               display_text = {
                 { ('%s (%s:%s): '):format(filename, lnum, col) },
-                { match, 'Comment' },
+                { match,                                       'Comment' },
               },
               data = {
                 filename = vim.fs.joinpath(option.root_dir, filename),

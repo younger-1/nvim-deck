@@ -1,7 +1,9 @@
 local kit = require('deck.kit')
 local Async = require('deck.kit.Async')
 local Keymap = require('deck.kit.Vim.Keymap')
+local WinSaveView = require('deck.kit.Vim.WinSaveView')
 local validate = require('deck.validate')
+local compose = require('deck.builtin.source.deck.compose')
 local Context = require('deck.Context')
 
 ---@doc.type
@@ -12,6 +14,10 @@ local Context = require('deck.Context')
 
 ---@doc.type
 ---@alias deck.Match { [1]: integer, [2]: integer }
+
+---@doc.type
+---@alias deck.ParseQuery fun(query: string): { dynamic_query?: string, matcher_query?: string }
+
 
 ---@doc.type
 ---@class deck.Decoration
@@ -31,10 +37,12 @@ local Context = require('deck.Context')
 ---@field public sign_hl_group? string
 ---@field public number_hl_group? string
 ---@field public line_hl_group? string
----@field public conceal? boolean
+---@field public conceal? string
 
 ---@doc.type
----@alias deck.Matcher fun(query: string, text: string): boolean, deck.Match[]?
+---@alias deck.Matcher.MatchFunction fun(query: string, text: string): integer
+---@alias deck.Matcher.DecorFunction fun(query: string, text: string): deck.Highlight[]
+---@alias deck.Matcher { match: deck.Matcher.MatchFunction, decor?: deck.Matcher.DecorFunction }
 
 ---@class deck.ItemSpecifier
 ---@field public display_text string|(deck.VirtualText[])
@@ -57,6 +65,7 @@ local Context = require('deck.Context')
 ---@field public actions? deck.Action[]
 ---@field public decorators? deck.Decorator[]
 ---@field public previewers? deck.Previewer[]
+---@field public parse_query? deck.ParseQuery
 
 ---@doc.type
 ---@alias deck.SourceExecuteFunction fun(ctx: deck.ExecuteContext)
@@ -122,7 +131,6 @@ local Context = require('deck.Context')
 ---@field public hide fun(ctx: deck.Context)
 ---@field public prompt fun(ctx: deck.Context)
 ---@field public scroll_preview fun(ctx: deck.Context, delta: integer)
----@field public render fun(ctx: deck.Context)
 
 ---@class deck.StartConfigSpecifier
 ---@field public name? string
@@ -132,9 +140,10 @@ local Context = require('deck.Context')
 ---@field public actions? deck.Action[]
 ---@field public decorators? deck.Decorator[]
 ---@field public previewers? deck.Previewer[]
----@field public performance? { interrupt_interval: integer, interrupt_timeout: integer }
+---@field public performance? { sync_timeout_ms?: integer, filter_bugdet_ms?: integer, filter_batch_size?: integer, render_delay_ms?: integer, render_bugdet_ms?: integer, render_batch_size?: integer, interrupt_ms?: integer }
 ---@field public dedup? boolean
----@field public parse_query? fun(query: string, source: deck.Source): { filter: string, dynamic: string }
+---@field public query? string
+---@field public auto_abort? boolean
 
 ---@doc.type
 ---@class deck.StartConfig: deck.StartConfigSpecifier
@@ -142,9 +151,9 @@ local Context = require('deck.Context')
 ---@field public view fun(): deck.View
 ---@field public matcher deck.Matcher
 ---@field public history boolean
----@field public performance { interrupt_interval: integer, interrupt_timeout: integer }
+---@field public performance { sync_timeout_ms: integer, filter_bugdet_ms: integer, filter_batch_size: integer, render_delay_ms: integer, render_bugdet_ms: integer, render_batch_size: integer, interrupt_ms: integer }
 ---@field public dedup boolean
----@field public parse_query fun(query: string, source: deck.Source): { filter: string, dynamic: string }
+---@field public query string
 
 ---@class deck.ConfigSpecifier
 ---@field public guicursor? string
@@ -158,9 +167,6 @@ local Context = require('deck.Context')
 ---@field public default_start_config? deck.StartConfigSpecifier
 
 local internal = {
-  ---@type integer
-  start_id = 0,
-
   ---@type integer
   augroup = vim.api.nvim_create_augroup('deck', {
     clear = true,
@@ -193,26 +199,46 @@ local internal = {
       matcher = require('deck.builtin.matcher').default,
       history = true,
       performance = {
-        interrupt_interval = 8,
-        interrupt_timeout = 8,
+        sync_timeout_ms = 200,
+        filter_bugdet_ms = 16,
+        filter_batch_size = 100,
+        render_delay_ms = 280,
+        render_bugdet_ms = 16,
+        render_batch_size = 100,
+        interrupt_ms = 4
       },
       dedup = true,
-      parse_query = function(query, source)
-        if source.dynamic then
-          local dynamic, filter = unpack(vim.split(query, '  '))
-          return {
-            filter = (filter or ''):gsub('^%s*(.-)%s*$', '%1'),
-            dynamic = (dynamic or ''):gsub('^%s*(.-)%s*$', '%1'),
-          }
-        end
-        return {
-          filter = query:gsub('^%s*(.-)%s*$', '%1'),
-          dynamic = '',
-        }
-      end,
+      query = '',
+      auto_abort = true,
     },
   },
 }
+
+-- guicursor.
+do
+  local restore_guicursor = nil
+  vim.api.nvim_create_autocmd('SafeState', {
+    group = internal.augroup,
+    callback = function()
+      local config_guicursor = internal.config.guicursor
+      if vim.b.deck then
+        if restore_guicursor == nil then
+          restore_guicursor = vim.o.guicursor
+          if vim.api.nvim_get_option_value('guicursor', {}) ~= config_guicursor then
+            vim.api.nvim_set_option_value('guicursor', config_guicursor, {})
+          end
+        end
+      else
+        if restore_guicursor then
+          if vim.api.nvim_get_option_value('guicursor', {}) ~= restore_guicursor then
+            vim.api.nvim_set_option_value('guicursor', restore_guicursor, {})
+          end
+          restore_guicursor = nil
+        end
+      end
+    end
+  })
+end
 
 local deck = {}
 
@@ -233,30 +259,6 @@ function deck.setup(config)
   end
 
   internal.config = kit.merge(kit.clone(config), internal.config)
-
-  -- guicursor.
-  do
-    local config_guicursor = require('deck').get_config().guicursor
-    if config_guicursor then
-      local restore_guicursor = nil
-      vim.api.nvim_create_autocmd('SafeState', {
-        group = internal.augroup,
-        callback = function()
-        if vim.b.deck then
-          if restore_guicursor == nil then
-            restore_guicursor = vim.o.guicursor
-            vim.api.nvim_set_option_value('guicursor', config_guicursor, {})
-          end
-        else
-          if restore_guicursor then
-            vim.api.nvim_set_option_value('guicursor', restore_guicursor, {})
-            restore_guicursor = nil
-          end
-        end
-        end
-      })
-    end
-  end
 end
 
 ---Return deck config.
@@ -285,25 +287,31 @@ end
 ---@return deck.Context
 function deck.start(sources, start_config_specifier)
   sources = validate.sources(kit.to_array(sources))
-  start_config_specifier = validate.start_config(kit.merge(start_config_specifier or {},
-    internal.config.default_start_config or {}) --[[@as deck.StartConfig]])
 
-  -- create name.
-  if not start_config_specifier.name then
-    start_config_specifier.name = vim
-        .iter(sources)
-        :map(function(source)
-          return source.name
-        end)
-        :join('+')
+  --- create composed source.
+  local source = sources
+  if kit.is_array(source) then
+    if #source == 1 then
+      source = source[1]
+    else
+      source = compose(source)
+    end
   end
 
+  --- check start_config.
+  local start_config = validate.start_config(
+    kit.merge(
+      start_config_specifier or {},
+      internal.config.default_start_config or {}
+    ) --[[@as deck.StartConfig]]
+  )
+  start_config.name = start_config.name or source.name
+
   -- create context.
-  internal.start_id = internal.start_id + 1
-  local context = Context.create(internal.start_id, sources, start_config_specifier)
+  local context = Context.create(kit.unique_id(), source, start_config)
 
   -- manage history.
-  if start_config_specifier.history then
+  if start_config.history then
     table.insert(internal.history, 1, context)
     context.on_dispose(function()
       for i, c in ipairs(internal.history) do
@@ -356,18 +364,16 @@ function deck.start(sources, start_config_specifier)
 
   --[=[@doc
     category = "autocmd"
-    name = "DeckStart:{source_name}"
+    name = "DeckStart:{source.name}"
     desc = "Triggered when deck starts for source."
   --]=]
-  for _, source in ipairs(sources) do
-    vim.api.nvim_exec_autocmds('User', {
-      pattern = 'DeckStart:' .. source.name,
-      modeline = false,
-      data = {
-        ctx = context,
-      },
-    })
-  end
+  vim.api.nvim_exec_autocmds('User', {
+    pattern = 'DeckStart:' .. source.name,
+    modeline = false,
+    data = {
+      ctx = context,
+    },
+  })
 
   return context
 end
@@ -528,11 +534,11 @@ function deck.register_start_preset(start_preset_or_name, start_fn_or_nil)
   end
 
   local start_preset = start_preset_or_name --[[@as deck.StartPreset]]
-  local has = vim.iter(internal.start_presets):any(function(target)
-    return target.name == start_preset.name
-  end)
-  if has then
-    error(('`%s` is already registered.'):format(start_preset.name))
+  for i, preset in ipairs(internal.start_presets) do
+    if preset.name == start_preset.name then
+      internal.start_presets[i] = start_preset
+      return
+    end
   end
   table.insert(internal.start_presets, 1, start_preset)
 end
@@ -669,7 +675,8 @@ end
 ---@param on_choice fun(item: T?, idx: integer?)
 ---@diagnostic disable-next-line: duplicate-set-field
 function deck.ui_select(items, opts, on_choice)
-  local ctx = deck.start({ {
+  local view = WinSaveView.new()
+  deck.start({ {
     name = opts.prompt or 'vim.ui.select',
     execute = function(ctx)
       for idx, item in ipairs(items) do
@@ -697,13 +704,13 @@ function deck.ui_select(items, opts, on_choice)
               else
                 on_choice(nil, nil)
               end
+              view:restore()
             end)):await()
           end)
         end
       }
     }
   } })
-  ctx.prompt()
 end
 
 return deck
