@@ -17,6 +17,7 @@ local ExecuteContext = require('deck.ExecuteContext')
 ---@field preview_mode boolean
 ---@field is_syncing boolean
 ---@field controller deck.ExecuteContext.Controller?
+---@field decoration_cache table<deck.Item, deck.Decoration[]>
 ---@field disposed boolean
 
 ---@doc.type
@@ -98,6 +99,7 @@ function Context.create(id, source, start_config)
     preview_mode = false,
     is_syncing = false,
     controller = nil,
+    decoration_cache = {},
     disposed = false,
   }
 
@@ -130,6 +132,7 @@ function Context.create(id, source, start_config)
       preview_mode = state.preview_mode,
       is_syncing = false,
       controller = nil,
+      decoration_cache = {},
       disposed = false,
     }
 
@@ -165,8 +168,6 @@ function Context.create(id, source, start_config)
 
   --Setup decoration provider.
   do
-    local item_decoration_cache = {}
-
     local function apply_decoration(row, decoration)
       vim.api.nvim_buf_set_extmark(context.buf, context.ns, row, decoration.col or 0, {
         end_row = decoration.end_col and row,
@@ -200,15 +201,13 @@ function Context.create(id, source, start_config)
             local item = buffer:get_rendered_items()[row + 1]
             if item then
               -- create cache.
-              if not item_decoration_cache[item] then
-                item_decoration_cache[item] = {
-                  decorations = {},
-                }
+              if not state.decoration_cache[item] then
+                state.decoration_cache[item] = {}
                 for _, decorator in ipairs(context.get_decorators()) do
                   if not decorator.dynamic then
                     if not decorator.resolve or decorator.resolve(context, item) then
                       for _, decoration in ipairs(kit.to_array(decorator.decorate(context, item))) do
-                        table.insert(item_decoration_cache[item].decorations, decoration)
+                        table.insert(state.decoration_cache[item], decoration)
                       end
                     end
                   end
@@ -225,7 +224,7 @@ function Context.create(id, source, start_config)
                   end
                 end
               end
-              for _, decoration in ipairs(item_decoration_cache[item].decorations) do
+              for _, decoration in ipairs(state.decoration_cache[item]) do
                 apply_decoration(row, decoration)
               end
             end
@@ -631,6 +630,7 @@ function Context.create(id, source, start_config)
     keymap = function(mode, lhs, rhs)
       vim.keymap.set(mode, lhs, function()
         rhs(context)
+        state.decoration_cache = {}
       end, {
         desc = 'deck.action',
         nowait = true,
@@ -645,6 +645,7 @@ function Context.create(id, source, start_config)
         if action.name == name then
           if not action.resolve or action.resolve(context) then
             action.execute(context)
+            state.decoration_cache = {}
             return
           end
         end

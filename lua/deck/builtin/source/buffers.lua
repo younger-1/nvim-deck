@@ -57,6 +57,7 @@ return function(option)
     end,
     actions = {
       require('deck').alias_action('default', 'open'),
+      require('deck').alias_action('write', 'write_buffer'),
     },
   }
 end
