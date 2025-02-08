@@ -1,4 +1,4 @@
-*deck.txt*            For NVIM v0.10.0           Last change: 2025 February 07
+*deck.txt*            For NVIM v0.10.0           Last change: 2025 February 08
 
 ==============================================================================
 Table of Contents                                     *deck-table-of-contents*
@@ -943,7 +943,7 @@ Start deck with given sources.
     ---@field get_decorators fun(): deck.Decorator[]
     ---@field get_previewer fun(): deck.Previewer?
     ---@field sync fun()
-    ---@field keymap fun(mode: string, lhs: string, rhs: fun(ctx: deck.Context))
+    ---@field keymap fun(mode: string|string[], lhs: string, rhs: fun(ctx: deck.Context))
     ---@field do_action fun(name: string)
     ---@field dispose fun()
     ---@field disposed fun(): boolean
