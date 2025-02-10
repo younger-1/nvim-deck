@@ -1,4 +1,4 @@
-*deck.txt*            For NVIM v0.10.0           Last change: 2025 February 08
+*deck.txt*            For NVIM v0.10.0           Last change: 2025 February 10
 
 ==============================================================================
 Table of Contents                                     *deck-table-of-contents*
@@ -959,6 +959,7 @@ Start deck with given sources.
     ---@field public col? integer
     ---@field public end_col? integer
     ---@field public hl_group? string
+    ---@field public hl_eol? boolean
     ---@field public virt_text? deck.VirtualText[]
     ---@field public virt_text_pos? 'eol' | 'overlay' | 'right_align' | 'inline'
     ---@field public virt_text_win_col? integer
