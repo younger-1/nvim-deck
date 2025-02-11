@@ -193,7 +193,7 @@ local internal = {
     max_history_size = 5,
     default_start_config = {
       view = function()
-        return require('deck.builtin.view.default').create({
+        return require('deck.builtin.view.default')({
           max_height = math.floor(vim.o.lines * 0.25),
         })
       end,
@@ -318,15 +318,6 @@ function deck.start(sources, start_config_specifier)
       for i, c in ipairs(internal.history) do
         if c == context then
           table.remove(internal.history, i)
-          break
-        end
-      end
-    end)
-    context.on_show(function()
-      for i, c in ipairs(internal.history) do
-        if c == context then
-          table.remove(internal.history, i)
-          table.insert(internal.history, 1, context)
           break
         end
       end
