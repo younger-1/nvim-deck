@@ -1017,6 +1017,17 @@ Start deck with given sources.
 ```
 
 ```vimdoc
+*deck.ConfigSpecifier*
+```
+
+```lua
+---@class deck.ConfigSpecifier
+---@field public guicursor? string
+---@field public max_history_size? integer
+---@field public default_start_config? deck.StartConfigSpecifier
+```
+
+```vimdoc
 *deck.Context*
 ```
 
@@ -1130,6 +1141,19 @@ Start deck with given sources.
 ```
 
 ```vimdoc
+*deck.ItemSpecifier*
+```
+
+```lua
+---@class deck.ItemSpecifier
+---@field public display_text string|(deck.VirtualText[])
+---@field public highlights? deck.Highlight[]
+---@field public filter_text? string
+---@field public dedup_id? string
+---@field public data? table
+```
+
+```vimdoc
 *deck.Previewer*
 ```
 
@@ -1169,6 +1193,25 @@ Start deck with given sources.
 ---@field public performance { sync_timeout_ms: integer, filter_bugdet_ms: integer, filter_batch_size: integer, render_delay_ms: integer, render_bugdet_ms: integer, render_batch_size: integer, interrupt_ms: integer }
 ---@field public dedup boolean
 ---@field public query string
+```
+
+```vimdoc
+*deck.StartConfigSpecifier*
+```
+
+```lua
+---@class deck.StartConfigSpecifier
+---@field public name? string
+---@field public view? fun(): deck.View
+---@field public matcher? deck.Matcher
+---@field public history? boolean
+---@field public actions? deck.Action[]
+---@field public decorators? deck.Decorator[]
+---@field public previewers? deck.Previewer[]
+---@field public performance? { sync_timeout_ms?: integer, filter_bugdet_ms?: integer, filter_batch_size?: integer, render_delay_ms?: integer, render_bugdet_ms?: integer, render_batch_size?: integer, interrupt_ms?: integer }
+---@field public dedup? boolean
+---@field public query? string
+---@field public auto_abort? boolean
 ```
 
 ```vimdoc
