@@ -5,6 +5,7 @@ local WinSaveView = require('deck.kit.Vim.WinSaveView')
 local validate = require('deck.validate')
 local compose = require('deck.builtin.source.deck.compose')
 local Context = require('deck.Context')
+local ExecuteContext = require('deck.ExecuteContext')
 
 ---@doc.type
 ---@alias deck.Highlight { [1]: integer, [2]: integer, hl_group: string }
@@ -17,7 +18,6 @@ local Context = require('deck.Context')
 
 ---@doc.type
 ---@alias deck.ParseQuery fun(query: string): { dynamic_query?: string, matcher_query?: string }
-
 
 ---@doc.type
 ---@class deck.Decoration
@@ -668,41 +668,48 @@ end
 ---@diagnostic disable-next-line: duplicate-set-field
 function deck.ui_select(items, opts, on_choice)
   local view = WinSaveView.new()
-  deck.start({ {
-    name = opts.prompt or 'vim.ui.select',
-    execute = function(ctx)
-      for idx, item in ipairs(items) do
-        ctx.item({
-          display_text = opts.format_item and opts.format_item(item) or tostring(item),
-          data = {
-            idx = idx,
-            item = item
-          }
-        })
-      end
-      ctx.done()
-    end,
-    actions = {
-      {
-        name = 'default',
-        execute = function(ctx)
-          Async.run(function()
-            ctx.hide()
-            Keymap.send(Keymap.termcodes('<Esc>')):await()
-            Keymap.send(Keymap.to_sendable(function()
-              local item = ctx.get_cursor_item()
-              if item then
-                on_choice(item.data.item, item.data.idx)
-              else
-                on_choice(nil, nil)
-              end
-              view:restore()
-            end)):await()
-          end)
+
+  local task = Async.resolve()
+  if vim.api.nvim_get_mode().mode ~= 'n' then
+    task = Keymap.send(Keymap.termcodes('<Esc>'))
+  end
+
+  task:next(function()
+    deck.start({
+      name = opts.prompt or 'vim.ui.select',
+      execute = function(ctx)
+        for idx, item in ipairs(items) do
+          ctx.item({
+            display_text = opts.format_item and opts.format_item(item) or tostring(item),
+            data = {
+              idx = idx,
+              item = item
+            }
+          })
         end
+        ctx.done()
+      end,
+      actions = {
+        {
+          name = 'default',
+          execute = function(ctx)
+            Async.run(function()
+              ctx.hide()
+              Keymap.send(Keymap.to_sendable(function()
+                local item = ctx.get_cursor_item()
+                if item then
+                  on_choice(item.data.item, item.data.idx)
+                else
+                  on_choice(nil, nil)
+                end
+                view:restore()
+              end)):await()
+            end)
+          end
+        }
       }
-    }
-  } })
+    })
+  end)
 end
 
 return deck
