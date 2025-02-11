@@ -72,14 +72,11 @@ function easy.setup(config)
     -- Register `grep` start preset.
     deck.register_start_preset('grep', function()
       local pattern = vim.fn.input('grep: ')
-      if #pattern == 0 then
-        return vim.notify('Canceled', vim.log.levels.INFO)
-      end
       deck.start(require('deck.builtin.source.grep')({
         root_dir = config.get_cwd(),
         ignore_globs = config.ignore_globs,
       }), {
-        query = pattern .. '  ',
+        query = #pattern > 0 and (pattern .. '  ') or '',
       })
     end)
 
