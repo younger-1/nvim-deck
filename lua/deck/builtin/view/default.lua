@@ -1,3 +1,4 @@
+local kit = require('deck.kit')
 local Keymap = require('deck.kit.Vim.Keymap')
 local Context = require('deck.Context')
 local ScheduledTimer = require('deck.kit.Async.ScheduledTimer')
@@ -10,30 +11,6 @@ local function is_visible(win)
     return false
   end
   return vim.api.nvim_win_is_valid(win)
-end
-
----Check shallow equals.
----@param a any
----@param b any
----@return boolean
-local function shallow_equals(a, b)
-  if type(a) ~= type(b) then
-    return false
-  end
-  if type(a) ~= 'table' then
-    return a == b
-  end
-  for k, v in pairs(a) do
-    if v ~= b[k] then
-      return false
-    end
-  end
-  for k, v in pairs(b) do
-    if v ~= a[k] then
-      return false
-    end
-  end
-  return true
 end
 
 ---@param config { max_height: number }
@@ -121,7 +98,7 @@ return function(config)
       preview_mode = ctx.get_preview_mode(),
       height = next_height,
     }
-    if not shallow_equals(state.cache.preview or {}, deps) then
+    if not kit.shallow_equals(state.cache.preview or {}, deps) then
       state.cache.preview = deps
       if not item or not ctx.get_preview_mode() or not ctx.get_previewer() then
         if is_visible(state.win_preview) then

@@ -183,15 +183,9 @@ function x.create_aligned_display_texts(items, callback, option)
   return display_texts, highlights
 end
 
----Clear table.
-x.clear = require('table.clear') or (function(t)
-  for k in pairs(t) do
-    t[k] = nil
-  end
-end)
-
 ---Create pub/sub pairs.
----@return { on: (fun(callback: fun(...)): fun()), emit: fun(...) }
+---@generic T
+---@return { on: (fun(callback: fun(payload: T)): fun()), emit: fun(payload: T) }
 function x.create_events()
   local callbacks = {}
 
@@ -207,9 +201,9 @@ function x.create_events()
         end
       end
     end,
-    emit = function(...)
+    emit = function(payload)
       for _, callback in ipairs(callbacks) do
-        callback(...)
+        callback(payload)
       end
     end,
   }

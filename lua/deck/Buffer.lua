@@ -1,4 +1,5 @@
 local x = require('deck.x')
+local kit = require('deck.kit')
 local symbols = require('deck.symbols')
 local ScheduledTimer = require("deck.kit.Async.ScheduledTimer")
 
@@ -48,8 +49,8 @@ end
 
 ---Start streaming.
 function Buffer:stream_start()
-  x.clear(self._items)
-  x.clear(self._items_filtered)
+  kit.clear(self._items)
+  kit.clear(self._items_filtered)
   self._done = false
   self._start_ms = vim.uv.hrtime() / 1e6
   self._cursor_filtered = 0
@@ -105,7 +106,7 @@ end
 ---Update query.
 ---@param query string
 function Buffer:update_query(query)
-  x.clear(self._items_filtered)
+  kit.clear(self._items_filtered)
   self._query = query
   self._cursor_filtered = 0
   self._cursor_rendered = 0
@@ -242,7 +243,7 @@ function Buffer:_step_render()
       for i = self._cursor_rendered + 1, #self._items_rendered do
         self._items_rendered[i] = nil
       end
-      x.clear(lines)
+      kit.clear(lines)
 
       local n = vim.uv.hrtime() / 1e6
       if n - s > config.render_bugdet_ms then

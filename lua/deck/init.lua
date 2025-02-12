@@ -5,7 +5,6 @@ local WinSaveView = require('deck.kit.Vim.WinSaveView')
 local validate = require('deck.validate')
 local compose = require('deck.builtin.source.deck.compose')
 local Context = require('deck.Context')
-local ExecuteContext = require('deck.ExecuteContext')
 
 ---@doc.type
 ---@alias deck.Highlight { [1]: integer, [2]: integer, hl_group: string }
@@ -208,7 +207,7 @@ local internal = {
         filter_batch_size = 100,
         render_delay_ms = 800,
         render_bugdet_ms = 16,
-        render_batch_size = 100,
+        render_batch_size = 500,
         interrupt_ms = 4
       },
       dedup = true,

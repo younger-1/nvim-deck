@@ -53,83 +53,83 @@ end
 ---@param max_width number
 ---@param max_height number
 local function render(max_width, max_height)
-  vim.api.nvim_buf_call(state.buf, function()
-    local now = vim.uv.now()
+  local now = vim.uv.now()
 
-    -- invalidate items.
-    for i = #state.items, 1, -1 do
-      local item = state.items[i]
-      if (now - item.visible_at) > item.timeout then
-        table.remove(state.items, i)
-      elseif #item.message == 0 then
-        table.remove(state.items, i)
-      end
+  -- invalidate items.
+  for i = #state.items, 1, -1 do
+    local item = state.items[i]
+    if (now - item.visible_at) > item.timeout then
+      table.remove(state.items, i)
+    elseif #item.message == 0 then
+      table.remove(state.items, i)
     end
+  end
 
-    -- check to visible.
-    if #state.items == 0 then
-      if state.win and vim.api.nvim_win_is_valid(state.win) then
-        vim.api.nvim_win_hide(state.win)
-        state.win = nil
-        state.timer:stop()
-        return
-      end
-    end
-
-    -- remove unnecessary empty lines.
-    while to_plain_text(state.items[1].message[1]) == '' do
-      table.remove(state.items[1].message, 1)
-    end
-
-    -- create lines.
-    local lines = {} --[=[@string[]]=]
-    for _, item in ipairs(state.items) do
-      for _, line in ipairs(item.message) do
-        table.insert(lines, to_plain_text(line))
-      end
-    end
-
-    -- compute width/height.
-    local width = max_width
-    local height = 0
-    for _, line in ipairs(lines) do
-      height = height + math.ceil(math.max(vim.api.nvim_strwidth(line), 1) / width)
-    end
-    height = math.max(1, math.min(max_height, height))
-
-    vim.api.nvim_set_option_value('modifiable', true, { buf = state.buf })
-    vim.api.nvim_buf_set_lines(state.buf, 0, -1, false, lines)
-    vim.api.nvim_set_option_value('modifiable', false, { buf = state.buf })
-
-    local win_config = {
-      noautocmd = true,
-      relative = 'editor',
-      width = width,
-      height = height,
-      row = vim.o.lines - height,
-      col = vim.o.columns - width,
-      style = 'minimal',
-      border = 'rounded',
-    }
+  -- check to visible.
+  if #state.items == 0 then
     if state.win and vim.api.nvim_win_is_valid(state.win) then
-      win_config.noautocmd = nil
-      vim.api.nvim_win_set_config(state.win, win_config)
-    else
-      state.win = vim.api.nvim_open_win(state.buf, false, win_config)
+      vim.api.nvim_win_hide(state.win)
+      state.win = nil
+      state.timer:stop()
+      return
     end
-    vim.api.nvim_set_option_value('wrap', true, { win = state.win })
-    vim.api.nvim_set_option_value('winhighlight', 'Normal:Normal,FloatBorder:Normal', { win = state.win })
-    vim.cmd.normal({ 'Gzb', bang = true })
+  end
 
-    state.timer:stop()
-    state.timer:start(
-      200,
-      0,
-      vim.schedule_wrap(function()
-        render(max_width, max_height)
-      end)
-    )
+  -- remove unnecessary empty lines.
+  while to_plain_text(state.items[1].message[1]) == '' do
+    table.remove(state.items[1].message, 1)
+  end
+
+  -- create lines.
+  local lines = {} --[=[@string[]]=]
+  for _, item in ipairs(state.items) do
+    for _, line in ipairs(item.message) do
+      table.insert(lines, to_plain_text(line))
+    end
+  end
+
+  -- compute width/height.
+  local width = max_width
+  local height = 0
+  for _, line in ipairs(lines) do
+    height = height + math.ceil(math.max(vim.api.nvim_strwidth(line), 1) / width)
+  end
+  height = math.max(1, math.min(max_height, height))
+
+  vim.api.nvim_set_option_value('modifiable', true, { buf = state.buf })
+  vim.api.nvim_buf_set_lines(state.buf, 0, -1, false, lines)
+  vim.api.nvim_set_option_value('modifiable', false, { buf = state.buf })
+
+  local win_config = {
+    noautocmd = true,
+    relative = 'editor',
+    width = width,
+    height = height,
+    row = vim.o.lines - height,
+    col = vim.o.columns - width,
+    style = 'minimal',
+    border = 'rounded',
+  }
+  if state.win and vim.api.nvim_win_is_valid(state.win) then
+    win_config.noautocmd = nil
+    vim.api.nvim_win_set_config(state.win, win_config)
+  else
+    state.win = vim.api.nvim_open_win(state.buf, false, win_config)
+  end
+  vim.api.nvim_set_option_value('wrap', true, { win = state.win })
+  vim.api.nvim_set_option_value('winhighlight', 'Normal:Normal,FloatBorder:Normal', { win = state.win })
+  vim.api.nvim_win_call(state.win, function()
+    vim.cmd.normal({ 'Gzb', bang = true })
   end)
+
+  state.timer:stop()
+  state.timer:start(
+    200,
+    0,
+    vim.schedule_wrap(function()
+      render(max_width, max_height)
+    end)
+  )
 end
 
 ---Show messages
