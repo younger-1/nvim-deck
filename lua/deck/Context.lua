@@ -369,12 +369,13 @@ function Context.create(id, source, start_config)
       state.cursor = cursor
 
       if view.is_visible(context) then
-        if vim.api.nvim_win_get_cursor(view.get_win() --[[@as integer]])[1] == cursor then
+        local win = view.get_win() --[[@as integer]]
+        if vim.api.nvim_win_get_cursor(win)[1] == cursor then
           return
         end
         local max = vim.api.nvim_buf_line_count(context.buf)
         if max >= cursor then
-          vim.api.nvim_win_set_cursor(view.get_win() --[[@as integer]], { cursor, 0 })
+          vim.api.nvim_win_set_cursor(win, { cursor, 0 })
         end
       end
     end,
