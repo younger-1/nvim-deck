@@ -1,4 +1,4 @@
-*deck.txt*            For NVIM v0.10.0           Last change: 2025 February 11
+*deck.txt*            For NVIM v0.10.0           Last change: 2025 February 12
 
 ==============================================================================
 Table of Contents                                     *deck-table-of-contents*
