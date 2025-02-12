@@ -135,6 +135,13 @@ return function(option)
       },
       {
         name = 'git.status.add',
+        resolve = function(ctx)
+          for _, item in ipairs(ctx.get_action_items()) do
+            if not item.data.staged then
+              return true
+            end
+          end
+        end,
         execute = function(ctx)
           Async.run(function()
             for _, item in ipairs(ctx.get_action_items()) do
@@ -161,6 +168,13 @@ return function(option)
       },
       {
         name = 'git.status.reset',
+        resolve = function(ctx)
+          for _, item in ipairs(ctx.get_action_items()) do
+            if item.data.staged then
+              return true
+            end
+          end
+        end,
         execute = function(ctx)
           Async.run(function()
             for _, item in ipairs(ctx.get_action_items()) do
