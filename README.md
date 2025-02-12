@@ -385,6 +385,22 @@ _No options_
 deck.start(require('deck.builtin.source.deck.history')())
 ```
 
+### dirs
+
+Show dirs under specified root directory.
+
+| Name         | Type      | Default | Description            |
+| ------------ | --------- | ------- | ---------------------- |
+| ignore_globs | string[]? | []      | Ignore glob patterns.  |
+| root_dir     | string    |         | Target root directory. |
+
+```lua
+deck.start(require('deck.builtin.source.dirs')({
+  root_dir = vim.fn.getcwd(),
+  ignore_globs = { '**/node_modules/', '**/.git/' },
+}))
+```
+
 ### files
 
 Show files under specified root directory.
