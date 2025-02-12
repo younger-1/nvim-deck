@@ -51,3 +51,6 @@ check:
 	make format
 	make test
 
+.PHONY: typecheck
+typecheck:
+	rm -Rf $(pwd)/tmp/typecheck; $(LUA_LS_PATH) --check $(pwd)/lua --configpath=$(pwd)/.luarc.typecheck.json --logpath=$(pwd)/tmp/typecheck
