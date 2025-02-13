@@ -143,6 +143,9 @@ local Context = require('deck.Context')
 ---@field public decorators? deck.Decorator[]
 ---@field public previewers? deck.Previewer[]
 ---@field public performance? { sync_timeout_ms?: integer, filter_bugdet_ms?: integer, filter_batch_size?: integer, render_delay_ms?: integer, render_bugdet_ms?: integer, render_batch_size?: integer, interrupt_ms?: integer }
+---@field public disable_actions? string[]
+---@field public disable_decorators? string[]
+---@field public disable_previewers? string[]
 ---@field public dedup? boolean
 ---@field public query? string
 ---@field public auto_abort? boolean
@@ -154,6 +157,9 @@ local Context = require('deck.Context')
 ---@field public matcher deck.Matcher
 ---@field public history boolean
 ---@field public performance { sync_timeout_ms: integer, filter_bugdet_ms: integer, filter_batch_size: integer, render_delay_ms: integer, render_bugdet_ms: integer, render_batch_size: integer, interrupt_ms: integer }
+---@field public disable_actions? string[]
+---@field public disable_decorators? string[]
+---@field public disable_previewers? string[]
 ---@field public dedup boolean
 ---@field public query string
 

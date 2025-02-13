@@ -543,7 +543,14 @@ function Context.create(id, source, start_config)
         table.insert(actions, action)
       end
 
-      return actions
+      return vim.iter(actions):filter(function(action)
+        if start_config.disable_actions then
+          if vim.tbl_contains(start_config.disable_actions, action.name) then
+            return false
+          end
+        end
+        return true
+      end):totable()
     end,
 
     ---Get decorators.
@@ -564,7 +571,15 @@ function Context.create(id, source, start_config)
       for _, decorator in ipairs(require('deck').get_decorators()) do
         table.insert(decorators, decorator)
       end
-      return decorators
+
+      return vim.iter(decorators):filter(function(action)
+        if start_config.disable_decorators then
+          if vim.tbl_contains(start_config.disable_decorators, action.name) then
+            return false
+          end
+        end
+        return true
+      end):totable()
     end,
 
     ---Get previewer.
@@ -574,26 +589,37 @@ function Context.create(id, source, start_config)
         return
       end
 
+      local previewers = {}
+
       -- config.
       for _, previewer in ipairs(start_config.previewers or {}) do
         if not previewer.resolve or previewer.resolve(context, item) then
-          return previewer
+          table.insert(previewers, previewer)
         end
       end
 
       -- source.
       for _, previewer in ipairs(source.previewers or {}) do
         if not previewer.resolve or previewer.resolve(context, item) then
-          return previewer
+          table.insert(previewers, previewer)
         end
       end
 
       -- global.
       for _, previewer in ipairs(require('deck').get_previewers()) do
         if not previewer.resolve or previewer.resolve(context, item) then
-          return previewer
+          table.insert(previewers, previewer)
         end
       end
+
+      return vim.iter(previewers):filter(function(previewer)
+        if start_config.disable_previewers then
+          if vim.tbl_contains(start_config.disable_previewers, previewer.name) then
+            return false
+          end
+        end
+        return true
+      end):nth(1)
     end,
 
     ---Synchronize for display.
