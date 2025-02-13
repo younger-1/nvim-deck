@@ -201,7 +201,7 @@ local internal = {
     max_history_size = 5,
     default_start_config = {
       view = function()
-        return require('deck.builtin.view.default')({
+        return require('deck.builtin.view.bottom_picker')({
           max_height = math.floor(vim.o.lines * 0.25),
         })
       end,

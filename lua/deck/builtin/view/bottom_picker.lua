@@ -168,7 +168,7 @@ return function(config)
         -- search existing window.
         local existing_deck_win --[[@type integer?]]
         for _, win in ipairs(vim.api.nvim_list_wins()) do
-          local ok, v = pcall(vim.api.nvim_win_get_var, win, 'deck_builtin_view_default')
+          local ok, v = pcall(vim.api.nvim_win_get_var, win, 'deck_builtin_view_botom_picker')
           if ok and v then
             existing_deck_win = win
             break
@@ -193,7 +193,7 @@ return function(config)
         state.win = vim.api.nvim_get_current_win()
 
         -- setup window.
-        vim.api.nvim_win_set_var(state.win, 'deck_builtin_view_default', true)
+        vim.api.nvim_win_set_var(state.win, 'deck_builtin_view_botom_picker', true)
         vim.api.nvim_set_option_value('wrap', false, { win = state.win })
         vim.api.nvim_set_option_value('number', false, { win = state.win })
         vim.api.nvim_set_option_value('winfixheight', true, { win = state.win })
@@ -225,7 +225,7 @@ return function(config)
         if not view.is_visible(ctx) then
           return
         end
-        local group = vim.api.nvim_create_augroup('deck.builtin.view.default.prompt', {
+        local group = vim.api.nvim_create_augroup('deck.builtin.view.bottom_picker.prompt', {
           clear = true
         })
         vim.schedule(function()
