@@ -165,45 +165,40 @@ return function(config)
       if not view.is_visible(ctx) then
         ctx.sync()
 
-        -- open win.
-        if vim.api.nvim_get_option_value('filetype', { buf = 0 }) ~= 'deck' then
-          -- search existing window.
-          local existing_deck_win --[[@type integer?]]
-          for _, win in ipairs(vim.api.nvim_list_wins()) do
-            local ok, v = pcall(vim.api.nvim_win_get_var, win, 'deck_builtin_view_default')
-            if ok and v then
-              existing_deck_win = win
-              break
-            end
+        -- search existing window.
+        local existing_deck_win --[[@type integer?]]
+        for _, win in ipairs(vim.api.nvim_list_wins()) do
+          local ok, v = pcall(vim.api.nvim_win_get_var, win, 'deck_builtin_view_default')
+          if ok and v then
+            existing_deck_win = win
+            break
           end
-
-          -- ensure window.
-          if existing_deck_win then
-            -- move to existing window.
-            vim.cmd.normal({ "m'", bang = true })
-            vim.api.nvim_set_current_win(existing_deck_win)
-          else
-            -- open new window.
-            local height = calc_winheight(ctx)
-            vim.cmd.split({
-              range = { height },
-              mods = {
-                split = 'botright',
-                keepalt = true,
-                keepjumps = true,
-                keepmarks = true,
-                noautocmd = true,
-              },
-            })
-            vim.w.winfixwidth = true
-          end
+        end
+        if existing_deck_win then
+          vim.api.nvim_set_current_win(existing_deck_win)
+        else
+          -- open new window.
+          local height = calc_winheight(ctx)
+          vim.cmd.split({
+            range = { height },
+            mods = {
+              split = 'botright',
+              keepalt = true,
+              keepjumps = true,
+              keepmarks = true,
+              noautocmd = true,
+            },
+          })
         end
         state.win = vim.api.nvim_get_current_win()
 
         -- setup window.
-        vim.api.nvim_win_set_var(0, 'deck_builtin_view_default', true)
-        vim.api.nvim_set_option_value('wrap', false, { win = 0 })
-        vim.api.nvim_set_option_value('number', false, { win = 0 })
+        vim.api.nvim_win_set_var(state.win, 'deck_builtin_view_default', true)
+        vim.api.nvim_set_option_value('wrap', false, { win = state.win })
+        vim.api.nvim_set_option_value('number', false, { win = state.win })
+        vim.api.nvim_set_option_value('winfixheight', true, { win = state.win })
+
+        vim.cmd('normal! m`')
         vim.api.nvim_win_set_buf(state.win, ctx.buf)
       end
 
@@ -216,7 +211,6 @@ return function(config)
     ---Hide window.
     hide = function(ctx)
       state.timer:stop()
-      vim.api.nvim_win_set_var(state.win, 'deck_builtin_view_default', false)
       if view.is_visible(ctx) then
         vim.api.nvim_win_hide(state.win)
       end

@@ -269,11 +269,9 @@ function Context.create(id, source, start_config)
 
     ---Show context via given view.
     show = function()
-      local to_show = not context.is_visible()
-      if not to_show then
-        context.focus()
-      end
       buffer:start_filtering()
+
+      local to_show = not context.is_visible()
       view.show(context)
       if to_show then
         --[=[@doc
@@ -288,21 +286,23 @@ function Context.create(id, source, start_config)
             ctx = context
           },
         })
-        events.show.emit()
+        events.show.emit(nil)
+      else
+        context.focus()
       end
     end,
 
     ---Hide context via given view.
     hide = function()
+      buffer:abort_filtering()
+
       local to_hide = context.is_visible()
+      pcall(view.hide, context)
       if to_hide then
         if start_config.auto_abort then
           state.controller.abort()
         end
-      end
-      buffer:abort_filtering()
-      pcall(view.hide, context)
-      if to_hide then
+
         --[=[@doc
           category = "autocmd"
           name = "DeckHide"
@@ -315,7 +315,7 @@ function Context.create(id, source, start_config)
             ctx = context
           },
         })
-        events.hide.emit()
+        events.hide.emit(nil)
       end
     end,
 
@@ -703,10 +703,20 @@ function Context.create(id, source, start_config)
       -- abort filtering.
       buffer:abort_filtering()
 
-      if vim.api.nvim_buf_is_valid(context.buf) then
-        vim.api.nvim_buf_delete(context.buf, { force = true })
+      local function cleanup()
+        if vim.api.nvim_buf_is_valid(context.buf) then
+          vim.api.nvim_buf_delete(context.buf, { force = true })
+        end
+        events.dispose.emit(nil)
       end
-      events.dispose.emit()
+      if context.is_visible() then
+        x.autocmd('BufWinLeave', cleanup, {
+          once = true,
+          pattern = ('<buffer=%s>'):format(context.buf),
+        })()
+      else
+        cleanup()
+      end
     end,
 
     ---Return dispose state.
