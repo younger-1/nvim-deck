@@ -21,11 +21,9 @@ local Icon = {}
 ---@return string?, string?
 function Icon.filename(filename)
   if resolve_filename then
-    if not vim.fs.basename(filename):match('%.') then
-      local is_dir = vim.fn.isdirectory(filename) == 1
-      if is_dir then
-        return resolve_filename('directory', filename)
-      end
+    local is_dir = vim.fn.isdirectory(filename) == 1
+    if is_dir then
+      return resolve_filename('directory', filename)
     end
     return resolve_filename('extension', filename)
   end
