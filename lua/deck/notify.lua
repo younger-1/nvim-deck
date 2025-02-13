@@ -1,3 +1,5 @@
+local kit = require('deck.kit')
+
 ---@alias deck.notify.Line (string|{ [1]: string, [2]?: string })[]
 ---@alias deck.notify.Item { message: deck.notify.Line[], timeout: integer, visible_at: integer }
 
@@ -7,6 +9,8 @@ local state = {
   buf = vim.api.nvim_create_buf(false, true),
   win = nil,
   timer = vim.uv.new_timer(),
+  memo_buf = {},
+  memo_win = {},
 }
 
 vim.api.nvim_set_decoration_provider(state.ns, {
@@ -96,9 +100,12 @@ local function render(max_width, max_height)
   end
   height = math.max(1, math.min(max_height, height))
 
-  vim.api.nvim_set_option_value('modifiable', true, { buf = state.buf })
-  vim.api.nvim_buf_set_lines(state.buf, 0, -1, false, lines)
-  vim.api.nvim_set_option_value('modifiable', false, { buf = state.buf })
+  if not kit.shallow_equals(state.memo_buf, { lines = lines, width = width, height = height }) then
+    state.memo_buf = { lines = lines, width = width, height = height }
+    vim.api.nvim_set_option_value('modifiable', true, { buf = state.buf })
+    vim.api.nvim_buf_set_lines(state.buf, 0, -1, false, lines)
+    vim.api.nvim_set_option_value('modifiable', false, { buf = state.buf })
+  end
 
   local win_config = {
     noautocmd = true,
@@ -112,15 +119,21 @@ local function render(max_width, max_height)
   }
   if state.win and vim.api.nvim_win_is_valid(state.win) then
     win_config.noautocmd = nil
-    vim.api.nvim_win_set_config(state.win, win_config)
+    if not kit.shallow_equals(state.memo_win, win_config) then
+      vim.api.nvim_win_set_config(state.win, win_config)
+      vim.api.nvim_win_call(state.win, function()
+        vim.cmd.normal({ 'Gzb', bang = true })
+      end)
+    end
   else
     state.win = vim.api.nvim_open_win(state.buf, false, win_config)
+    vim.api.nvim_set_option_value('wrap', true, { win = state.win })
+    vim.api.nvim_set_option_value('winhighlight', 'Normal:Normal,FloatBorder:Normal', { win = state.win })
+    vim.api.nvim_win_call(state.win, function()
+      vim.cmd.normal({ 'Gzb', bang = true })
+    end)
   end
-  vim.api.nvim_set_option_value('wrap', true, { win = state.win })
-  vim.api.nvim_set_option_value('winhighlight', 'Normal:Normal,FloatBorder:Normal', { win = state.win })
-  vim.api.nvim_win_call(state.win, function()
-    vim.cmd.normal({ 'Gzb', bang = true })
-  end)
+  state.memo_win = win_config
 
   state.timer:stop()
   state.timer:start(
