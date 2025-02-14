@@ -169,6 +169,7 @@ actions for them.
 - create
 - delete
 - rename
+- write
 - open
 - open_split
 - open_vsplit
