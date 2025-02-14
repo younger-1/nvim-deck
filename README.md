@@ -142,6 +142,43 @@ vim.keymap.set('n', '<Leader>n', function()
 end)
 ```
 
+# Development Guideline
+
+If you create nvim-deck source or action, we recommend to follow guidelines.
+
+### Register alias action for common action names.
+
+nvim-deck supports the concept of duck-typing.
+
+So if your custom source has source-specific actions, you should register alias actions for them.
+
+- default
+- create
+- delete
+- rename
+- open
+- open_split
+- open_vsplit
+
+The source definition looks like this:
+
+```lua
+source = {
+  ...
+  actions = {
+    deck.alias_action('default', 'source.default'),
+    {
+      name = 'source.default',
+      execute = ...
+    }
+  }
+  ...
+}
+```
+
+The `source.default` action will be shown in action picker.
+The user can have a unified experience across many different sources just by writing `ctx.keymap('n', '<CR>', deck.action_mapping('default'))`.
+
 # Customization
 
 !!! We strongly recommend using `lua-language-server` !!!
