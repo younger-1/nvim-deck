@@ -8,13 +8,14 @@ Table of Contents                                     *deck-table-of-contents*
 3. Features                                                    |deck-features|
 4. Why nvim-deck?                                        |deck-why-nvim-deck?|
 5. Setup                                                          |deck-setup|
-6. Customization                                          |deck-customization|
-7. Built-in                                                    |deck-built-in|
+6. DevelopmentGuideline                            |deck-developmentguideline|
+7. Customization                                          |deck-customization|
+8. Built-in                                                    |deck-built-in|
   - Sources                                            |deck-built-in-sources|
   - Actions                                            |deck-built-in-actions|
   - Autocmd                                            |deck-built-in-autocmd|
-8. API                                                              |deck-api|
-9. Type                                                            |deck-type|
+9. API                                                              |deck-api|
+10. Type                                                           |deck-type|
 
 ==============================================================================
 1. Intro                                                          *deck-intro*
@@ -152,9 +153,51 @@ Here’s an example of how to set up `nvim-deck`
 
 
 ==============================================================================
-6. Customization                                          *deck-customization*
+6. DevelopmentGuideline                            *deck-developmentguideline*
 
-!!!We strongly recommend using `lua-language-server` !!!
+If you create nvim-deck source or action, we recommend to follow guidelines.
+
+
+REGISTER ALIAS ACTION FOR COMMON ACTION NAMES. ~
+
+nvim-deck supports the concept of duck-typing.
+
+So if your custom source has source-specific actions, you should register alias
+actions for them.
+
+- default
+- create
+- delete
+- rename
+- open
+- open_split
+- open_vsplit
+
+The source definition looks like this:
+
+>lua
+    source = {
+      ...
+      actions = {
+        deck.alias_action('default', 'source.default'),
+        {
+          name = 'source.default',
+          execute = ...
+        }
+      }
+      ...
+    }
+<
+
+The `source.default` action will be shown in action picker. The user can have a
+unified experience across many different sources just by writing
+`ctx.keymap('n', '<CR>', deck.action_mapping('default'))`.
+
+
+==============================================================================
+7. Customization                                          *deck-customization*
+
+!!! We strongly recommend using `lua-language-server` !!!
 
 
 APPEARANCE ~
@@ -357,7 +400,7 @@ PREVIEWER ~
 
 
 ==============================================================================
-7. Built-in                                                    *deck-built-in*
+8. Built-in                                                    *deck-built-in*
 
 
 SOURCES                                                *deck-built-in-sources*
@@ -720,7 +763,7 @@ AUTOCMD                                                *deck-built-in-autocmd*
 
 
 ==============================================================================
-8. API                                                              *deck-api*
+9. API                                                              *deck-api*
 
 deck.action_mapping(mapping): fun(ctx: |deck.Context|) ~
 
@@ -896,7 +939,7 @@ Start deck with given sources.
 
 
 ==============================================================================
-9. Type                                                            *deck-type*
+10. Type                                                           *deck-type*
 
 *deck.Action*
 
