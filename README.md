@@ -156,6 +156,7 @@ So if your custom source has source-specific actions, you should register alias 
 - create
 - delete
 - rename
+- write
 - open
 - open_split
 - open_vsplit
