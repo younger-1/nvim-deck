@@ -150,7 +150,8 @@ If you create nvim-deck source or action, we recommend to follow guidelines.
 
 nvim-deck supports the concept of duck-typing.
 
-So if your custom source has source-specific actions, you should register alias actions for them.
+So if your custom source has source-specific actions, you should register alias
+actions for them.
 
 - default
 - create
@@ -176,8 +177,9 @@ source = {
 }
 ```
 
-The `source.default` action will be shown in action picker.
-The user can have a unified experience across many different sources just by writing `ctx.keymap('n', '<CR>', deck.action_mapping('default'))`.
+The `source.default` action will be shown in action picker. The user can have a
+unified experience across many different sources just by writing
+`ctx.keymap('n', '<CR>', deck.action_mapping('default'))`.
 
 # Customization
 
