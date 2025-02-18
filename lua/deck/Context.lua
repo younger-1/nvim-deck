@@ -60,7 +60,7 @@ local ExecuteContext = require('deck.ExecuteContext')
 ---@field get_previewer fun(): deck.Previewer?
 ---@field sync fun()
 ---@field keymap fun(mode: string|string[], lhs: string, rhs: fun(ctx: deck.Context))
----@field do_action fun(name: string)
+---@field do_action fun(name: string): any
 ---@field dispose fun()
 ---@field disposed fun(): boolean
 ---@field on_show fun(callback: fun())
@@ -109,7 +109,21 @@ function Context.create(id, source, start_config)
     hide = x.create_events(),
   }
 
+  local function redraw()
+    if context.is_visible() and not context.is_syncing() then
+      view.redraw(context)
+      vim.api.nvim_buf_set_extmark(context.buf, context.ns, 0, 0, {
+        id = 1,
+        ui_watched = true
+      })
+    end
+  end
+
   local buffer = Buffer.new(tostring(id), start_config)
+
+  buffer.on_render(function()
+    redraw()
+  end)
 
   ---Execute source.
   local execute_source = function()
@@ -269,11 +283,17 @@ function Context.create(id, source, start_config)
 
     ---Show context via given view.
     show = function()
+      if context.disposed() then
+        return
+      end
+
       buffer:start_filtering()
 
       local to_show = not context.is_visible()
-      view.show(context)
+      pcall(view.show, context)
+      context.set_cursor(context.get_cursor())
       if to_show then
+        redraw()
         --[=[@doc
           category = "autocmd"
           name = "DeckShow"
@@ -362,20 +382,20 @@ function Context.create(id, source, start_config)
 
     ---Set cursor row.
     set_cursor = function(cursor)
+      local prev_cursor_item = context.get_cursor_item()
       cursor = math.max(1, cursor)
-      if state.cursor == cursor then
-        return
-      end
       state.cursor = cursor
 
       if view.is_visible(context) then
         local win = view.get_win() --[[@as integer]]
-        if vim.api.nvim_win_get_cursor(win)[1] == cursor then
-          return
+        if vim.api.nvim_win_get_cursor(win)[1] ~= cursor then
+          local max = vim.api.nvim_buf_line_count(context.buf)
+          if max >= cursor then
+            vim.api.nvim_win_set_cursor(win, { cursor, 0 })
+          end
         end
-        local max = vim.api.nvim_buf_line_count(context.buf)
-        if max >= cursor then
-          vim.api.nvim_win_set_cursor(win, { cursor, 0 })
+        if prev_cursor_item ~= context.get_cursor_item() then
+          redraw()
         end
       end
     end,
@@ -435,6 +455,7 @@ function Context.create(id, source, start_config)
         state.select_all = false
       end
       state.select_map[item] = selected and true or nil
+      redraw()
     end,
 
     ---Get specified item's selected state.
@@ -466,7 +487,7 @@ function Context.create(id, source, start_config)
       end
 
       state.preview_mode = preview_mode
-      view.show(context)
+      redraw()
     end,
 
     ---Get preview mode.
@@ -657,6 +678,8 @@ function Context.create(id, source, start_config)
       end)
       restore()
       state.is_syncing = false
+
+      redraw()
     end,
 
     ---Set keymap to the deck buffer.
@@ -665,28 +688,43 @@ function Context.create(id, source, start_config)
         rhs(context)
         state.decoration_cache = {}
       end, {
-        desc = 'deck.action',
+        desc = 'deck.keymap',
         nowait = true,
         buffer = context.buf,
       })
     end,
 
-    ---Do specified action.
-    ---@param name string
-    do_action = function(name)
-      for _, action in ipairs(context.get_actions()) do
-        if action.name == name then
-          if not action.resolve or action.resolve(context) then
-            action.execute(context)
-            state.decoration_cache = {}
-            return
+    do_action = (function()
+      local nested = 0
+      ---Do specified action.
+      ---@param name string
+      ---@return any
+      return function(name)
+        nested = nested + 1
+        local ok, v = pcall(function()
+          for _, action in ipairs(context.get_actions()) do
+            if action.name == name then
+              if not action.resolve or action.resolve(context) then
+                return action.execute(context)
+              end
+            end
+          end
+          error(('Available Action not found: %s'):format(name))
+        end)
+        nested = nested - 1
+        if not ok then
+          if nested > 0 then
+            error(v)
+          else
+            notify.show({
+              { { v, 'WarningMsg' } },
+            })
           end
         end
+        state.decoration_cache = {}
+        return v
       end
-      notify.show({
-        { { ('Available Action not found: %s'):format(name), 'WarningMsg' } },
-      })
-    end,
+    end)(),
 
     ---Dispose context.
     dispose = function()
@@ -715,7 +753,7 @@ function Context.create(id, source, start_config)
           pattern = ('<buffer=%s>'):format(context.buf),
         })()
       else
-        cleanup()
+        kit.fast_schedule(cleanup)
       end
     end,
 

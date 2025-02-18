@@ -75,7 +75,9 @@ local Context = require('deck.Context')
 ---@class deck.ExecuteContext
 ---@field public item fun(item: deck.ItemSpecifier)
 ---@field public done fun( )
+---@field public queue fun(task: fun())
 ---@field public get_query fun(): string
+---@field public get_config fun(): deck.StartConfig
 ---@field public aborted fun(): boolean
 ---@field public on_abort fun(callback: fun())
 
@@ -91,7 +93,7 @@ local Context = require('deck.Context')
 ---@alias deck.ActionResolveFunction fun(ctx: deck.Context): any
 
 ---@doc.type
----@alias deck.ActionExecuteFunction fun(ctx: deck.Context)
+---@alias deck.ActionExecuteFunction fun(ctx: deck.Context): any
 
 ---@doc.type
 ---@class deck.Decorator
@@ -130,8 +132,21 @@ local Context = require('deck.Context')
 ---@field public is_visible fun(ctx: deck.Context): boolean
 ---@field public show fun(ctx: deck.Context)
 ---@field public hide fun(ctx: deck.Context)
+---@field public redraw fun(ctx: deck.Context)
 ---@field public prompt fun(ctx: deck.Context)
 ---@field public scroll_preview fun(ctx: deck.Context, delta: integer)
+
+---@doc.type
+---@class deck.PerformanceConfig
+---@field public sync_timeout_ms integer
+---@field public interrupt_ms integer
+---@field public gather_budget_ms integer
+---@field public gather_batch_size integer
+---@field public filter_bugdet_ms integer
+---@field public filter_batch_size integer
+---@field public render_bugdet_ms integer
+---@field public render_batch_size integer
+---@field public render_delay_ms integer
 
 ---@doc.type
 ---@class deck.StartConfigSpecifier
@@ -142,7 +157,7 @@ local Context = require('deck.Context')
 ---@field public actions? deck.Action[]
 ---@field public decorators? deck.Decorator[]
 ---@field public previewers? deck.Previewer[]
----@field public performance? { sync_timeout_ms?: integer, filter_bugdet_ms?: integer, filter_batch_size?: integer, render_delay_ms?: integer, render_bugdet_ms?: integer, render_batch_size?: integer, interrupt_ms?: integer }
+---@field public performance? deck.PerformanceConfig|{}
 ---@field public disable_actions? string[]
 ---@field public disable_decorators? string[]
 ---@field public disable_previewers? string[]
@@ -156,7 +171,7 @@ local Context = require('deck.Context')
 ---@field public view fun(): deck.View
 ---@field public matcher deck.Matcher
 ---@field public history boolean
----@field public performance { sync_timeout_ms: integer, filter_bugdet_ms: integer, filter_batch_size: integer, render_delay_ms: integer, render_bugdet_ms: integer, render_batch_size: integer, interrupt_ms: integer }
+---@field public performance deck.PerformanceConfig
 ---@field public disable_actions? string[]
 ---@field public disable_decorators? string[]
 ---@field public disable_previewers? string[]
@@ -209,12 +224,14 @@ local internal = {
       history = true,
       performance = {
         sync_timeout_ms = 400,
+        interrupt_ms = 4,
+        gather_budget_ms = 16,
+        gather_batch_size = 100,
         filter_bugdet_ms = 16,
         filter_batch_size = 100,
         render_delay_ms = 800,
         render_bugdet_ms = 16,
         render_batch_size = 500,
-        interrupt_ms = 4
       },
       dedup = true,
       query = '',

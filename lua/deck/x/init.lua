@@ -11,6 +11,25 @@ function x.normalize_display_text(display_text)
   return { display_text or '' }
 end
 
+---Confirm with yes or no.
+---@param maybe_prompt string|string[]
+---@return boolean
+function x.confirm(maybe_prompt)
+  local prompt = ''
+  if type(maybe_prompt) == 'string' then
+    prompt = maybe_prompt
+  else
+    for _, line in ipairs(maybe_prompt) do
+      prompt = prompt .. (line:gsub('\n$', '')) .. '\n'
+    end
+  end
+  prompt = prompt:gsub('\n$', '') .. '\ny(es)/n(o): '
+  local result = vim.fn.input({
+    prompt = prompt,
+  })
+  return vim.tbl_contains({ 'y', 'yes' }, result)
+end
+
 ---Resolve bufnr from deck.Item if can't resolved, return -1.
 ---@param item deck.Item
 ---@return integer
@@ -25,6 +44,38 @@ function x.resolve_bufnr(item)
     end
   end
   return -1
+end
+
+---Ensure window.
+---@param name string
+---@param opener fun(): integer
+---@param configure? fun(win: integer)
+function x.ensure_win(name, opener, configure)
+  local tab = vim.api.nvim_get_current_tabpage()
+
+  local existing_win --[[@as integer?]]
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    if tab == vim.api.nvim_win_get_tabpage(win) then
+      local ok, v = pcall(vim.api.nvim_win_get_var, win, 'deck_win_name')
+      if ok and v == name then
+        existing_win = win
+        break
+      end
+    end
+  end
+  if existing_win then
+    if configure then
+      configure(existing_win)
+    end
+    return existing_win
+  end
+
+  local win = opener()
+  vim.api.nvim_win_set_var(win, 'deck_win_name', name)
+  if configure then
+    configure(win)
+  end
+  return win
 end
 
 ---Open a preview buffer with the given data.

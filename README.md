@@ -118,6 +118,20 @@ vim.api.nvim_create_autocmd('User', {
   end
 })
 
+--key-mapping for explorer source (requires `require('deck.easy').setup()`).
+vim.api.nvim_create_autocmd('User', {
+  pattern = 'DeckStart:explorer',
+  callback = function(e)
+    ctx.keymap('n', 'h', deck.action_mapping('explorer.collapse'))
+    ctx.keymap('n', 'l', deck.action_mapping('explorer.expand'))
+    ctx.keymap('n', '.', deck.action_mapping('explorer.toggle_dotfiles'))
+    ctx.keymap('n', 'c', deck.action_mapping('explorer.clipboard.save_copy'))
+    ctx.keymap('n', 'm', deck.action_mapping('explorer.clipboard.save_move'))
+    ctx.keymap('n', 'p', deck.action_mapping('explorer.clipboard.paste'))
+    ctx.keymap('n', 'x', deck.action_mapping('explorer.clipboard.ui_open'))
+  end
+})
+
 -- Example key bindings for launching nvim-deck sources. (These mapping required `deck.easy` calls.)
 vim.keymap.set('n', '<Leader>ff', '<Cmd>Deck files<CR>', { desc = 'Show recent files, buffers, and more' })
 vim.keymap.set('n', '<Leader>gr', '<Cmd>Deck grep<CR>', { desc = 'Start grep search' })
