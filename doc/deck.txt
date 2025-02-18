@@ -1130,6 +1130,7 @@ Start deck with given sources.
 >lua
     ---@class deck.Previewer
     ---@field public name string
+    ---@field public priority? integer
     ---@field public resolve? deck.PreviewerResolveFunction
     ---@field public preview deck.PreviewerPreviewFunction
 <
