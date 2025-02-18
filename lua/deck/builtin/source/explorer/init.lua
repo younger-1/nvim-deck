@@ -271,36 +271,42 @@ return function(option)
     events = {
       BufWinEnter = function(ctx, env)
         require('deck.builtin.source.recent_dirs'):add(state:get_root().path)
-        vim.cmd.lcd(vim.fn.fnameescape(state:get_root().path))
 
-        if env.first and option.reveal then
-          Async.run(function()
-            local relpath = vim.fs.relpath(state:get_root().path, option.reveal)
-            if relpath then
-              local paths = vim.fn.split(relpath, '/')
-              local current_path = option.cwd
-              while current_path and #paths > 0 do
-                local item = state:get_item({ path = current_path, type = 'directory' })
-                if item then
-                  state:expand(item)
+        -- TODO: I can't understand that but change directory to root causes infinite loop...
+        if state:get_root().path ~= '/' then
+          vim.cmd.tcd(state:get_root().path)
+        end
+
+        if env.first then
+          if option.reveal then
+            Async.run(function()
+              local relpath = vim.fs.relpath(state:get_root().path, option.reveal)
+              if relpath then
+                local paths = vim.fn.split(relpath, '/')
+                local current_path = option.cwd
+                while current_path and #paths > 0 do
+                  local item = state:get_item({ path = current_path, type = 'directory' })
+                  if item then
+                    state:expand(item)
+                  end
+                  local prev_path = current_path
+                  current_path = vim.fs.joinpath(current_path, table.remove(paths, 1))
+                  if current_path == prev_path then
+                    break
+                  end
                 end
-                local prev_path = current_path
-                current_path = vim.fs.joinpath(current_path, table.remove(paths, 1))
-                if current_path == prev_path then
-                  break
+                local target_item = state:get_item({
+                  path = option.reveal,
+                  type = vim.fn.isdirectory(option.reveal) == 1 and 'directory' or 'file'
+                })
+                if target_item then
+                  ctx.execute()
+                  ctx.sync()
+                  focus(ctx, target_item)
                 end
               end
-              local target_item = state:get_item({
-                path = option.reveal,
-                type = vim.fn.isdirectory(option.reveal) == 1 and 'directory' or 'file'
-              })
-              if target_item then
-                ctx.execute()
-                ctx.sync()
-                focus(ctx, target_item)
-              end
-            end
-          end):sync(5 * 1000)
+            end):sync(5 * 1000)
+          end
         end
       end,
     },
@@ -454,7 +460,11 @@ return function(option)
                   ctx.execute()
                   return
                 end
+                local prev_target_item = target_item
                 target_item = state:get_parent_item(target_item)
+                if target_item == prev_target_item then
+                  break
+                end
               end
             end
             ctx.do_action('explorer.cd_up')
