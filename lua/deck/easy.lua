@@ -30,6 +30,13 @@ function easy.setup(config)
     return kit.findup(path, { '.git', 'package.json', 'tsconfig.json' })
   end
 
+  local function to_dir(path)
+    if vim.fn.filereadable(path) == 1 then
+      return vim.fs.dirname(path)
+    end
+    return path
+  end
+
   local deck = require('deck')
 
   -- Manage recent_files and recent_dirs automatically.
@@ -71,9 +78,10 @@ function easy.setup(config)
         },
       },
       start = function(args)
+        local buffer_path = config.get_buffer_path(vim.api.nvim_get_current_buf())
         local option = {
           width = args['--width'] or 40,
-          cwd = args['--cwd'] or config.get_project_root(config.get_buffer_path(vim.api.nvim_get_current_buf())),
+          cwd = args['--cwd'] or config.get_project_root(buffer_path) or to_dir(buffer_path),
           reveal = args['--reveal'] or config.get_buffer_path(vim.api.nvim_get_current_buf()),
         }
 

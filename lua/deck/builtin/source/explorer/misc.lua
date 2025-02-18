@@ -49,7 +49,7 @@ function misc.get_children(entry, depth)
   return vim.iter(children):map(function(child)
     return {
       path = child.path,
-      type = child.type,
+      type = child.type == 'directory' and 'directory' or 'file',
       expanded = false,
       depth = depth + 1,
     }

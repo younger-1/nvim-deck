@@ -224,20 +224,22 @@ end
 ---@param entry deck.builtin.source.explorer.Entry
 ---@return deck.builtin.source.explorer.Item?
 function State:get_parent_item(entry)
-  local function find_parent(item, path)
-    if item.children then
-      for _, child in ipairs(item.children) do
-        if child.path == path then
-          return item
-        end
-        local found = find_parent(child, path)
-        if found then
-          return found
-        end
-      end
+  if entry.path == '/' then
+    return
+  end
+
+  local parent_path = vim.fs.dirname(entry.path)
+  while parent_path do
+    local parent_item = self:get_item({ path = parent_path, type = 'directory' })
+    if parent_item then
+      return parent_item
+    end
+    local prev_parent_path = parent_path
+    parent_path = vim.fs.dirname(parent_path)
+    if parent_path == prev_parent_path then
+      break
     end
   end
-  return find_parent(self:get_root(), entry.path)
 end
 
 ---@class deck.builtin.source.explorer.Option
@@ -247,6 +249,10 @@ end
 ---@field reveal? string
 ---@param option deck.builtin.source.explorer.Option
 return function(option)
+  if #option.cwd == 0 or vim.fn.isdirectory(option.cwd) == 0 then
+    error('Invalid cwd: ' .. option.cwd)
+  end
+
   option = option or {}
   option.cwd = vim.fs.normalize(option.cwd)
   option.reveal = option.reveal and vim.fs.normalize(option.reveal) or nil
@@ -278,7 +284,11 @@ return function(option)
                 if item then
                   state:expand(item)
                 end
+                local prev_path = current_path
                 current_path = vim.fs.joinpath(current_path, table.remove(paths, 1))
+                if current_path == prev_path then
+                  break
+                end
               end
               local target_item = state:get_item({
                 path = option.reveal,
@@ -331,7 +341,11 @@ return function(option)
                     path = parent,
                     type = 'directory',
                   })
+                  local prev_parent = parent
                   parent = vim.fs.dirname(parent)
+                  if parent == prev_parent then
+                    break
+                  end
                 end
               end
               for i = #parents, 1, -1 do
