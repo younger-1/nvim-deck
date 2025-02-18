@@ -502,9 +502,6 @@ function Context.create(id, source, start_config)
 
     ---Get cursor item.
     get_cursor_item = function()
-      if view.is_visible(context) then
-        return buffer:get_rendered_items()[vim.api.nvim_win_get_cursor(view.get_win() --[[@as integer]])[1]]
-      end
       return buffer:get_rendered_items()[state.cursor]
     end,
 
