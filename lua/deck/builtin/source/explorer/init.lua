@@ -153,7 +153,8 @@ end
 
 ---Refresh target items children with keeping expanded state.
 ---@param entry deck.builtin.source.explorer.Entry
-function State:refresh(entry)
+---@param recursive? boolean
+function State:refresh(entry, recursive)
   local item = self:get_item(entry)
   if item then
     if item.type == 'file' then
@@ -190,9 +191,11 @@ function State:refresh(entry)
       item.children = new_children
 
       -- recursive refresh.
-      for _, child in ipairs(item.children) do
-        if child.type == 'directory' and self:is_expanded(child) then
-          self:refresh(child)
+      if recursive then
+        for _, child in ipairs(item.children) do
+          if child.type == 'directory' and self:is_expanded(child) then
+            self:refresh(child)
+          end
         end
       end
     end
@@ -698,7 +701,7 @@ return function(option)
         name = 'explorer.refresh',
         execute = function(ctx)
           Async.run(function()
-            state:refresh(state:get_root())
+            state:refresh(state:get_root(), true)
             ctx.execute()
           end)
         end,

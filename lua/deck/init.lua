@@ -111,6 +111,7 @@ local Context = require('deck.Context')
 ---@doc.type
 ---@class deck.Previewer
 ---@field public name string
+---@field public priority? integer
 ---@field public resolve? deck.PreviewerResolveFunction
 ---@field public preview deck.PreviewerPreviewFunction
 

@@ -610,24 +610,46 @@ function Context.create(id, source, start_config)
         return
       end
 
+      ---@param previewers deck.Previewer[]
+      ---@return deck.Previewer
+      local function get_sorted_previewers(previewers)
+        local entries = vim.iter(ipairs(previewers)):map(function(i, previewer)
+          return {
+            index = i,
+            previewer = previewer,
+          }
+        end):totable()
+        table.sort(entries, function(a, b)
+          local priority_a = a.previewer.priority or 0
+          local priority_b = b.previewer.priority or 0
+          if priority_a ~= priority_b then
+            return priority_a > priority_b
+          end
+          return a.index < b.index
+        end)
+        return vim.iter(entries):map(function(entry)
+          return entry.previewer
+        end):totable()
+      end
+
       local previewers = {}
 
       -- config.
-      for _, previewer in ipairs(start_config.previewers or {}) do
+      for _, previewer in ipairs(get_sorted_previewers(start_config.previewers or {})) do
         if not previewer.resolve or previewer.resolve(context, item) then
           table.insert(previewers, previewer)
         end
       end
 
       -- source.
-      for _, previewer in ipairs(source.previewers or {}) do
+      for _, previewer in ipairs(get_sorted_previewers(source.previewers or {})) do
         if not previewer.resolve or previewer.resolve(context, item) then
           table.insert(previewers, previewer)
         end
       end
 
       -- global.
-      for _, previewer in ipairs(require('deck').get_previewers()) do
+      for _, previewer in ipairs(get_sorted_previewers(require('deck').get_previewers())) do
         if not previewer.resolve or previewer.resolve(context, item) then
           table.insert(previewers, previewer)
         end

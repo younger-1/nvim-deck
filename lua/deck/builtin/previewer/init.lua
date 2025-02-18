@@ -2,6 +2,29 @@ local x = require('deck.x')
 
 local previewer = {}
 
+---image previewer.
+---@type deck.Previewer
+previewer.snacks_image = {
+  name = 'snacks_image',
+  priority = 1,
+  resolve = function(_, item)
+    if not item.data.filename then
+      return false
+    end
+    local ok, image = pcall(require, 'snacks.image')
+    if not ok or not image then
+      return false
+    end
+    return image.supports(item.data.filename)
+  end,
+  preview = function(_, item, env)
+    local buf = vim.api.nvim_win_get_buf(env.win)
+    require('snacks.image.buf').attach(buf, {
+      src = item.data.filename,
+    })
+  end,
+}
+
 ---filename previewer.
 ---@type deck.Previewer
 previewer.filename = {
