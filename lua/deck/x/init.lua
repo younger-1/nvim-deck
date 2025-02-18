@@ -32,18 +32,14 @@ end
 
 ---Resolve bufnr from deck.Item if can't resolved, return -1.
 ---@param item deck.Item
----@return integer
+---@return integer?
 function x.resolve_bufnr(item)
   if item.data.bufnr then
     return item.data.bufnr
   end
   if item.data.filename then
-    local bufnr = vim.fn.bufnr(item.data.filename, true)
-    if bufnr ~= -1 then
-      return bufnr
-    end
+    return x.get_bufnr_from_filename(item.data.filename)
   end
-  return -1
 end
 
 ---Ensure window.
@@ -294,6 +290,16 @@ function x.create_deck_buf(name)
     end,
   })
   return buf
+end
+
+---Get bufnr from filename.
+---@param filename string
+---@return integer|nil
+function x.get_bufnr_from_filename(filename)
+  if vim.fn.bufexists(filename) == 1 then
+    return vim.fn.bufnr(filename, false)
+  end
+  return nil
 end
 
 return x

@@ -1,10 +1,11 @@
-local symbols = require('deck.symbols')
-local Icon    = require('deck.x.Icon')
+local x                  = require('deck.x')
+local symbols            = require('deck.symbols')
+local Icon               = require('deck.x.Icon')
 
-local decorators = {}
+local decorators         = {}
 
 ---@type deck.Decorator
-decorators.signs = {
+decorators.signs         = {
   name = 'signs',
   dynamic = true,
   decorate = function(ctx, item)
@@ -36,7 +37,7 @@ decorators.signs = {
 }
 
 ---@type deck.Decorator
-decorators.highlights = {
+decorators.highlights    = {
   name = 'highlights',
   resolve = function(_, item)
     return type(item.highlights) == 'table'
@@ -120,8 +121,8 @@ do
       end
 
       -- buffer related decoration.
-      local buf = vim.fn.bufnr(item.data.filename, false)
-      if buf ~= -1 and vim.fn.isdirectory(item.data.filename) ~= 1 then
+      local buf = x.get_bufnr_from_filename(item.data.filename)
+      if buf and vim.fn.isdirectory(item.data.filename) ~= 1 then
         local modified = vim.api.nvim_get_option_value('modified', { buf = buf })
         table.insert(decorations, {
           col = 0,

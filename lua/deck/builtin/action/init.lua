@@ -244,7 +244,7 @@ action.write_buffer = {
   resolve = function(ctx)
     for _, item in ipairs(ctx.get_action_items()) do
       local bufnr = x.resolve_bufnr(item)
-      if bufnr ~= -1 and vim.api.nvim_get_option_value('modified', { buf = bufnr }) then
+      if bufnr and vim.api.nvim_get_option_value('modified', { buf = bufnr }) then
         return true
       end
     end
@@ -253,7 +253,7 @@ action.write_buffer = {
   execute = function(ctx)
     for _, item in ipairs(ctx.get_action_items()) do
       local bufnr = x.resolve_bufnr(item)
-      if bufnr ~= -1 and vim.api.nvim_get_option_value('modified', { buf = bufnr }) then
+      if bufnr and vim.api.nvim_get_option_value('modified', { buf = bufnr }) then
         vim.api.nvim_buf_call(bufnr, function()
           vim.cmd.write()
         end)

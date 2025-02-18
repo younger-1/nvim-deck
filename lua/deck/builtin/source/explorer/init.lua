@@ -588,8 +588,17 @@ return function(option)
                 end
                 path = vim.fs.joinpath(parent_item.path, path)
 
+                local buf = x.get_bufnr_from_filename(item.data.filename)
                 IO.cp(item.data.filename, path, { recursive = true }):await()
                 IO.rm(item.data.filename, { recursive = true }):await()
+                if buf then
+                  vim.api.nvim_buf_set_name(buf, path)
+                  vim.api.nvim_buf_delete(vim.fn.bufadd(item.data.filename), {})
+                  local contents = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+                  vim.api.nvim_buf_call(buf, function() vim.cmd.edit({ bang = true }) end)
+                  vim.api.nvim_buf_set_lines(buf, 0, -1, false, contents)
+                end
+
                 if parent_item then
                   state:refresh(parent_item)
                 end
