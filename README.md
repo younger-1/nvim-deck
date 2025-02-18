@@ -118,6 +118,20 @@ vim.api.nvim_create_autocmd('User', {
   end
 })
 
+--key-mapping for explorer source (requires `require('deck.easy').setup()`).
+vim.api.nvim_create_autocmd('User', {
+  pattern = 'DeckStart:explorer',
+  callback = function(e)
+    ctx.keymap('n', 'h', deck.action_mapping('explorer.collapse'))
+    ctx.keymap('n', 'l', deck.action_mapping('explorer.expand'))
+    ctx.keymap('n', '.', deck.action_mapping('explorer.toggle_dotfiles'))
+    ctx.keymap('n', 'c', deck.action_mapping('explorer.clipboard.save_copy'))
+    ctx.keymap('n', 'm', deck.action_mapping('explorer.clipboard.save_move'))
+    ctx.keymap('n', 'p', deck.action_mapping('explorer.clipboard.paste'))
+    ctx.keymap('n', 'x', deck.action_mapping('explorer.clipboard.ui_open'))
+  end
+})
+
 -- Example key bindings for launching nvim-deck sources. (These mapping required `deck.easy` calls.)
 vim.keymap.set('n', '<Leader>ff', '<Cmd>Deck files<CR>', { desc = 'Show recent files, buffers, and more' })
 vim.keymap.set('n', '<Leader>gr', '<Cmd>Deck grep<CR>', { desc = 'Start grep search' })
@@ -158,6 +172,7 @@ actions for them.
 - delete
 - rename
 - write
+- refresh
 - open
 - open_split
 - open_vsplit
@@ -700,6 +715,12 @@ deck.start(require('deck.builtin.source.recent_files')({
 
     Open at the recently normal window with split.
 
+- `open_split_keep`
+  - Open `item.data.filename` or `item.data.bufnr`.
+
+    Open at the recently normal window with split. But keep the deck window and
+    cursor.
+
 - `open_tabnew`
   - Open `item.data.filename` or `item.data.bufnr`.
 
@@ -709,6 +730,12 @@ deck.start(require('deck.builtin.source.recent_files')({
   - Open `item.data.filename` or `item.data.bufnr`.
 
     Open at the recently normal window with vsplit.
+
+- `open_vsplit_keep`
+  - Open `item.data.filename` or `item.data.bufnr`.
+
+    Open at the recently normal window with vsplit. But keep the deck window and
+    cursor.
 
 - `print`
   - Print selected items.
@@ -1127,7 +1154,7 @@ Start deck with given sources.
 ---@field get_previewer fun(): deck.Previewer?
 ---@field sync fun()
 ---@field keymap fun(mode: string|string[], lhs: string, rhs: fun(ctx: deck.Context))
----@field do_action fun(name: string)
+---@field do_action fun(name: string): any
 ---@field dispose fun()
 ---@field disposed fun(): boolean
 ---@field on_show fun(callback: fun())
@@ -1181,7 +1208,9 @@ Start deck with given sources.
 ---@class deck.ExecuteContext
 ---@field public item fun(item: deck.ItemSpecifier)
 ---@field public done fun( )
+---@field public queue fun(task: fun())
 ---@field public get_query fun(): string
+---@field public get_config fun(): deck.StartConfig
 ---@field public aborted fun(): boolean
 ---@field public on_abort fun(callback: fun())
 ```
@@ -1207,6 +1236,23 @@ Start deck with given sources.
 ---@field public filter_text? string
 ---@field public dedup_id? string
 ---@field public data? table
+```
+
+```vimdoc
+*deck.PerformanceConfig*
+```
+
+```lua
+---@class deck.PerformanceConfig
+---@field public sync_timeout_ms integer
+---@field public interrupt_ms integer
+---@field public gather_budget_ms integer
+---@field public gather_batch_size integer
+---@field public filter_bugdet_ms integer
+---@field public filter_batch_size integer
+---@field public render_bugdet_ms integer
+---@field public render_batch_size integer
+---@field public render_delay_ms integer
 ```
 
 ```vimdoc
@@ -1246,7 +1292,7 @@ Start deck with given sources.
 ---@field public view fun(): deck.View
 ---@field public matcher deck.Matcher
 ---@field public history boolean
----@field public performance { sync_timeout_ms: integer, filter_bugdet_ms: integer, filter_batch_size: integer, render_delay_ms: integer, render_bugdet_ms: integer, render_batch_size: integer, interrupt_ms: integer }
+---@field public performance deck.PerformanceConfig
 ---@field public disable_actions? string[]
 ---@field public disable_decorators? string[]
 ---@field public disable_previewers? string[]
@@ -1267,7 +1313,7 @@ Start deck with given sources.
 ---@field public actions? deck.Action[]
 ---@field public decorators? deck.Decorator[]
 ---@field public previewers? deck.Previewer[]
----@field public performance? { sync_timeout_ms?: integer, filter_bugdet_ms?: integer, filter_batch_size?: integer, render_delay_ms?: integer, render_bugdet_ms?: integer, render_batch_size?: integer, interrupt_ms?: integer }
+---@field public performance? deck.PerformanceConfig|{}
 ---@field public disable_actions? string[]
 ---@field public disable_decorators? string[]
 ---@field public disable_previewers? string[]
@@ -1297,6 +1343,7 @@ Start deck with given sources.
 ---@field public is_visible fun(ctx: deck.Context): boolean
 ---@field public show fun(ctx: deck.Context)
 ---@field public hide fun(ctx: deck.Context)
+---@field public redraw fun(ctx: deck.Context)
 ---@field public prompt fun(ctx: deck.Context)
 ---@field public scroll_preview fun(ctx: deck.Context, delta: integer)
 ```
