@@ -112,6 +112,11 @@ return function()
           clear = true
         })
         vim.schedule(function()
+          vim.api.nvim__redraw({
+            flush = true,
+            valid = true,
+            win = state.win,
+          })
           vim.api.nvim_create_autocmd('CmdlineChanged', {
             group = group,
             callback = function()
