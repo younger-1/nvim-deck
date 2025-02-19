@@ -807,7 +807,7 @@ function Context.create(id, source, start_config)
       end
       first = false
 
-      context.show()
+      redraw()
     end, {
       pattern = ('<buffer=%s>'):format(context.buf),
     }))
