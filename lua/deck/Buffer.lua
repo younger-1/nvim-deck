@@ -272,6 +272,11 @@ function Buffer:_step_render()
     end)
   end
   self._emit_render()
+
+  -- emit for `is_filtering()` change.
+  vim.schedule(function()
+    self._emit_render()
+  end)
 end
 
 ---Return whether buffer is aborted or not.
