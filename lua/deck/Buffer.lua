@@ -157,7 +157,7 @@ end
 
 ---Filtering step.
 function Buffer:_step_filter()
-  if self._aborted then
+  if self:_is_aborted() then
     return
   end
 
@@ -203,7 +203,7 @@ end
 
 ---Rendering step.
 function Buffer:_step_render()
-  if self._aborted then
+  if self:_is_aborted() then
     return
   end
 
@@ -272,6 +272,12 @@ function Buffer:_step_render()
     end)
   end
   self._emit_render()
+end
+
+---Return whether buffer is aborted or not.
+---@return boolean
+function Buffer:_is_aborted()
+  return self._aborted or not vim.api.nvim_buf_is_valid(self._bufnr)
 end
 
 return Buffer
