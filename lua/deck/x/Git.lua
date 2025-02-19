@@ -801,4 +801,18 @@ function Git:exec(command, option)
   end)
 end
 
+---Get browser URL from fetch url.
+---@param fetch_url string
+---@return string?
+function Git.to_browser_url(fetch_url)
+  if fetch_url:match('^git@') then
+    return (
+      fetch_url
+      :gsub(':', '/')
+      :gsub('^git@', 'https://')
+      :gsub('%.git$', '')
+    )
+  end
+end
+
 return Git
