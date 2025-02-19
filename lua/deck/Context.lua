@@ -736,7 +736,7 @@ function Context.create(id, source, start_config)
             error(v)
           else
             notify.show({
-              { { v, 'WarningMsg' } },
+              { { vim.inspect(v), 'WarningMsg' } },
             })
           end
         end
