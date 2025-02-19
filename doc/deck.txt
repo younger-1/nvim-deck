@@ -1,4 +1,4 @@
-*deck.txt*            For NVIM v0.10.0           Last change: 2025 February 18
+*deck.txt*            For NVIM v0.10.0           Last change: 2025 February 19
 
 ==============================================================================
 Table of Contents                                     *deck-table-of-contents*
@@ -137,7 +137,7 @@ Here’s an example of how to set up `nvim-deck`
         ctx.keymap('n', 'c', deck.action_mapping('explorer.clipboard.save_copy'))
         ctx.keymap('n', 'm', deck.action_mapping('explorer.clipboard.save_move'))
         ctx.keymap('n', 'p', deck.action_mapping('explorer.clipboard.paste'))
-        ctx.keymap('n', 'x', deck.action_mapping('explorer.clipboard.ui_open'))
+        ctx.keymap('n', 'x', deck.action_mapping('explorer.ui_open'))
       end
     })
     
@@ -1130,6 +1130,7 @@ Start deck with given sources.
 >lua
     ---@class deck.Previewer
     ---@field public name string
+    ---@field public priority? integer
     ---@field public resolve? deck.PreviewerResolveFunction
     ---@field public preview deck.PreviewerPreviewFunction
 <
