@@ -128,7 +128,7 @@ vim.api.nvim_create_autocmd('User', {
     ctx.keymap('n', 'c', deck.action_mapping('explorer.clipboard.save_copy'))
     ctx.keymap('n', 'm', deck.action_mapping('explorer.clipboard.save_move'))
     ctx.keymap('n', 'p', deck.action_mapping('explorer.clipboard.paste'))
-    ctx.keymap('n', 'x', deck.action_mapping('explorer.clipboard.ui_open'))
+    ctx.keymap('n', 'x', deck.action_mapping('explorer.ui_open'))
   end
 })
 
