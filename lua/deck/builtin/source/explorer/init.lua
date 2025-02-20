@@ -306,36 +306,34 @@ return function(option)
           vim.cmd.tcd(state:get_root().path)
         end
 
-        if env.first then
-          if option.reveal then
-            Async.run(function()
-              local relpath = vim.fs.relpath(state:get_root().path, option.reveal)
-              if relpath then
-                local paths = vim.fn.split(relpath, '/')
-                local current_path = option.cwd
-                while current_path and #paths > 0 do
-                  local item = state:get_item({ path = current_path, type = 'directory' })
-                  if item then
-                    state:expand(item)
-                  end
-                  local prev_path = current_path
-                  current_path = vim.fs.joinpath(current_path, table.remove(paths, 1))
-                  if current_path == prev_path then
-                    break
-                  end
+        if env.first and option.reveal then
+          Async.run(function()
+            local relpath = vim.fs.relpath(state:get_root().path, option.reveal)
+            if relpath then
+              local paths = vim.fn.split(relpath, '/')
+              local current_path = option.cwd
+              while current_path and #paths > 0 do
+                local item = state:get_item({ path = current_path, type = 'directory' })
+                if item then
+                  state:expand(item)
                 end
-                local target_item = state:get_item({
-                  path = option.reveal,
-                  type = vim.fn.isdirectory(option.reveal) == 1 and 'directory' or 'file'
-                })
-                if target_item then
-                  ctx.execute()
-                  ctx.sync()
-                  focus(ctx, target_item)
+                local prev_path = current_path
+                current_path = vim.fs.joinpath(current_path, table.remove(paths, 1))
+                if current_path == prev_path then
+                  break
                 end
               end
-            end):sync(5 * 1000)
-          end
+              local target_item = state:get_item({
+                path = option.reveal,
+                type = vim.fn.isdirectory(option.reveal) == 1 and 'directory' or 'file'
+              })
+              if target_item then
+                ctx.execute()
+                ctx.sync()
+                focus(ctx, target_item)
+              end
+            end
+          end):sync(5 * 1000)
         end
       end,
     },

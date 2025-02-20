@@ -294,6 +294,10 @@ function Context.create(id, source, start_config)
       context.set_cursor(context.get_cursor())
       if to_show then
         redraw()
+        if vim.api.nvim_get_current_win() == view.get_win() then
+          vim.cmd.normal({ 'zz', bang = true })
+        end
+
         --[=[@doc
           category = "autocmd"
           name = "DeckShow"
