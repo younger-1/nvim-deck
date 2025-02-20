@@ -110,8 +110,7 @@ return function(option)
       {
         name = 'git.log.reset_soft',
         resolve = function(ctx)
-          local item = ctx.get_cursor_item()
-          return #ctx.get_action_items() == 1 and item and #item.data.hash_parents == 1
+          return #ctx.get_action_items() == 1
         end,
         execute = function(ctx)
           local item = ctx.get_cursor_item()
@@ -125,8 +124,7 @@ return function(option)
       {
         name = 'git.log.reset_hard',
         resolve = function(ctx)
-          local item = ctx.get_cursor_item()
-          return #ctx.get_action_items() == 1 and item and #item.data.hash_parents == 1
+          return #ctx.get_action_items() == 1
         end,
         execute = function(ctx)
           local item = ctx.get_cursor_item()
