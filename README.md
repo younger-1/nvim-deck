@@ -465,6 +465,22 @@ deck.start(require('deck.builtin.source.dirs')({
 }))
 ```
 
+### explorer
+
+Explorer source.
+
+| Name   | Type                                           | Default | Description            |
+| ------ | ---------------------------------------------- | ------- | ---------------------- |
+| cwd    | string                                         |         | Target directory.      |
+| mode   | 'drawer' \| 'filer'                            |         | Mode of explorer.      |
+| narrow | { enabled?: boolean, ignore_globs?: string[] } |         | Narrow finder options. |
+| reveal | string                                         |         | Reveal target path.    |
+
+```lua
+To use explorer, you must set `start_preset` or use `require('deck.easy').setup()`.
+If you call `require('deck.easy').setup()`, then you can use explorer by `:Deck explorer` command.
+```
+
 ### files
 
 Show files under specified root directory.
