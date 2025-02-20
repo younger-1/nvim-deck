@@ -366,6 +366,7 @@ function deck.start(sources, start_config_specifier)
   -- start context.
   context.execute()
   context.show()
+  vim.cmd.normal({ 'zz', bang = true })
 
   --[=[@doc
     category = "autocmd"
