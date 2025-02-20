@@ -242,6 +242,35 @@ function State:get_parent_item(entry)
   end
 end
 
+--[=[@doc
+  category = "source"
+  name = "explorer"
+  desc = "Explorer source."
+  example = """
+    To use explorer, you must set `start_preset` or use `require('deck.easy').setup()`.
+    If you call `require('deck.easy').setup()`, then you can use explorer by `:Deck explorer` command.
+  """
+
+  [[options]]
+  name = "cwd"
+  type = "string"
+  desc = "Target directory."
+
+  [[options]]
+  name = "mode"
+  type = "'drawer' | 'filer'"
+  desc = "Mode of explorer."
+
+  [[options]]
+  name = "narrow"
+  type = "{ enabled?: boolean, ignore_globs?: string[] }"
+  desc = "Narrow finder options."
+
+  [[options]]
+  name = "reveal"
+  type = "string"
+  desc = "Reveal target path."
+]=]
 ---@class deck.builtin.source.explorer.Option
 ---@field cwd string
 ---@field mode 'drawer' | 'filer'
@@ -394,9 +423,23 @@ return function(option)
       deck.alias_action('rename', 'explorer.rename'),
       deck.alias_action('refresh', 'explorer.refresh'),
       {
-        name = 'explorer.get_cwd',
-        execute = function()
-          return state:get_root().path
+        name = 'explorer.get_api',
+        hidden = true,
+        execute = function(ctx)
+          return {
+            ---@param path string
+            ---@param reveal? string
+            set_cwd = function(path, reveal)
+              deck.start(require('deck.builtin.source.explorer')(kit.merge({
+                cwd = path,
+                reveal = reveal or path,
+              }, option)), ctx.get_config())
+            end,
+            ---@return string
+            get_cwd = function()
+              return state:get_root().path
+            end,
+          }
         end,
       },
       {
@@ -411,9 +454,7 @@ return function(option)
           local item = ctx.get_cursor_item()
           if item and item.data.filename then
             if item.data.entry.type == 'directory' then
-              deck.start(require('deck.builtin.source.explorer')(kit.merge({
-                cwd = item.data.filename,
-              }, option)), ctx.get_config())
+              ctx.do_action('explorer.get_api').set_cwd(item.data.filename)
             else
               ctx.do_action('open')
             end
@@ -480,10 +521,10 @@ return function(option)
           return true
         end,
         execute = function(ctx)
-          deck.start(require('deck.builtin.source.explorer')(kit.merge({
-            cwd = vim.fs.dirname(state:get_root().path),
-            reveal = state:get_root().path,
-          }, option)), ctx.get_config())
+          ctx.do_action('explorer.get_api').set_cwd(
+            vim.fs.dirname(state:get_root().path),
+            state:get_root().path
+          )
         end,
       },
       {
@@ -515,9 +556,10 @@ return function(option)
                 name = 'default',
                 execute = function(ctx)
                   explorer_ctx.focus()
-                  deck.start(require('deck.builtin.source.explorer')(kit.merge({
-                    cwd = ctx.get_cursor_item().data.filename
-                  }, option)), explorer_ctx.get_config())
+                  explorer_ctx.do_action('explorer.get_api').set_cwd(
+                    ctx.get_cursor_item().data.filename,
+                    state:get_root().path
+                  )
                   ctx.hide()
                 end,
               }
