@@ -194,7 +194,7 @@ function State:refresh(entry, recursive)
       if recursive then
         for _, child in ipairs(item.children) do
           if child.type == 'directory' and self:is_expanded(child) then
-            self:refresh(child)
+            self:refresh(child, recursive)
           end
         end
       end
