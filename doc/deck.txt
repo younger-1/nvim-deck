@@ -1,4 +1,4 @@
-*deck.txt*            For NVIM v0.10.0           Last change: 2025 February 19
+*deck.txt*            For NVIM v0.10.0           Last change: 2025 February 20
 
 ==============================================================================
 Table of Contents                                     *deck-table-of-contents*
@@ -131,6 +131,7 @@ Here’s an example of how to set up `nvim-deck`
     vim.api.nvim_create_autocmd('User', {
       pattern = 'DeckStart:explorer',
       callback = function(e)
+        local ctx = e.data.ctx --[[@as deck.Context]]
         ctx.keymap('n', 'h', deck.action_mapping('explorer.collapse'))
         ctx.keymap('n', 'l', deck.action_mapping('explorer.expand'))
         ctx.keymap('n', '.', deck.action_mapping('explorer.toggle_dotfiles'))
