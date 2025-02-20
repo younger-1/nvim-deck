@@ -35,6 +35,10 @@ return function()
   ---Redraw dirty.
   ---@param ctx deck.Context
   local function redraw_dirty(ctx)
+    if not state.dirty then
+      return
+    end
+
     -- update status.
     do
       spinner.idx = spinner.idx + 1
