@@ -62,6 +62,7 @@ return function(config)
     if not state.dirty then
       return
     end
+    state.dirty = false
 
     -- update winheight.
     local curr_height = vim.api.nvim_win_get_height(state.win)

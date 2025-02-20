@@ -38,6 +38,7 @@ return function()
     if not state.dirty then
       return
     end
+    state.dirty = false
 
     -- update status.
     do
