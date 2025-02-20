@@ -484,6 +484,28 @@ Show dirs under specified root directory.
 <
 
 
+EXPLORER ~
+
+Explorer source.
+
+  -------------------------------------------------------------------------------
+  Name     Type                                     Default   Description
+  -------- ---------------------------------------- --------- -------------------
+  cwd      string                                             Target directory.
+
+  mode     ‘drawer’ | ‘filer’                                 Mode of explorer.
+
+  narrow   { enabled?: boolean, ignore_globs?:                Narrow finder
+           string[] }                                         options.
+
+  reveal   string                                             Reveal target path.
+  -------------------------------------------------------------------------------
+>lua
+    To use explorer, you must set `start_preset` or use `require('deck.easy').setup()`.
+    If you call `require('deck.easy').setup()`, then you can use explorer by `:Deck explorer` command.
+<
+
+
 FILES ~
 
 Show files under specified root directory.
