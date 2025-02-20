@@ -138,7 +138,15 @@ Here’s an example of how to set up `nvim-deck`
         ctx.keymap('n', 'c', deck.action_mapping('explorer.clipboard.save_copy'))
         ctx.keymap('n', 'm', deck.action_mapping('explorer.clipboard.save_move'))
         ctx.keymap('n', 'p', deck.action_mapping('explorer.clipboard.paste'))
-        ctx.keymap('n', 'x', deck.action_mapping('explorer.ui_open'))
+        ctx.keymap('n', 'x', deck.action_mapping('explorer.clipboard.paste'))
+        ctx.keymap('n', '<Leader>ff', deck.action_mapping('explorer.dirs'))
+        ctx.keymap('n', 'P', deck.action_mapping('toggle_preview_mode'))
+        ctx.keymap('n', '~', function()
+          ctx.do_action('explorer.get_api').set_cwd(vim.fs.normalize('~'))
+        end)
+        ctx.keymap('n', '\\', function()
+          ctx.do_action('explorer.get_api').set_cwd(vim.fs.normalize('/'))
+        end)
       end
     })
     
