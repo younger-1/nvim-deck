@@ -77,10 +77,6 @@ vim.api.nvim_create_autocmd('User', {
   callback = function(e)
     local ctx = e.data.ctx --[[@as deck.Context]]
 
-    -- normal-mode mapping.
-    ctx.keymap('n', '<Esc>', function()
-      ctx.set_preview_mode(false)
-    end)
     ctx.keymap('n', '<Tab>', deck.action_mapping('choose_action'))
     ctx.keymap('n', '<C-l>', deck.action_mapping('refresh'))
     ctx.keymap('n', 'i', deck.action_mapping('prompt'))
@@ -98,20 +94,6 @@ vim.api.nvim_create_autocmd('User', {
     ctx.keymap('n', 'w', deck.action_mapping('write'))
     ctx.keymap('n', '<C-u>', deck.action_mapping('scroll_preview_up'))
     ctx.keymap('n', '<C-d>', deck.action_mapping('scroll_preview_down'))
-
-    -- cmdline-mode mapping.
-    ctx.keymap('c', '<C-y>', function()
-      vim.api.nvim_feedkeys(vim.keycode('<Esc>'), 'n', true)
-      vim.schedule(function()
-        ctx.do_action('default')
-      end)
-    end)
-    ctx.keymap('c', '<C-j>', function()
-      ctx.set_cursor(ctx.get_cursor() + 1)
-    end)
-    ctx.keymap('c', '<C-k>', function()
-      ctx.set_cursor(ctx.get_cursor() - 1)
-    end)
 
     -- If you want to start the filter by default, call ctx.prompt() here
     ctx.prompt()
@@ -149,9 +131,9 @@ vim.keymap.set('n', '<Leader>he', '<Cmd>Deck helpgrep<CR>', { desc = 'Live grep 
 
 -- Show the latest deck context.
 vim.keymap.set('n', '<Leader>;', function()
-  local ctx = require('deck').get_history()[1]
-  if ctx then
-    ctx.show()
+  local context = deck.get_history()[vim.v.count == 0 and 1 or vim.v.count]
+  if context then
+    context.show()
   end
 end)
 
