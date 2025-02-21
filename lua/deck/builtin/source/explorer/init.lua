@@ -162,7 +162,7 @@ function State:refresh(force)
     end
 
     if item.type == 'directory' and self:is_expanded(item) then
-      local should_retrive = true
+      local should_retrive = false
       should_retrive = should_retrive or force
       should_retrive = should_retrive or item.dirty
       should_retrive = should_retrive or item.children == nil
