@@ -44,6 +44,7 @@ Clipboard.instance = Clipboard.new()
 ---@field public type 'directory' | 'file'
 
 ---@class deck.builtin.source.explorer.Item: deck.builtin.source.explorer.Entry
+---@field public dirty boolean
 ---@field public depth integer
 ---@field public expanded boolean
 ---@field public children? deck.builtin.source.explorer.Item[]
@@ -139,7 +140,7 @@ function State:expand(entry)
   local item = self:get_item(entry)
   if item and item.type == 'directory' and not item.expanded then
     item.expanded = true
-    self:refresh(item)
+    self:refresh()
   end
 end
 
@@ -152,54 +153,59 @@ function State:collapse(entry)
 end
 
 ---Refresh target items children with keeping expanded state.
----@param entry deck.builtin.source.explorer.Entry
----@param recursive? boolean
-function State:refresh(entry, recursive)
-  local item = self:get_item(entry)
-  if item then
+---@param force? boolean
+function State:refresh(force)
+  ---@param item deck.builtin.source.explorer.Item
+  local function refresh(item)
     if item.type == 'file' then
       item = self:get_parent_item(item) or item
     end
 
     if item.type == 'directory' and self:is_expanded(item) then
-      local prev_children = item.children or {}
-      local next_children = misc.get_children(item, item.depth)
-      local new_children = {}
+      local should_retrive = true
+      should_retrive = should_retrive or force
+      should_retrive = should_retrive or item.dirty
+      should_retrive = should_retrive or item.children == nil
+      if should_retrive then
+        item.dirty = false
+        local prev_children = item.children or {}
+        local next_children = misc.get_children(item, item.depth)
+        local new_children = {}
 
-      -- keep.
-      for _, prev_c in ipairs(prev_children) do
-        local keep = vim.iter(next_children):find(function(next_c)
-          return prev_c.path == next_c.path
-        end)
-        if keep then
-          table.insert(new_children, prev_c)
-        end
-      end
-
-      -- new items.
-      for _, next_c in ipairs(next_children) do
-        local found = vim.iter(prev_children):find(function(prev_c)
-          return prev_c.path == next_c.path
-        end)
-        if not found then
-          table.insert(new_children, next_c)
-        end
-      end
-
-      -- update items.
-      misc.sort_entries(new_children)
-      item.children = new_children
-
-      -- recursive refresh.
-      if recursive then
-        for _, child in ipairs(item.children) do
-          if child.type == 'directory' and self:is_expanded(child) then
-            self:refresh(child, recursive)
+        -- keep.
+        for _, prev_c in ipairs(prev_children) do
+          local keep = vim.iter(next_children):find(function(next_c)
+            return prev_c.path == next_c.path
+          end)
+          if keep then
+            table.insert(new_children, prev_c)
           end
+        end
+
+        -- new items.
+        for _, next_c in ipairs(next_children) do
+          local found = vim.iter(prev_children):find(function(prev_c)
+            return prev_c.path == next_c.path
+          end)
+          if not found then
+            table.insert(new_children, next_c)
+          end
+        end
+
+        -- update items.
+        misc.sort_entries(new_children)
+        item.children = new_children
+      end
+
+      -- recursive.
+      for _, child in ipairs(item.children) do
+        if child.type == 'directory' then
+          refresh(child)
         end
       end
     end
   end
+  refresh(self:get_root())
 end
 
 ---@param entry deck.builtin.source.explorer.Entry
@@ -396,7 +402,7 @@ return function(option)
 
       -- tree.
       Async.run(function()
-        state:refresh(state:get_root())
+        state:refresh()
         for item in state:iter() do
           ctx.item({
             display_text = misc.create_display_text(item, item.expanded, item.depth),
@@ -596,7 +602,7 @@ return function(option)
               else
                 vim.fn.writefile({}, path)
               end
-              state:refresh(parent_item)
+              state:refresh()
               ctx.execute()
             end
           end)
@@ -621,19 +627,18 @@ return function(option)
               return
             end
 
-            local to_refresh = {}
             for _, item in ipairs(items) do
-              to_refresh[state:get_parent_item(item.data.entry)] = true
+              local parent_item = state:get_parent_item(item.data.entry)
+              if parent_item then
+                parent_item.dirty = true
+              end
               if item.data.entry.type == 'directory' then
                 vim.fn.delete(item.data.entry.path, 'rf')
               else
                 vim.fn.delete(item.data.entry.path)
               end
             end
-
-            for entry, _ in pairs(to_refresh) do
-              state:refresh(entry)
-            end
+            state:refresh()
             ctx.execute()
           end)
         end,
@@ -662,10 +667,8 @@ return function(option)
                   vim.api.nvim_buf_call(buf, function() vim.cmd.edit({ bang = true }) end)
                   vim.api.nvim_buf_set_lines(buf, 0, -1, false, contents)
                 end
-
-                if parent_item then
-                  state:refresh(parent_item)
-                end
+                parent_item.dirty = true
+                state:refresh()
                 ctx.execute()
               end
             end
@@ -751,21 +754,25 @@ return function(option)
           Async.run(function()
             local item = ctx.get_cursor_item()
             if item then
-              local target_item = state:get_item(item.data.entry)
-              if target_item then
-                if target_item.type == 'file' or not state:is_expanded(target_item) then
-                  target_item = state:get_parent_item(target_item) or state:get_root()
+              local paste_target_item = state:get_item(item.data.entry)
+              if paste_target_item then
+                if paste_target_item.type == 'file' or not state:is_expanded(paste_target_item) then
+                  paste_target_item = state:get_parent_item(paste_target_item) or state:get_root()
                 end
+                paste_target_item.dirty = true
                 for _, path in ipairs(Clipboard.instance:get().paths) do
-                  IO.cp(path, vim.fs.joinpath(target_item.path, vim.fs.basename(path)), { recursive = true }):await()
+                  IO.cp(path, vim.fs.joinpath(paste_target_item.path, vim.fs.basename(path)), { recursive = true }):await()
                   if Clipboard.instance:get().type == 'move' then
                     IO.rm(path, { recursive = true }):await()
-                    state:refresh(path)
+                    local moving_parent_item = state:get_parent_item({ path = path, type = 'directory' })
+                    if moving_parent_item then
+                      moving_parent_item.dirty = true
+                    end
                   end
                 end
-                state:refresh(target_item)
               end
             end
+            state:refresh()
             ctx.execute()
           end)
         end,
@@ -774,7 +781,7 @@ return function(option)
         name = 'explorer.refresh',
         execute = function(ctx)
           Async.run(function()
-            state:refresh(state:get_root(), true)
+            state:refresh(true)
             ctx.execute()
           end)
         end,
