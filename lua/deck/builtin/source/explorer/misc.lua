@@ -99,7 +99,7 @@ do
         if vim.startswith(text, './') then
           text = text:sub(3)
         end
-        on_path(('%s/%s'):format(root_dir, text))
+        on_path(vim.fs.joinpath(root_dir, text))
       end,
       on_stderr = function()
         -- noop

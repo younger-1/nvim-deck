@@ -40,7 +40,7 @@ local function ripgrep(root_dir, ignore_globs, ctx)
         text = text:sub(3)
       end
       ctx.queue(function()
-        ctx.item(to_item(('%s/%s'):format(root_dir, text)))
+        ctx.item(to_item(vim.fs.joinpath(root_dir, text)))
       end)
     end,
     on_stderr = function()
