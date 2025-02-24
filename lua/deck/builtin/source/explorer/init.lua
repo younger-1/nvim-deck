@@ -597,11 +597,13 @@ return function(option)
               if vim.fn.isdirectory(path) == 1 or vim.fn.filereadable(path) == 1 then
                 return require('deck.notify').show({ { 'Already exists: ' .. path } })
               end
+
               if path:sub(-1, -1) == '/' then
                 vim.fn.mkdir(path, 'p')
               else
                 vim.fn.writefile({}, path)
               end
+              parent_item.dirty = true
               state:refresh()
               ctx.execute()
             end
