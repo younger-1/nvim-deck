@@ -96,9 +96,6 @@ do
         ignore_empty = true,
       }),
       on_stdout = function(text)
-        if vim.startswith(text, './') then
-          text = text:sub(3)
-        end
         on_path(vim.fs.joinpath(root_dir, text))
       end,
       on_stderr = function()
