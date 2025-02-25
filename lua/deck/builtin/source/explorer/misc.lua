@@ -152,4 +152,14 @@ do
   end
 end
 
+---Get directory path.
+---@param path string
+---@return string
+function misc.dirpath(path)
+  if vim.fn.isdirectory(path) == 1 then
+    return path
+  end
+  return vim.fs.dirname(path)
+end
+
 return misc

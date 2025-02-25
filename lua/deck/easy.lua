@@ -79,6 +79,7 @@ function easy.setup(config)
       },
       start = function(args)
         local buffer_path = config.get_buffer_path(vim.api.nvim_get_current_buf())
+
         local option = {
           width = args['--width'] or 40,
           cwd = args['--cwd'] or config.get_project_root(buffer_path) or to_dir(buffer_path),

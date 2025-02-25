@@ -134,6 +134,7 @@ end
 ---@param chunk_size? integer
 ---@return deck.kit.Async.AsyncTask
 function IO.read_file(path, chunk_size)
+  path = IO.normalize(path)
   chunk_size = chunk_size or 1024
   return Async.run(function()
     local stat = IO.fs_stat(path):await()
@@ -164,8 +165,9 @@ end
 ---@param content string
 ---@param chunk_size? integer
 function IO.write_file(path, content, chunk_size)
-  chunk_size = chunk_size or 1024
+  path = IO.normalize(path)
   content = content .. '\n' -- add EOF.
+  chunk_size = chunk_size or 1024
   return Async.run(function()
     local fd = IO.fs_open(path, IO.AccessMode.w, tonumber('755', 8)):await()
     local ok, err = pcall(function()
