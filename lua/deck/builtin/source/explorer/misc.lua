@@ -5,17 +5,17 @@ local System = require('deck.kit.System')
 local misc = {}
 
 ---Create display text.
----@param entry deck.builtin.source.explorer.Entry
+---@param item deck.builtin.source.explorer.Item
 ---@param is_expanded boolean
 ---@param depth integer
 ---@return deck.VirtualText[]
-function misc.create_display_text(entry, is_expanded, depth)
+function misc.create_display_text(item, is_expanded, depth)
   local parts = {}
 
   -- indent
   table.insert(parts, { string.rep('  ', depth) })
 
-  if entry.type == 'directory' then
+  if item.type == 'directory' then
     -- expander
     if is_expanded then
       table.insert(parts, { '' })
@@ -24,18 +24,18 @@ function misc.create_display_text(entry, is_expanded, depth)
     end
     table.insert(parts, { ' ' })
     -- icon
-    local icon, hl = Icon.filename(entry.path)
+    local icon, hl = Icon.filename(item.path)
     table.insert(parts, { icon or ' ', hl })
   else
     -- expander area
     table.insert(parts, { '  ' })
     -- icon
-    local icon, hl = Icon.filename(entry.path)
+    local icon, hl = Icon.filename(item.path)
     table.insert(parts, { icon or ' ', hl })
   end
   -- sep
   table.insert(parts, { ' ' })
-  table.insert(parts, { vim.fs.basename(entry.path) })
+  table.insert(parts, { item.name })
   return parts
 end
 
@@ -46,14 +46,52 @@ end
 function misc.get_children(entry, depth)
   local children = IO.scandir(entry.path):await()
   misc.sort_entries(children)
-  return vim.iter(children):map(function(child)
-    return {
-      path = child.path,
-      type = child.type == 'directory' and 'directory' or 'file',
-      expanded = false,
-      depth = depth + 1,
-    }
-  end):totable()
+  return vim.iter(children)
+      :map(function(child)
+        return misc.resolve_entry(child, depth)
+      end)
+      :filter(function(child)
+        return not not child
+      end)
+      :totable()
+end
+
+---Get item by path.
+---@param path string
+---@param depth integer
+function misc.get_item_by_path(path, depth)
+  local stat = IO.stat(path):catch(function()
+    return nil
+  end):await()
+  if not stat then
+    return nil
+  end
+  return misc.resolve_entry({
+    type = stat.type,
+    path = path,
+  }, depth)
+end
+
+---Resolve entry.
+---@param entry deck.builtin.source.explorer.Entry
+---@param depth integer
+---@return deck.builtin.source.explorer.Item?
+function misc.resolve_entry(entry, depth)
+  local realpath = entry.path
+  local stat = IO.stat(realpath):catch(function()
+    return nil
+  end):await()
+  if not stat then
+    return nil
+  end
+  return {
+    name = vim.fs.basename(entry.path),
+    path = IO.normalize(realpath),
+    type = stat.type == 'directory' and 'directory' or 'file',
+    link = entry.type == 'link',
+    expanded = false,
+    depth = depth,
+  }
 end
 
 ---Sort entries.
@@ -88,7 +126,7 @@ do
       table.insert(command, '!' .. glob)
     end
 
-    root_dir = vim.fs.normalize(root_dir)
+    root_dir = IO.normalize(root_dir)
     on_abort(System.spawn(command, {
       cwd = root_dir,
       env = {},
@@ -96,7 +134,7 @@ do
         ignore_empty = true,
       }),
       on_stdout = function(text)
-        on_path(vim.fs.joinpath(root_dir, text))
+        on_path(IO.join(root_dir, text))
       end,
       on_stderr = function()
         -- noop
@@ -159,7 +197,7 @@ function misc.dirpath(path)
   if vim.fn.isdirectory(path) == 1 then
     return path
   end
-  return vim.fs.dirname(path)
+  return IO.dirname(path)
 end
 
 return misc
