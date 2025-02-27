@@ -2,23 +2,26 @@
 
 local kit = {}
 
----Clear table.
----@generic T: table
----@param tbl T
----@return T
-local clear = require('table.clear')
-kit.clear = function(tbl)
-  if type(tbl) ~= 'table' then
+do
+  local clear = require('table.clear')
+
+  ---Clear table.
+  ---@generic T: table
+  ---@param tbl T
+  ---@return T
+  kit.clear = function(tbl)
+    if type(tbl) ~= 'table' then
+      return tbl
+    end
+    if clear then
+      clear(tbl)
+    else
+      for k, _ in pairs(tbl) do
+        tbl[k] = nil
+      end
+    end
     return tbl
   end
-  if clear then   
-    clear(tbl)
-  else
-    for k, _ in pairs(tbl) do
-      tbl[k] = nil
-    end
-  end
-  return tbl
 end
 
 ---Check shallow equals.

@@ -72,7 +72,7 @@ end
 ---Mark buffer as completed.
 function Buffer:stream_done()
   self._done = true
-  self._timer_render:start(self._start_config.performance.interrupt_ms, 0, function()
+  self._timer_render:start(0, 0, function()
     self:_step_render()
   end)
 end
@@ -184,7 +184,7 @@ function Buffer:_step_filter()
         c = 0
         local n = vim.uv.hrtime() / 1e6
         if n - s > config.filter_bugdet_ms then
-          self._timer_filter:start(config.interrupt_ms, 0, function()
+          self._timer_filter:start(config.filter_interrupt_ms, 0, function()
             self:_step_filter()
           end)
           return
@@ -195,7 +195,7 @@ function Buffer:_step_filter()
   -- ↑ all currently received items are filtered.
 
   if not self._done then
-    self._timer_filter:start(config.interrupt_ms, 0, function()
+    self._timer_filter:start(config.filter_interrupt_ms, 0, function()
       self:_step_filter()
     end)
   end
@@ -226,7 +226,7 @@ function Buffer:_step_render()
   should_render = should_render or (#items_filtered - self._cursor_rendered) > max_count
   should_render = should_render or (self._done and not self._timer_filter:is_running())
   if not should_render then
-    self._timer_render:start(config.interrupt_ms, 0, function()
+    self._timer_render:start(config.render_interrupt_ms, 0, function()
       self:_step_render()
     end)
     return
@@ -252,7 +252,7 @@ function Buffer:_step_render()
 
       local n = vim.uv.hrtime() / 1e6
       if n - s > config.render_bugdet_ms then
-        self._timer_render:start(config.interrupt_ms, 0, function()
+        self._timer_render:start(config.render_interrupt_ms, 0, function()
           self:_step_render()
         end)
         self._emit_render()
@@ -266,12 +266,14 @@ function Buffer:_step_render()
   end
   -- ↑ all currently received items are rendered.
 
+  self._emit_render()
+
   if self._timer_filter:is_running() then
-    self._timer_render:start(config.interrupt_ms, 0, function()
+    self._timer_render:start(config.render_interrupt_ms, 0, function()
       self:_step_render()
     end)
+    return
   end
-  self._emit_render()
 
   -- emit for `is_filtering()` change.
   vim.schedule(function()

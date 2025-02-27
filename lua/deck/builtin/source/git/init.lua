@@ -174,8 +174,8 @@ return function(option)
         end
 
         local is_rebasing = (
-          IO.is_directory(vim.fs.joinpath(git.cwd, '.git/rebase-apply')):await() or
-          IO.is_directory(vim.fs.joinpath(git.cwd, '.git/rebase-merge')):await()
+          IO.is_directory(IO.join(git.cwd, '.git/rebase-apply')):await() or
+          IO.is_directory(IO.join(git.cwd, '.git/rebase-merge')):await()
         )
         if is_rebasing then
           table.insert(menu, {

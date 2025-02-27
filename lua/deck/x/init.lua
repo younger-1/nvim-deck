@@ -11,14 +11,6 @@ function x.normalize_display_text(display_text)
   return { display_text or '' }
 end
 
----Normalize path to absolute.
----@param path string
----@return string
-function x.normalize_path(path)
-  path = vim.fs.normalize((path:gsub('\\', '/')))
-  return path
-end
-
 ---Confirm with yes or no.
 ---@param maybe_prompt string|string[]
 ---@return boolean

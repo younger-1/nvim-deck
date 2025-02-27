@@ -1,5 +1,6 @@
 local kit = require('deck.kit')
 local notify = require('deck.notify')
+local IO = require('deck.kit.IO')
 local System = require('deck.kit.System')
 
 --[=[@doc
@@ -83,7 +84,7 @@ return function()
                 { match,                                       'Comment' },
               },
               data = {
-                filename = vim.fs.joinpath(dir, filename),
+                filename = IO.join(dir, filename),
                 lnum = lnum,
                 col = col,
               },

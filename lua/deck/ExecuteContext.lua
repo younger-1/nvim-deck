@@ -39,7 +39,7 @@ function ExecuteContext.create(params)
         c = 0
         local n = vim.uv.hrtime() / 1e6
         if n - s > config.gather_budget_ms then
-          gather_queue_timer:start(config.interrupt_ms, 0, gather_step)
+          gather_queue_timer:start(config.gather_interrupt_ms, 0, gather_step)
           return
         end
       end

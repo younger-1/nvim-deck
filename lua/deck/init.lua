@@ -140,13 +140,15 @@ local Context = require('deck.Context')
 ---@doc.type
 ---@class deck.PerformanceConfig
 ---@field public sync_timeout_ms integer
----@field public interrupt_ms integer
 ---@field public gather_budget_ms integer
 ---@field public gather_batch_size integer
+---@field public gather_interrupt_ms integer
 ---@field public filter_bugdet_ms integer
 ---@field public filter_batch_size integer
+---@field public filter_interrupt_ms integer
 ---@field public render_bugdet_ms integer
 ---@field public render_batch_size integer
+---@field public render_interrupt_ms integer
 ---@field public render_delay_ms integer
 
 ---@doc.type
@@ -225,14 +227,16 @@ local internal = {
       history = true,
       performance = {
         sync_timeout_ms = 400,
-        interrupt_ms = 4,
         gather_budget_ms = 16,
-        gather_batch_size = 100,
+        gather_batch_size = 200,
+        gather_interrupt_ms = 8,
         filter_bugdet_ms = 16,
-        filter_batch_size = 100,
-        render_delay_ms = 800,
+        filter_batch_size = 200,
+        filter_interrupt_ms = 8,
         render_bugdet_ms = 16,
         render_batch_size = 500,
+        render_interrupt_ms = 8,
+        render_delay_ms = 800,
       },
       dedup = true,
       query = '',
