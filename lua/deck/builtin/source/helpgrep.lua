@@ -81,7 +81,7 @@ return function()
             ctx.item({
               display_text = {
                 { ('%s (%s:%s): '):format(filename, lnum, col) },
-                { match,                                       'Comment' },
+                { match, 'Comment' },
               },
               data = {
                 filename = IO.join(dir, filename),

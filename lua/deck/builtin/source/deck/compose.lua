@@ -8,13 +8,16 @@ local symbols = require('deck.symbols')
 return function(sources)
   for _, s in ipairs(sources) do
     if s.parse_query then
-      error('can\'t compose source that has `parse_query`.')
+      error("can't compose source that has `parse_query`.")
     end
   end
 
-  local name = vim.iter(sources):map(function(source)
-    return source.name
-  end):join('+')
+  local name = vim
+    .iter(sources)
+    :map(function(source)
+      return source.name
+    end)
+    :join('+')
 
   local memo = {} ---@type table<any, deck.Item[]>
 
@@ -81,21 +84,24 @@ return function(sources)
     actions = vim.iter(sources):fold({}, function(acc, source)
       return kit.concat(acc, source.actions or {})
     end),
-    decorators = kit.concat(vim.iter(sources):fold({}, function(acc, source)
-      return kit.concat(acc, source.decorators or {})
-    end), {
+    decorators = kit.concat(
+      vim.iter(sources):fold({}, function(acc, source)
+        return kit.concat(acc, source.decorators or {})
+      end),
       {
-        name = 'source_name',
-        decorate = function(_, item)
-          return {
-            col = 0,
-            virt_text = { { ('%s'):format(item[symbols.source].name), 'Comment' } },
-            virt_text_pos = 'right_align',
-            hl_mode = 'combine',
-          }
-        end,
+        {
+          name = 'source_name',
+          decorate = function(_, item)
+            return {
+              col = 0,
+              virt_text = { { ('%s'):format(item[symbols.source].name), 'Comment' } },
+              virt_text_pos = 'right_align',
+              hl_mode = 'combine',
+            }
+          end,
+        },
       }
-    }),
+    ),
     previewers = vim.iter(sources):fold({}, function(acc, source)
       return kit.concat(acc, source.previewers or {})
     end),

@@ -81,7 +81,7 @@ return function(option)
             end
             notify.show({ { 'No remote url found', 'WarningMsg' } })
           end)
-        end
+        end,
       },
       {
         name = 'git.branch.checkout',
@@ -123,13 +123,13 @@ return function(option)
             local item = ctx.get_action_items()[1]
             if item.data.remote then
               git
-                  :exec_print({
-                    'git',
-                    'merge',
-                    '--ff-only',
-                    ('%s/%s'):format(item.data.remotename, item.data.name),
-                  })
-                  :await()
+                :exec_print({
+                  'git',
+                  'merge',
+                  '--ff-only',
+                  ('%s/%s'):format(item.data.remotename, item.data.name),
+                })
+                :await()
             else
               git:exec_print({ 'git', 'merge', '--ff-only', item.data.name }):await()
             end
@@ -147,13 +147,13 @@ return function(option)
             local item = ctx.get_action_items()[1]
             if item.data.remote then
               git
-                  :exec_print({
-                    'git',
-                    'merge',
-                    '--no-ff',
-                    ('%s/%s'):format(item.data.remotename, item.data.name),
-                  })
-                  :await()
+                :exec_print({
+                  'git',
+                  'merge',
+                  '--no-ff',
+                  ('%s/%s'):format(item.data.remotename, item.data.name),
+                })
+                :await()
             else
               git:exec_print({ 'git', 'merge', '--no-ff', item.data.name }):await()
             end
@@ -171,13 +171,13 @@ return function(option)
             local item = ctx.get_action_items()[1]
             if item.data.remote then
               git
-                  :exec_print({
-                    'git',
-                    'merge',
-                    '--squash',
-                    ('%s/%s'):format(item.data.remotename, item.data.name),
-                  })
-                  :await()
+                :exec_print({
+                  'git',
+                  'merge',
+                  '--squash',
+                  ('%s/%s'):format(item.data.remotename, item.data.name),
+                })
+                :await()
             else
               git:exec_print({ 'git', 'merge', '--squash', item.data.name }):await()
             end
@@ -218,14 +218,14 @@ return function(option)
               if not branch.data.current then
                 if branch.data.remote then
                   git
-                      :exec_print({
-                        'git',
-                        'push',
-                        branch.data.remotename,
-                        '--delete',
-                        branch.data.name,
-                      })
-                      :await()
+                    :exec_print({
+                      'git',
+                      'push',
+                      branch.data.remotename,
+                      '--delete',
+                      branch.data.name,
+                    })
+                    :await()
                 else
                   git:exec_print({ 'git', 'branch', '-D', branch.data.name }):await()
                 end
@@ -250,12 +250,12 @@ return function(option)
         end,
         execute = function(ctx)
           git
-              :push({
-                branch = ctx.get_action_items()[1].data,
-              })
-              :next(function()
-                ctx.execute()
-              end)
+            :push({
+              branch = ctx.get_action_items()[1].data,
+            })
+            :next(function()
+              ctx.execute()
+            end)
         end,
       },
       {
@@ -273,13 +273,13 @@ return function(option)
         end,
         execute = function(ctx)
           git
-              :push({
-                branch = ctx.get_action_items()[1].data,
-                force = true,
-              })
-              :next(function()
-                ctx.execute()
-              end)
+            :push({
+              branch = ctx.get_action_items()[1].data,
+              force = true,
+            })
+            :next(function()
+              ctx.execute()
+            end)
         end,
       },
     },

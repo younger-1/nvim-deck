@@ -87,7 +87,7 @@ function ExecuteContext.create(params)
         local highlights = {} ---@type deck.Highlight[]
         local offset = 0
         for _, virt_text in
-        ipairs(item_specifier.display_text --[=[@as deck.VirtualText[]]=])
+          ipairs(item_specifier.display_text --[=[@as deck.VirtualText[]]=])
         do
           if type(virt_text) ~= 'table' or type(virt_text[1]) ~= 'string' then
             error('item.display_text must be string or deck.VirtualText[] ' .. vim.inspect(virt_text))

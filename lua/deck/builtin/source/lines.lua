@@ -26,7 +26,7 @@ return function(option)
               bufnr = bufnr,
               lnum = i,
               text = text,
-            }
+            },
           })
         end
       end
@@ -85,7 +85,7 @@ return function(option)
           end)
           return extmarks
         end,
-      }
+      },
     },
     actions = {
       require('deck').alias_action('default', 'open'),

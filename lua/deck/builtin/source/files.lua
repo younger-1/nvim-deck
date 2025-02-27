@@ -52,11 +52,11 @@ end
 ---@type deck.builtin.source.files.Finder
 local function walk(root_dir, ignore_globs, ctx)
   local ignore_glob_patterns = vim
-      .iter(ignore_globs or {})
-      :map(function(glob)
-        return vim.glob.to_lpeg(glob)
-      end)
-      :totable()
+    .iter(ignore_globs or {})
+    :map(function(glob)
+      return vim.glob.to_lpeg(glob)
+    end)
+    :totable()
 
   IO.walk(root_dir, function(err, entry)
     if err then

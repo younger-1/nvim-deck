@@ -113,10 +113,10 @@ function IO.is_directory(path)
   path = IO.normalize(path)
   return Async.run(function()
     return uv_fs_stat(path)
-        :catch(function()
-          return {}
-        end)
-        :await().type == 'directory'
+      :catch(function()
+        return {}
+      end)
+      :await().type == 'directory'
   end)
 end
 
@@ -127,13 +127,13 @@ function IO.exists(path)
   path = IO.normalize(path)
   return Async.run(function()
     return uv_fs_stat(path)
-        :next(function()
-          return true
-        end)
-        :catch(function()
-          return false
-        end)
-        :await()
+      :next(function()
+        return true
+      end)
+      :catch(function()
+        return false
+      end)
+      :await()
   end)
 end
 

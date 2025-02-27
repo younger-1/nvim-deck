@@ -87,12 +87,7 @@ function easy.setup(config)
         }
 
         x.ensure_win('deck.easy.explorer', function()
-          vim.cmd(('noautocmd keepalt keepjumps %s %s%s +%sbuffer'):format(
-            'topleft',
-            option.width,
-            'vsplit',
-            vim.api.nvim_create_buf(false, true)
-          ))
+          vim.cmd(('noautocmd keepalt keepjumps %s %s%s +%sbuffer'):format('topleft', option.width, 'vsplit', vim.api.nvim_create_buf(false, true)))
           return vim.api.nvim_get_current_win()
         end, function(win)
           vim.api.nvim_set_current_win(win)
@@ -107,7 +102,7 @@ function easy.setup(config)
             narrow = {
               enable = true,
               ignore_globs = config.ignore_globs,
-            }
+            },
           }),
         }, {
           view = function()
@@ -115,9 +110,9 @@ function easy.setup(config)
           end,
           dedup = false,
           history = false,
-          disable_decorators = { 'filename', 'signs' }
+          disable_decorators = { 'filename', 'signs' },
         })
-      end
+      end,
     })
     -- Register `files` start preset.
     deck.register_start_preset('files', function()
@@ -149,12 +144,15 @@ function easy.setup(config)
     -- Register `grep` start preset.
     deck.register_start_preset('grep', function()
       local pattern = vim.fn.input('grep: ')
-      deck.start(require('deck.builtin.source.grep')({
-        root_dir = config.get_cwd(),
-        ignore_globs = config.ignore_globs,
-      }), {
-        query = #pattern > 0 and (pattern .. '  ') or '',
-      })
+      deck.start(
+        require('deck.builtin.source.grep')({
+          root_dir = config.get_cwd(),
+          ignore_globs = config.ignore_globs,
+        }),
+        {
+          query = #pattern > 0 and (pattern .. '  ') or '',
+        }
+      )
     end)
 
     -- Register `git` start preset.

@@ -19,13 +19,13 @@ end
 return function()
   local spinner = {
     idx = 1,
-    frame = { ".", "..", "...", "...." },
+    frame = { '.', '..', '...', '....' },
   }
 
   local state = {
     win = nil, --[[@type integer?]]
     preview_win = nil, --[[@type integer?]]
-    preview_cache = {} --[[@as table<string, table>]],
+    preview_cache = {},--[[@as table<string, table>]]
     timer = ScheduledTimer.new(),
     dirty = false,
   }
@@ -45,18 +45,9 @@ return function()
       spinner.idx = spinner.idx + 1
 
       local is_running = (ctx.get_status() ~= Context.Status.Success or ctx.is_filtering())
-      vim.api.nvim_set_option_value(
-        'statusline',
-        ('[%s] %s/%s%s'):format(
-          ctx.name,
-          #ctx.get_filtered_items(),
-          #ctx.get_items(),
-          is_running and (' %s'):format(spinner.frame[spinner.idx % #spinner.frame + 1]) or ''
-        ),
-        {
-          win = state.win,
-        }
-      )
+      vim.api.nvim_set_option_value('statusline', ('[%s] %s/%s%s'):format(ctx.name, #ctx.get_filtered_items(), #ctx.get_items(), is_running and (' %s'):format(spinner.frame[spinner.idx % #spinner.frame + 1]) or ''), {
+        win = state.win,
+      })
     end
 
     -- update preview.
@@ -95,8 +86,7 @@ return function()
         end
         ctx.get_previewer().preview(ctx, item, { win = state.preview_win })
         vim.api.nvim_set_option_value('wrap', false, { win = state.preview_win })
-        vim.api.nvim_set_option_value('winhighlight',
-          'Normal:Normal,FloatBorder:Normal,FloatTitle:Normal,FloatFooter:Normal', { win = state.preview_win })
+        vim.api.nvim_set_option_value('winhighlight', 'Normal:Normal,FloatBorder:Normal,FloatTitle:Normal,FloatFooter:Normal', { win = state.preview_win })
         vim.api.nvim_set_option_value('number', true, { win = state.preview_win })
         vim.api.nvim_set_option_value('numberwidth', 5, { win = state.preview_win })
         vim.api.nvim_set_option_value('scrolloff', 0, { win = state.preview_win })
@@ -113,7 +103,6 @@ return function()
       })
     end
   end
-
 
   view = {
     ---Get window.
@@ -175,7 +164,7 @@ return function()
           return
         end
         local group = vim.api.nvim_create_augroup('deck.builtin.view.current_picker.prompt', {
-          clear = true
+          clear = true,
         })
         vim.schedule(function()
           vim.api.nvim__redraw({
@@ -196,8 +185,7 @@ return function()
     end,
 
     ---Scroll preview window.
-    scroll_preview = function(_, delta)
-    end,
+    scroll_preview = function(_, delta) end,
   } --[[@as deck.View]]
   return view
 end

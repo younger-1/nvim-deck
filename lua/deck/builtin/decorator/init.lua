@@ -1,11 +1,11 @@
-local x                  = require('deck.x')
-local symbols            = require('deck.symbols')
-local Icon               = require('deck.x.Icon')
+local x = require('deck.x')
+local symbols = require('deck.symbols')
+local Icon = require('deck.x.Icon')
 
-local decorators         = {}
+local decorators = {}
 
 ---@type deck.Decorator
-decorators.signs         = {
+decorators.signs = {
   name = 'signs',
   dynamic = true,
   decorate = function(ctx, item)
@@ -30,14 +30,14 @@ decorators.signs         = {
         col = 0,
         virt_text = { { '  ' } },
         virt_text_pos = 'inline',
-        priority = 100
-      }
+        priority = 100,
+      },
     }
-  end
+  end,
 }
 
 ---@type deck.Decorator
-decorators.highlights    = {
+decorators.highlights = {
   name = 'highlights',
   resolve = function(_, item)
     return type(item.highlights) == 'table'
@@ -77,10 +77,7 @@ decorators.query_matches = {
         item[symbols.query_matches].matches = {}
       else
         -- update highlights.
-        local matches = ctx.get_config().matcher.decor(
-          ctx.get_matcher_query(),
-          item[symbols.display_text_lower]
-        )
+        local matches = ctx.get_config().matcher.decor(ctx.get_matcher_query(), item[symbols.display_text_lower])
         if #matches > 0 then
           item[symbols.query_matches].matches = matches
         end
@@ -126,7 +123,7 @@ do
         local modified = vim.api.nvim_get_option_value('modified', { buf = buf })
         table.insert(decorations, {
           col = 0,
-          virt_text = { { modified and '[+]' or '', 'SpecialKey' }, { ' ' }, { ('#%s'):format(buf), 'Comment' }, },
+          virt_text = { { modified and '[+]' or '', 'SpecialKey' }, { ' ' }, { ('#%s'):format(buf), 'Comment' } },
           virt_text_pos = 'eol',
           hl_mode = 'combine',
           ephemeral = true,

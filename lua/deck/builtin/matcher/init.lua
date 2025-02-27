@@ -98,7 +98,7 @@ do
         end
       end
       return matches
-    end
+    end,
   }
 end
 
@@ -121,7 +121,7 @@ do
         end
       end
       return matches
-    end
+    end,
   }
 end
 

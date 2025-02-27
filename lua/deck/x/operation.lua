@@ -7,9 +7,12 @@ local kit = require('deck.kit')
 
 ---@return deck.kit.LSP.Client[]
 local function get_clients()
-  return vim.iter(vim.lsp.get_clients()):map(function(client)
-    return Client.new(client)
-  end):totable()
+  return vim
+    .iter(vim.lsp.get_clients())
+    :map(function(client)
+      return Client.new(client)
+    end)
+    :totable()
 end
 
 ---@param client deck.kit.LSP.Client
@@ -75,58 +78,64 @@ end
 ---@return deck.x.operation.FileOperation[]
 local function filter_operations(operations, filters)
   ---@param operation deck.x.operation.FileOperation
-  return vim.iter(operations):filter(function(operation)
-    for _, filter in ipairs(filters) do
-      local matches = true
-      -- scheme.
-      if filter.scheme then
-        matches = matches and filter.scheme == 'file'
-      end
-      -- pattern.glob.
-      if filter.pattern and filter.pattern.glob then
-        local glob_pat = (filter.pattern.glob:gsub('\\', '/'))
-        local to_match = operation.path:gsub('\\', '/')
-        if filter.pattern.options and filter.pattern.options.ignoreCase then
-          glob_pat = glob_pat:lower()
-          to_match = to_match:lower()
+  return vim
+    .iter(operations)
+    :filter(function(operation)
+      for _, filter in ipairs(filters) do
+        local matches = true
+        -- scheme.
+        if filter.scheme then
+          matches = matches and filter.scheme == 'file'
         end
-        matches = matches and match_glob(glob_pat, to_match)
+        -- pattern.glob.
+        if filter.pattern and filter.pattern.glob then
+          local glob_pat = (filter.pattern.glob:gsub('\\', '/'))
+          local to_match = operation.path:gsub('\\', '/')
+          if filter.pattern.options and filter.pattern.options.ignoreCase then
+            glob_pat = glob_pat:lower()
+            to_match = to_match:lower()
+          end
+          matches = matches and match_glob(glob_pat, to_match)
+        end
+        -- pattern.matches.
+        if filter.pattern and filter.pattern.matches then
+          matches = matches and filter.pattern.matches ~= operation.kind
+        end
+        if matches then
+          return true
+        end
       end
-      -- pattern.matches.
-      if filter.pattern and filter.pattern.matches then
-        matches = matches and filter.pattern.matches ~= operation.kind
-      end
-      if matches then
-        return true
-      end
-    end
-    return false
-  end):totable()
+      return false
+    end)
+    :totable()
 end
 
 ---@param operations deck.x.operation.FileOperation[]
 ---@return (deck.kit.LSP.FileCreate|deck.kit.LSP.FileDelete|deck.kit.LSP.FileRename)[]
 local function to_lsp_operations(operations)
   ---@param operation deck.x.operation.FileOperation
-  return vim.iter(operations):map(function(operation)
-    if operation.type == 'create' then
-      ---@type deck.kit.LSP.FileCreate
-      return {
-        uri = vim.uri_from_fname(operation.path),
-      }
-    elseif operation.type == 'delete' then
-      ---@type deck.kit.LSP.FileDelete
-      return {
-        uri = vim.uri_from_fname(operation.path),
-      }
-    elseif operation.type == 'rename' then
-      ---@type deck.kit.LSP.FileRename
-      return {
-        oldUri = vim.uri_from_fname(operation.path),
-        newUri = vim.uri_from_fname(operation.path_new),
-      }
-    end
-  end):totable()
+  return vim
+    .iter(operations)
+    :map(function(operation)
+      if operation.type == 'create' then
+        ---@type deck.kit.LSP.FileCreate
+        return {
+          uri = vim.uri_from_fname(operation.path),
+        }
+      elseif operation.type == 'delete' then
+        ---@type deck.kit.LSP.FileDelete
+        return {
+          uri = vim.uri_from_fname(operation.path),
+        }
+      elseif operation.type == 'rename' then
+        ---@type deck.kit.LSP.FileRename
+        return {
+          oldUri = vim.uri_from_fname(operation.path),
+          newUri = vim.uri_from_fname(operation.path_new),
+        }
+      end
+    end)
+    :totable()
 end
 
 ---@param will_capability_name string
@@ -147,10 +156,7 @@ local function lsp_operations(will_capability_name, did_capability_name, will_me
       progress = {
         did_operation = function()
           if progress.workspace_edit then
-            vim.lsp.util.apply_workspace_edit(
-              progress.workspace_edit --[[@as lsp.WorkspaceEdit]],
-              progress.position_encodng_kind or LSP.PositionEncodingKind.UTF16 --[[@as lsp.PositionEncodingKind]]
-            )
+            vim.lsp.util.apply_workspace_edit(progress.workspace_edit --[[@as lsp.WorkspaceEdit]], progress.position_encodng_kind or LSP.PositionEncodingKind.UTF16 --[[@as lsp.PositionEncodingKind]])
           end
 
           local did_filters = get_filters(client, did_capability_name, did_method)
@@ -158,11 +164,11 @@ local function lsp_operations(will_capability_name, did_capability_name, will_me
             local did_operations = filter_operations(operations, did_filters)
             if #did_operations > 0 then
               client:notify(did_method, {
-                files = to_lsp_operations(did_operations)
+                files = to_lsp_operations(did_operations),
               })
             end
           end
-        end
+        end,
       }
 
       -- run will.
@@ -170,9 +176,11 @@ local function lsp_operations(will_capability_name, did_capability_name, will_me
       if will_filters then
         local will_operations = filter_operations(operations, will_filters)
         if #will_operations > 0 then
-          local workspace_edit = client:request(will_method, {
-            files = to_lsp_operations(will_operations)
-          }):await()
+          local workspace_edit = client
+            :request(will_method, {
+              files = to_lsp_operations(will_operations),
+            })
+            :await()
           progress.workspace_edit = workspace_edit
           progress.position_encodng_kind = client.client.offset_encoding
         end
@@ -192,13 +200,7 @@ operation.Kind = LSP.FileOperationPatternKind
 ---@return deck.kit.Async.AsyncTask
 function operation.create(creates)
   return Async.run(function()
-    local progresses = lsp_operations(
-      'willCreate',
-      'didCreate',
-      'workspace/willCreateFiles',
-      'workspace/didCreateFiles',
-      creates
-    ):await()
+    local progresses = lsp_operations('willCreate', 'didCreate', 'workspace/willCreateFiles', 'workspace/didCreateFiles', creates):await()
     for _, create in ipairs(creates) do
       if create.kind == LSP.FileOperationPatternKind.file then
         vim.fn.writefile({}, create.path)
@@ -216,13 +218,7 @@ end
 ---@return deck.kit.Async.AsyncTask
 function operation.delete(deletes)
   return Async.run(function()
-    local progresses = lsp_operations(
-      'willDelete',
-      'didDelete',
-      'workspace/willDeleteFiles',
-      'workspace/didDeleteFiles',
-      deletes
-    ):await()
+    local progresses = lsp_operations('willDelete', 'didDelete', 'workspace/willDeleteFiles', 'workspace/didDeleteFiles', deletes):await()
     for _, delete in ipairs(deletes) do
       if delete.kind == LSP.FileOperationPatternKind.folder then
         vim.fn.delete(delete.path, 'rf')
@@ -240,13 +236,7 @@ end
 ---@return deck.kit.Async.AsyncTask
 function operation.rename(renames)
   return Async.run(function()
-    local progresses = lsp_operations(
-      'willRename',
-      'didRename',
-      'workspace/willRenameFiles',
-      'workspace/didRenameFiles',
-      renames
-    ):await()
+    local progresses = lsp_operations('willRename', 'didRename', 'workspace/willRenameFiles', 'workspace/didRenameFiles', renames):await()
     for _, rename in ipairs(renames) do
       local buf = x.get_bufnr_from_filename(rename.path)
       IO.cp(rename.path, rename.path_new, { recursive = true }):await()

@@ -1,14 +1,14 @@
-local x           = require('deck.x')
-local operation   = require('deck.x.operation')
-local kit         = require('deck.kit')
-local IO          = require('deck.kit.IO')
-local Async       = require('deck.kit.Async')
-local misc        = require('deck.builtin.source.explorer.misc')
-local notify      = require('deck.notify')
+local x = require('deck.x')
+local operation = require('deck.x.operation')
+local kit = require('deck.kit')
+local IO = require('deck.kit.IO')
+local Async = require('deck.kit.Async')
+local misc = require('deck.builtin.source.explorer.misc')
+local notify = require('deck.notify')
 
 ---@class deck.builtin.source.explorer.Clipboard
 ---@field private _entry? { data: any }
-local Clipboard   = {}
+local Clipboard = {}
 Clipboard.__index = Clipboard
 
 ---Create Clipboard object.
@@ -71,7 +71,7 @@ end
 ---@field private _cwd string
 ---@field private _config deck.builtin.source.explorer.State.Config
 ---@field private _root deck.builtin.source.explorer.Item
-local State   = {}
+local State = {}
 State.__index = State
 
 ---Create State object.
@@ -121,7 +121,9 @@ function State:iter()
       end
     end
   end
-  return coroutine.wrap(function() iter(self:get_root()) end)
+  return coroutine.wrap(function()
+    iter(self:get_root())
+  end)
 end
 
 ---@param entry deck.builtin.source.explorer.Entry
@@ -355,7 +357,7 @@ return function(option)
     },
     parse_query = function(query)
       return {
-        dynamic_query = query
+        dynamic_query = query,
       }
     end,
     execute = function(ctx)
@@ -444,10 +446,13 @@ return function(option)
             ---@param path string
             ---@param reveal? string
             set_cwd = function(path, reveal)
-              deck.start(require('deck.builtin.source.explorer')(kit.merge({
-                cwd = path,
-                reveal = reveal or path,
-              }, option)), ctx.get_config())
+              deck.start(
+                require('deck.builtin.source.explorer')(kit.merge({
+                  cwd = path,
+                  reveal = reveal or path,
+                }, option)),
+                ctx.get_config()
+              )
             end,
             ---@return string
             get_cwd = function()
@@ -535,10 +540,7 @@ return function(option)
           return true
         end,
         execute = function(ctx)
-          ctx.do_action('explorer.get_api').set_cwd(
-            IO.dirname(state:get_root().path),
-            state:get_root().path
-          )
+          ctx.do_action('explorer.get_api').set_cwd(IO.dirname(state:get_root().path), state:get_root().path)
         end,
       },
       {
@@ -563,21 +565,18 @@ return function(option)
             require('deck.builtin.source.recent_dirs')(),
             require('deck.builtin.source.dirs')({
               root_dir = state:get_root().path,
-            })
+            }),
           }, {
             actions = {
               {
                 name = 'default',
                 execute = function(ctx)
                   explorer_ctx.focus()
-                  explorer_ctx.do_action('explorer.get_api').set_cwd(
-                    ctx.get_cursor_item().data.filename,
-                    state:get_root().path
-                  )
+                  explorer_ctx.do_action('explorer.get_api').set_cwd(ctx.get_cursor_item().data.filename, state:get_root().path)
                   ctx.hide()
                 end,
-              }
-            }
+              },
+            },
           })
         end,
       },
@@ -629,24 +628,28 @@ return function(option)
               return a.data.entry.depth > b.data.entry.depth
             end)
 
-            if not x.confirm(
-                  ('Delete below items?\n%s'):format(
-                    vim.iter(items):map(function(item)
-                      return ('  %s'):format(vim.fs.relpath(state:get_root().path, item.data.filename))
-                    end):join('\n')
-                  )
-                ) then
+            if not x.confirm(('Delete below items?\n%s'):format(vim
+              .iter(items)
+              :map(function(item)
+                return ('  %s'):format(vim.fs.relpath(state:get_root().path, item.data.filename))
+              end)
+              :join('\n'))) then
               return
             end
 
-            operation.delete(vim.iter(items):map(function(item)
-              ---@type deck.x.operation.Delete
-              return {
-                type = 'delete',
-                path = item.data.filename,
-                kind = item.data.entry.type == 'directory' and operation.Kind.folder or operation.Kind.file,
-              }
-            end):totable()):await()
+            operation
+              .delete(vim
+                .iter(items)
+                :map(function(item)
+                  ---@type deck.x.operation.Delete
+                  return {
+                    type = 'delete',
+                    path = item.data.filename,
+                    kind = item.data.entry.type == 'directory' and operation.Kind.folder or operation.Kind.file,
+                  }
+                end)
+                :totable())
+              :await()
 
             for _, item in ipairs(items) do
               state:dirty(misc.dirpath(item.data.entry.path))
@@ -675,14 +678,16 @@ return function(option)
                 end
                 path = IO.join(parent_item.path, path)
 
-                operation.rename({
-                  {
-                    type = 'rename',
-                    path = item.data.filename,
-                    path_new = path,
-                    kind = vim.fn.isdirectory(item.data.filename) == 1 and operation.Kind.folder or operation.Kind.file,
-                  }
-                }):await()
+                operation
+                  .rename({
+                    {
+                      type = 'rename',
+                      path = item.data.filename,
+                      path_new = path,
+                      kind = vim.fn.isdirectory(item.data.filename) == 1 and operation.Kind.folder or operation.Kind.file,
+                    },
+                  })
+                  :await()
                 state:dirty(parent_item.path)
                 state:refresh()
                 ctx.execute()
@@ -717,12 +722,15 @@ return function(option)
           Clipboard.instance:set({ type = 'copy', paths = paths })
           notify.show(kit.concat(
             {
-              { 'Save clipboard to copy:' }
+              { 'Save clipboard to copy:' },
             },
-            vim.iter(paths):map(function(path)
-              return { '  ' .. vim.fs.relpath(state:get_root().path, path) }
-            end):totable())
-          )
+            vim
+              .iter(paths)
+              :map(function(path)
+                return { '  ' .. vim.fs.relpath(state:get_root().path, path) }
+              end)
+              :totable()
+          ))
         end,
       },
       {
@@ -745,12 +753,15 @@ return function(option)
           Clipboard.instance:set({ type = 'move', paths = paths })
           notify.show(kit.concat(
             {
-              { 'Save clipboard to move:' }
+              { 'Save clipboard to move:' },
             },
-            vim.iter(paths):map(function(path)
-              return { '  ' .. vim.fs.relpath(state:get_root().path, path) }
-            end):totable())
-          )
+            vim
+              .iter(paths)
+              :map(function(path)
+                return { '  ' .. vim.fs.relpath(state:get_root().path, path) }
+              end)
+              :totable()
+          ))
         end,
       },
       {
@@ -779,17 +790,20 @@ return function(option)
 
                 local clipboard = Clipboard.instance:get()
                 if clipboard.type == 'move' then
-                  operation.rename(
-                    vim.iter(clipboard.paths):map(function(path)
-                      state:dirty(path)
-                      return {
-                        type = 'rename',
-                        path = path,
-                        path_new = IO.join(paste_target_item.path, vim.fs.basename(path)),
-                        kind = vim.fn.isdirectory(path) == 1 and operation.Kind.folder or operation.Kind.file,
-                      } ---@as deck.x.operation.Rename
-                    end):totable()
-                  ):await()
+                  operation
+                    .rename(vim
+                      .iter(clipboard.paths)
+                      :map(function(path)
+                        state:dirty(path)
+                        return {
+                          type = 'rename',
+                          path = path,
+                          path_new = IO.join(paste_target_item.path, vim.fs.basename(path)),
+                          kind = vim.fn.isdirectory(path) == 1 and operation.Kind.folder or operation.Kind.file,
+                        } ---@as deck.x.operation.Rename
+                      end)
+                      :totable())
+                    :await()
                 else
                   for _, path in ipairs(clipboard.paths) do
                     local target_path = IO.join(paste_target_item.path, vim.fs.basename(path))
@@ -811,7 +825,7 @@ return function(option)
             ctx.execute()
           end)
         end,
-      }
+      },
     }),
     decorators = {
       {
@@ -831,7 +845,7 @@ return function(option)
             },
           }
         end,
-      }
+      },
     },
   }
 end

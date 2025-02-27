@@ -142,12 +142,12 @@ return function(option)
             ---@param action_ctx deck.Context
             execute = function(action_ctx)
               git
-                  :push({
-                    branch = current_branch,
-                  })
-                  :next(function()
-                    action_ctx.execute()
-                  end)
+                :push({
+                  branch = current_branch,
+                })
+                :next(function()
+                  action_ctx.execute()
+                end)
             end,
           })
           table.insert(menu, {
@@ -162,21 +162,18 @@ return function(option)
             ---@param action_ctx deck.Context
             execute = function(action_ctx)
               git
-                  :push({
-                    branch = current_branch,
-                    force = true,
-                  })
-                  :next(function()
-                    action_ctx.execute()
-                  end)
+                :push({
+                  branch = current_branch,
+                  force = true,
+                })
+                :next(function()
+                  action_ctx.execute()
+                end)
             end,
           })
         end
 
-        local is_rebasing = (
-          IO.is_directory(IO.join(git.cwd, '.git/rebase-apply')):await() or
-          IO.is_directory(IO.join(git.cwd, '.git/rebase-merge')):await()
-        )
+        local is_rebasing = (IO.is_directory(IO.join(git.cwd, '.git/rebase-apply')):await() or IO.is_directory(IO.join(git.cwd, '.git/rebase-merge')):await())
         if is_rebasing then
           table.insert(menu, {
             columns = {
@@ -184,13 +181,15 @@ return function(option)
               { 'continue commit', 'Comment' },
             },
             execute = function(ctx)
-              git:exec_print({ 'git', 'rebase', '--continue' }, {
-                env = {
-                  GIT_EDITOR = 'true',
-                }
-              }):next(function()
-                ctx.execute()
-              end)
+              git
+                :exec_print({ 'git', 'rebase', '--continue' }, {
+                  env = {
+                    GIT_EDITOR = 'true',
+                  },
+                })
+                :next(function()
+                  ctx.execute()
+                end)
             end,
           })
           table.insert(menu, {

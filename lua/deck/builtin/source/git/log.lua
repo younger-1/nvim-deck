@@ -175,11 +175,11 @@ return function(option)
           Async.run(function()
             x.open_preview_buffer(env.win, {
               contents = git
-                  :get_unified_diff({
-                    from_rev = item.data.hash_parents[1],
-                    to_rev = item.data.hash,
-                  })
-                  :sync(5000),
+                :get_unified_diff({
+                  from_rev = item.data.hash_parents[1],
+                  to_rev = item.data.hash,
+                })
+                :sync(5000),
               filetype = 'diff',
             })
           end)
@@ -195,11 +195,11 @@ return function(option)
         end,
         decorate = function(_, item)
           local lines = vim
-              .iter(vim.split(item.data.body_raw:gsub('\n*$', ''), '\n'))
-              :map(function(text)
-                return { { '  ' .. text, 'Comment' } }
-              end)
-              :totable()
+            .iter(vim.split(item.data.body_raw:gsub('\n*$', ''), '\n'))
+            :map(function(text)
+              return { { '  ' .. text, 'Comment' } }
+            end)
+            :totable()
           table.insert(lines, { { '' } })
           return {
             virt_lines = lines,

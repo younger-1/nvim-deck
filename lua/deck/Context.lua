@@ -67,7 +67,6 @@ local ExecuteContext = require('deck.ExecuteContext')
 ---@field on_hide fun(callback: fun())
 ---@field on_dispose fun(callback: fun()): fun()
 
-
 local Context = {}
 
 ---@enum deck.Context.Status
@@ -114,7 +113,7 @@ function Context.create(id, source, start_config)
       view.redraw(context)
       vim.api.nvim_buf_set_extmark(context.buf, context.ns, 0, 0, {
         id = 1,
-        ui_watched = true
+        ui_watched = true,
       })
     end
   end
@@ -303,7 +302,7 @@ function Context.create(id, source, start_config)
           pattern = 'DeckShow',
           modeline = false,
           data = {
-            ctx = context
+            ctx = context,
           },
         })
         events.show.emit(nil)
@@ -332,7 +331,7 @@ function Context.create(id, source, start_config)
           pattern = 'DeckHide',
           modeline = false,
           data = {
-            ctx = context
+            ctx = context,
           },
         })
         events.hide.emit(nil)
@@ -561,14 +560,17 @@ function Context.create(id, source, start_config)
         table.insert(actions, action)
       end
 
-      return vim.iter(actions):filter(function(action)
-        if start_config.disable_actions then
-          if vim.tbl_contains(start_config.disable_actions, action.name) then
-            return false
+      return vim
+        .iter(actions)
+        :filter(function(action)
+          if start_config.disable_actions then
+            if vim.tbl_contains(start_config.disable_actions, action.name) then
+              return false
+            end
           end
-        end
-        return true
-      end):totable()
+          return true
+        end)
+        :totable()
     end,
 
     ---Get decorators.
@@ -590,14 +592,17 @@ function Context.create(id, source, start_config)
         table.insert(decorators, decorator)
       end
 
-      return vim.iter(decorators):filter(function(action)
-        if start_config.disable_decorators then
-          if vim.tbl_contains(start_config.disable_decorators, action.name) then
-            return false
+      return vim
+        .iter(decorators)
+        :filter(function(action)
+          if start_config.disable_decorators then
+            if vim.tbl_contains(start_config.disable_decorators, action.name) then
+              return false
+            end
           end
-        end
-        return true
-      end):totable()
+          return true
+        end)
+        :totable()
     end,
 
     ---Get previewer.
@@ -610,12 +615,15 @@ function Context.create(id, source, start_config)
       ---@param previewers deck.Previewer[]
       ---@return deck.Previewer
       local function get_sorted_previewers(previewers)
-        local entries = vim.iter(ipairs(previewers)):map(function(i, previewer)
-          return {
-            index = i,
-            previewer = previewer,
-          }
-        end):totable()
+        local entries = vim
+          .iter(ipairs(previewers))
+          :map(function(i, previewer)
+            return {
+              index = i,
+              previewer = previewer,
+            }
+          end)
+          :totable()
         table.sort(entries, function(a, b)
           local priority_a = a.previewer.priority or 0
           local priority_b = b.previewer.priority or 0
@@ -624,9 +632,12 @@ function Context.create(id, source, start_config)
           end
           return a.index < b.index
         end)
-        return vim.iter(entries):map(function(entry)
-          return entry.previewer
-        end):totable()
+        return vim
+          .iter(entries)
+          :map(function(entry)
+            return entry.previewer
+          end)
+          :totable()
       end
 
       local previewers = {}
@@ -652,14 +663,17 @@ function Context.create(id, source, start_config)
         end
       end
 
-      return vim.iter(previewers):filter(function(previewer)
-        if start_config.disable_previewers then
-          if vim.tbl_contains(start_config.disable_previewers, previewer.name) then
-            return false
+      return vim
+        .iter(previewers)
+        :filter(function(previewer)
+          if start_config.disable_previewers then
+            if vim.tbl_contains(start_config.disable_previewers, previewer.name) then
+              return false
+            end
           end
-        end
-        return true
-      end):nth(1)
+          return true
+        end)
+        :nth(1)
     end,
 
     ---Synchronize for display.
@@ -679,8 +693,7 @@ function Context.create(id, source, start_config)
             end)
           end
         end
-        return function()
-        end
+        return function() end
       end
 
       state.is_syncing = true

@@ -175,14 +175,15 @@ action.delete_file = {
         table.insert(targets, item.data.filename)
       end
     end
-    if x.confirm(
-          kit.concat(
-            { 'Delete files?' },
-            vim.iter(targets):map(function(item)
-              return ('  %s'):format(item)
-            end):totable()
-          )
-        ) then
+    if x.confirm(kit.concat(
+      { 'Delete files?' },
+      vim
+        .iter(targets)
+        :map(function(item)
+          return ('  %s'):format(item)
+        end)
+        :totable()
+    )) then
       for _, target in ipairs(targets) do
         vim.fn.delete(target, 'rf')
       end
@@ -217,14 +218,15 @@ action.delete_buffer = {
         table.insert(targets, item.data.bufnr)
       end
     end
-    if x.confirm(
-          kit.concat(
-            { 'Delete buffers?' },
-            vim.iter(targets):map(function(item)
-              return ('  %s'):format(item)
-            end):totable()
-          )
-        ) then
+    if x.confirm(kit.concat(
+      { 'Delete buffers?' },
+      vim
+        .iter(targets)
+        :map(function(item)
+          return ('  %s'):format(item)
+        end)
+        :totable()
+    )) then
       for _, target in ipairs(targets) do
         vim.api.nvim_buf_delete(target, { force = true })
       end
@@ -262,7 +264,6 @@ action.write_buffer = {
     ctx.execute()
   end,
 }
-
 
 --[=[@doc
   category = "action"
@@ -506,9 +507,17 @@ action.substitute = {
 
     -- create substitute buffer.
     local buf = vim.api.nvim_create_buf(false, true)
-    vim.api.nvim_buf_set_lines(buf, 0, -1, false, vim.iter(substitute_targets):map(function(target)
-      return target.text
-    end):totable()
+    vim.api.nvim_buf_set_lines(
+      buf,
+      0,
+      -1,
+      false,
+      vim
+        .iter(substitute_targets)
+        :map(function(target)
+          return target.text
+        end)
+        :totable()
     )
     vim.api.nvim_buf_set_name(buf, 'substitute')
     vim.api.nvim_set_option_value('buftype', 'acwrite', { buf = buf })
@@ -540,13 +549,7 @@ action.substitute = {
           vim.api.nvim_set_option_value('modified', false, { buf = buf })
           for i, target in ipairs(substitute_targets) do
             vim.api.nvim_buf_call(target.buf, function()
-              vim.api.nvim_buf_set_lines(
-                target.buf,
-                target.lnum - 1,
-                target.lnum,
-                false,
-                { vim.api.nvim_buf_get_lines(buf, i - 1, i, false)[1] }
-              )
+              vim.api.nvim_buf_set_lines(target.buf, target.lnum - 1, target.lnum, false, { vim.api.nvim_buf_get_lines(buf, i - 1, i, false)[1] })
             end)
           end
           for _, b in pairs(filename_buf) do

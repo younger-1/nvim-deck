@@ -79,7 +79,7 @@ return function(option)
             ctx.item({
               display_text = {
                 { ('%s (%s:%s): '):format(filename, lnum, col) },
-                { match,                                       'Comment' },
+                { match, 'Comment' },
               },
               data = {
                 filename = IO.join(option.root_dir, filename),

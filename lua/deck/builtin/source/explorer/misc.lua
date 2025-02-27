@@ -46,23 +46,26 @@ end
 function misc.get_children(entry, depth)
   local children = IO.scandir(entry.path):await()
   misc.sort_entries(children)
-  return vim.iter(children)
-      :map(function(child)
-        return misc.resolve_entry(child, depth)
-      end)
-      :filter(function(child)
-        return not not child
-      end)
-      :totable()
+  return vim
+    .iter(children)
+    :map(function(child)
+      return misc.resolve_entry(child, depth)
+    end)
+    :filter(function(child)
+      return not not child
+    end)
+    :totable()
 end
 
 ---Get item by path.
 ---@param path string
 ---@param depth integer
 function misc.get_item_by_path(path, depth)
-  local stat = IO.stat(path):catch(function()
-    return nil
-  end):await()
+  local stat = IO.stat(path)
+    :catch(function()
+      return nil
+    end)
+    :await()
   if not stat then
     return nil
   end
@@ -78,9 +81,11 @@ end
 ---@return deck.builtin.source.explorer.Item?
 function misc.resolve_entry(entry, depth)
   local realpath = entry.path
-  local stat = IO.stat(realpath):catch(function()
-    return nil
-  end):await()
+  local stat = IO.stat(realpath)
+    :catch(function()
+      return nil
+    end)
+    :await()
   if not stat then
     return nil
   end
@@ -148,11 +153,11 @@ do
   ---@type deck.builtin.source.explorer.misc.NarrowFinder
   local function walk(root_dir, ignore_globs, _, aborted, on_path, on_done)
     local ignore_glob_patterns = vim
-        .iter(ignore_globs or {})
-        :map(function(glob)
-          return vim.glob.to_lpeg(glob)
-        end)
-        :totable()
+      .iter(ignore_globs or {})
+      :map(function(glob)
+        return vim.glob.to_lpeg(glob)
+      end)
+      :totable()
 
     IO.walk(root_dir, function(err, entry)
       if err then

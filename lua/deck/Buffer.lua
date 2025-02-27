@@ -1,7 +1,7 @@
 local x = require('deck.x')
 local kit = require('deck.kit')
 local symbols = require('deck.symbols')
-local ScheduledTimer = require("deck.kit.Async.ScheduledTimer")
+local ScheduledTimer = require('deck.kit.Async.ScheduledTimer')
 
 ---@class deck.Buffer
 ---@field public on_render fun(callback: fun())

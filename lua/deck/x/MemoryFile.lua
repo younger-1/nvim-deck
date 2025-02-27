@@ -19,7 +19,7 @@ function MemoryFile.new(path)
     desc = 'deck.x.MemoryFile',
     callback = function()
       vim.fn.writefile(self.contents, self.path)
-    end
+    end,
   })
   return self
 end

@@ -46,7 +46,7 @@ return function(option)
               log.author_name,
               log.reflog_selector,
               log.reflog_subject,
-              log.subject
+              log.subject,
             }
           end, { sep = ' │ ' })
           for i, item in ipairs(logs) do
@@ -105,4 +105,3 @@ return function(option)
     },
   }
 end
-

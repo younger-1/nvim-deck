@@ -267,7 +267,7 @@ do
           restore_guicursor = nil
         end
       end
-    end
+    end,
   })
 end
 
@@ -330,12 +330,7 @@ function deck.start(sources, start_config_specifier)
   end
 
   --- check start_config.
-  local start_config = validate.start_config(
-    kit.merge(
-      start_config_specifier or {},
-      internal.config.default_start_config or {}
-    ) --[[@as deck.StartConfig]]
-  )
+  local start_config = validate.start_config(kit.merge(start_config_specifier or {}, internal.config.default_start_config or {}) --[[@as deck.StartConfig]])
   start_config.name = start_config.name or source.name
 
   -- create context.
@@ -714,8 +709,8 @@ function deck.ui_select(items, opts, on_choice)
             display_text = opts.format_item and opts.format_item(item) or tostring(item),
             data = {
               idx = idx,
-              item = item
-            }
+              item = item,
+            },
           })
         end
         ctx.done()
@@ -736,9 +731,9 @@ function deck.ui_select(items, opts, on_choice)
                 view:restore()
               end)):await()
             end)
-          end
-        }
-      }
+          end,
+        },
+      },
     })
   end)
 end
