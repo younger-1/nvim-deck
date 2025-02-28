@@ -5,36 +5,49 @@ local Icon = require('deck.x.Icon')
 local decorators = {}
 
 ---@type deck.Decorator
-decorators.signs = {
-  name = 'signs',
-  dynamic = true,
-  decorate = function(ctx, item)
-    local signs = {}
-    if ctx.get_selected(item) then
-      table.insert(signs, '▌')
-    else
-      table.insert(signs, ' ')
-    end
-    if ctx.get_cursor_item() == item then
-      table.insert(signs, '»')
-    else
-      table.insert(signs, ' ')
-    end
-    return {
-      {
-        col = 0,
-        sign_text = table.concat(signs),
-        sign_hl_group = 'SignColumn',
-      },
-      {
-        col = 0,
-        virt_text = { { '  ' } },
-        virt_text_pos = 'inline',
-        priority = 100,
-      },
-    }
-  end,
-}
+do
+  local padding_decor = {
+    col = 0,
+    virt_text = { { '  ' } },
+    virt_text_pos = 'inline',
+    priority = 100,
+  }
+  local selected_cursor_decor = {
+    col = 0,
+    sign_text = '▌»',
+    sign_hl_group = 'SignColumn',
+  }
+  local selected_decor = {
+    col = 0,
+    sign_text = '▌ ',
+    sign_hl_group = 'SignColumn',
+  }
+  local cursor_decor = {
+    col = 0,
+    sign_text = ' »',
+    sign_hl_group = 'SignColumn',
+  }
+  local empty_decor = {
+    col = 0,
+    sign_text = '  ',
+    sign_hl_group = 'SignColumn',
+  }
+  decorators.signs = {
+    name = 'signs',
+    dynamic = true,
+    decorate = function(ctx, item)
+      if ctx.get_selected(item) and ctx.get_cursor_item() == item then
+        return { selected_cursor_decor, padding_decor }
+      elseif ctx.get_selected(item) then
+        return { selected_decor, padding_decor }
+      elseif ctx.get_cursor_item() == item then
+        return { cursor_decor, padding_decor }
+      else
+        return { empty_decor, padding_decor }
+      end
+    end,
+  }
+end
 
 ---@type deck.Decorator
 decorators.highlights = {
@@ -72,7 +85,7 @@ decorators.query_matches = {
 
       if item[symbols.query_matches].query == '' then
         -- clear highlights if query is empty.
-        item[symbols.query_matches].matches = {}
+        item[symbols.query_matches].matches = symbols.empty
       else
         -- update highlights.
         local matches = ctx.get_config().matcher.decor(ctx.get_matcher_query(), item.display_text)
@@ -80,6 +93,10 @@ decorators.query_matches = {
           item[symbols.query_matches].matches = matches
         end
       end
+    end
+
+    if #item[symbols.query_matches].matches == 0 then
+      return symbols.empty
     end
 
     local decorations = {}

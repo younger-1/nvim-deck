@@ -1,8 +1,8 @@
 local kit = require('deck.kit')
 local Character = require('deck.kit.App.Character')
-local matcher = {}
+local symbols = require('deck.symbols')
 
-local Empty = {}
+local matcher = {}
 
 ---Search query text in label text.
 ---@param label string
@@ -129,7 +129,7 @@ do
     ---@type deck.Matcher.DecorFunction
     decor = function(query, text)
       if query == '' then
-        return Empty
+        return symbols.empty
       end
 
       local matches = {}

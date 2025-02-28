@@ -1,6 +1,5 @@
 local ScheduledTimer = require('deck.kit.Async.ScheduledTimer')
-
-local EmptyData = {}
+local symbols = require('deck.symbols')
 
 ---@class deck.ExecuteContext.Controller
 ---@field public abort fun()
@@ -110,7 +109,7 @@ function ExecuteContext.create(params)
 
       -- check & normalize data.
       if not item_specifier.data then
-        item_specifier.data = EmptyData
+        item_specifier.data = symbols.empty
       end
 
       params.on_item(item_specifier --[[@as deck.Item]])
