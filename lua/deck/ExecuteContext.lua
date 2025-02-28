@@ -1,5 +1,7 @@
 local ScheduledTimer = require('deck.kit.Async.ScheduledTimer')
 
+local EmptyData = {}
+
 ---@class deck.ExecuteContext.Controller
 ---@field public abort fun()
 
@@ -69,7 +71,7 @@ function ExecuteContext.create(params)
       if aborted then
         return
       end
-      table.insert(gather_queue, task)
+      gather_queue[#gather_queue + 1] = task
       if not gather_queue_timer:is_running() then
         gather_queue_timer:start(0, 0, gather_step)
       end
@@ -108,7 +110,7 @@ function ExecuteContext.create(params)
 
       -- check & normalize data.
       if not item_specifier.data then
-        item_specifier.data = {}
+        item_specifier.data = EmptyData
       end
 
       params.on_item(item_specifier --[[@as deck.Item]])

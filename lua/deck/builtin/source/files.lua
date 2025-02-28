@@ -1,14 +1,15 @@
 local IO = require('deck.kit.IO')
 local System = require('deck.kit.System')
 
-local home = vim.fn.fnamemodify('~', ':p')
+local home = IO.normalize(vim.fn.expand('~'))
+local home_pre_pat = '^' .. vim.pesc(home)
 
 ---@param filename string
 ---@return deck.Item
 local function to_item(filename)
   local display_text = filename
-  if #filename > #home and vim.startswith(filename, home) then
-    display_text = ('~/%s'):format(filename:sub(#home + 1))
+  if display_text:find(home_pre_pat, 1) then
+    display_text = display_text:gsub(home_pre_pat, '~')
   end
   return {
     display_text = display_text,
@@ -36,9 +37,7 @@ local function ripgrep(root_dir, ignore_globs, ctx)
       ignore_empty = true,
     }),
     on_stdout = function(text)
-      ctx.queue(function()
-        ctx.item(to_item(IO.join(root_dir, text)))
-      end)
+      ctx.item(to_item(IO.join(root_dir, text)))
     end,
     on_stderr = function()
       -- noop
@@ -75,9 +74,7 @@ local function walk(root_dir, ignore_globs, ctx)
     end
 
     if entry.type == 'file' then
-      ctx.queue(function()
-        ctx.item(to_item(entry.path))
-      end)
+      ctx.item(to_item(entry.path))
     end
   end):next(function()
     ctx.done()

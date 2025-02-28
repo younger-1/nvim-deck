@@ -66,8 +66,6 @@ decorators.query_matches = {
     return ctx.get_config().matcher.decor
   end,
   decorate = function(ctx, item)
-    item[symbols.display_text_lower] = item[symbols.display_text_lower] or item.display_text:lower()
-
     item[symbols.query_matches] = item[symbols.query_matches] or { matches = {} }
     if item[symbols.query_matches].query ~= ctx.get_matcher_query() then
       item[symbols.query_matches].query = ctx.get_matcher_query()
@@ -77,7 +75,7 @@ decorators.query_matches = {
         item[symbols.query_matches].matches = {}
       else
         -- update highlights.
-        local matches = ctx.get_config().matcher.decor(ctx.get_matcher_query(), item[symbols.display_text_lower])
+        local matches = ctx.get_config().matcher.decor(ctx.get_matcher_query(), item.display_text)
         if #matches > 0 then
           item[symbols.query_matches].matches = matches
         end

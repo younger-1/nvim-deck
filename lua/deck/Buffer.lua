@@ -1,6 +1,5 @@
 local x = require('deck.x')
 local kit = require('deck.kit')
-local symbols = require('deck.symbols')
 local ScheduledTimer = require('deck.kit.Async.ScheduledTimer')
 
 ---@class deck.Buffer
@@ -169,11 +168,8 @@ function Buffer:_step_filter()
     local c = 0
     for i = self._cursor_filtered + 1, #self._items do
       local item = self._items[i]
-      -- matching.
-      local raw_filter_text = item.filter_text or item.display_text
-      item[symbols.filter_text_lower] = item[symbols.filter_text_lower] or raw_filter_text:lower()
-      local matched = self._start_config.matcher.match(self._query, item[symbols.filter_text_lower]) > 0
-      if matched then
+      local score = self._start_config.matcher.match(self._query, item.filter_text or item.display_text)
+      if score > 0 then
         self._items_filtered[#self._items_filtered + 1] = item
       end
       self._cursor_filtered = i
