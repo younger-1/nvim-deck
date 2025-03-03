@@ -181,30 +181,32 @@ function Context.create(id, source, start_config)
 
   --Setup decoration provider.
   do
+    local decor = {}
+
     ---@param row integer
     ---@param decoration deck.Decoration
     local function apply_decoration(row, decoration)
-      vim.api.nvim_buf_set_extmark(context.buf, context.ns, row, decoration.col or 0, {
-        end_row = decoration.end_col and row,
-        end_col = decoration.end_col,
-        hl_eol = decoration.hl_eol,
-        hl_group = decoration.hl_group,
-        hl_mode = 'combine',
-        virt_text = decoration.virt_text,
-        virt_text_pos = decoration.virt_text_pos,
-        virt_text_win_col = decoration.virt_text_win_col,
-        virt_text_hide = decoration.virt_text_hide,
-        virt_text_repeat_linebreak = decoration.virt_text_repeat_linebreak,
-        virt_lines = decoration.virt_lines,
-        virt_lines_above = decoration.virt_lines_above,
-        ephemeral = decoration.ephemeral,
-        priority = decoration.priority,
-        sign_text = decoration.sign_text,
-        sign_hl_group = decoration.sign_hl_group,
-        number_hl_group = decoration.number_hl_group,
-        line_hl_group = decoration.line_hl_group,
-        conceal = decoration.conceal,
-      })
+      kit.clear(decor)
+      decor.end_row = decoration.end_col and row
+      decor.end_col = decoration.end_col
+      decor.hl_eol = decoration.hl_eol
+      decor.hl_group = decoration.hl_group
+      decor.hl_mode = 'combine'
+      decor.virt_text = decoration.virt_text
+      decor.virt_text_pos = decoration.virt_text_pos
+      decor.virt_text_win_col = decoration.virt_text_win_col
+      decor.virt_text_hide = decoration.virt_text_hide
+      decor.virt_text_repeat_linebreak = decoration.virt_text_repeat_linebreak
+      decor.virt_lines = decoration.virt_lines
+      decor.virt_lines_above = decoration.virt_lines_above
+      decor.ephemeral = decoration.ephemeral
+      decor.priority = decoration.priority
+      decor.sign_text = decoration.sign_text
+      decor.sign_hl_group = decoration.sign_hl_group
+      decor.number_hl_group = decoration.number_hl_group
+      decor.line_hl_group = decoration.line_hl_group
+      decor.conceal = decoration.conceal
+      vim.api.nvim_buf_set_extmark(context.buf, context.ns, row, decoration.col or 0, decor)
     end
 
     vim.api.nvim_set_decoration_provider(namespace, {
@@ -561,49 +563,51 @@ function Context.create(id, source, start_config)
       end
 
       return vim
-        .iter(actions)
-        :filter(function(action)
-          if start_config.disable_actions then
-            if vim.tbl_contains(start_config.disable_actions, action.name) then
-              return false
+          .iter(actions)
+          :filter(function(action)
+            if start_config.disable_actions then
+              if vim.tbl_contains(start_config.disable_actions, action.name) then
+                return false
+              end
             end
-          end
-          return true
-        end)
-        :totable()
+            return true
+          end)
+          :totable()
     end,
 
     ---Get decorators.
-    get_decorators = function()
-      local decorators = {}
-
-      -- config.
-      for _, decorator in ipairs(start_config.decorators or {}) do
-        table.insert(decorators, decorator)
-      end
-
-      -- source.
-      for _, decorator in ipairs(source.decorators or {}) do
-        table.insert(decorators, decorator)
-      end
-
-      -- global.
-      for _, decorator in ipairs(require('deck').get_decorators()) do
-        table.insert(decorators, decorator)
-      end
-
-      return vim
-        .iter(decorators)
-        :filter(function(action)
-          if start_config.disable_decorators then
-            if vim.tbl_contains(start_config.disable_decorators, action.name) then
-              return false
-            end
+    get_decorators = (function()
+      local cache = nil
+      return function()
+        if not cache then
+          local decorators = {}
+          -- config.
+          for _, decorator in ipairs(start_config.decorators or {}) do
+            table.insert(decorators, decorator)
           end
-          return true
-        end)
-        :totable()
-    end,
+
+          -- source.
+          for _, decorator in ipairs(source.decorators or {}) do
+            table.insert(decorators, decorator)
+          end
+
+          -- global.
+          for _, decorator in ipairs(require('deck').get_decorators()) do
+            table.insert(decorators, decorator)
+          end
+
+          cache = vim.iter(decorators):filter(function(action)
+            if start_config.disable_decorators then
+              if vim.tbl_contains(start_config.disable_decorators, action.name) then
+                return false
+              end
+            end
+            return true
+          end):totable()
+        end
+        return cache
+      end
+    end)(),
 
     ---Get previewer.
     get_previewer = function()
@@ -616,14 +620,14 @@ function Context.create(id, source, start_config)
       ---@return deck.Previewer
       local function get_sorted_previewers(previewers)
         local entries = vim
-          .iter(ipairs(previewers))
-          :map(function(i, previewer)
-            return {
-              index = i,
-              previewer = previewer,
-            }
-          end)
-          :totable()
+            .iter(ipairs(previewers))
+            :map(function(i, previewer)
+              return {
+                index = i,
+                previewer = previewer,
+              }
+            end)
+            :totable()
         table.sort(entries, function(a, b)
           local priority_a = a.previewer.priority or 0
           local priority_b = b.previewer.priority or 0
@@ -633,11 +637,11 @@ function Context.create(id, source, start_config)
           return a.index < b.index
         end)
         return vim
-          .iter(entries)
-          :map(function(entry)
-            return entry.previewer
-          end)
-          :totable()
+            .iter(entries)
+            :map(function(entry)
+              return entry.previewer
+            end)
+            :totable()
       end
 
       local previewers = {}
@@ -664,16 +668,16 @@ function Context.create(id, source, start_config)
       end
 
       return vim
-        .iter(previewers)
-        :filter(function(previewer)
-          if start_config.disable_previewers then
-            if vim.tbl_contains(start_config.disable_previewers, previewer.name) then
-              return false
+          .iter(previewers)
+          :filter(function(previewer)
+            if start_config.disable_previewers then
+              if vim.tbl_contains(start_config.disable_previewers, previewer.name) then
+                return false
+              end
             end
-          end
-          return true
-        end)
-        :nth(1)
+            return true
+          end)
+          :nth(1)
     end,
 
     ---Synchronize for display.

@@ -13,63 +13,53 @@ do
     priority = 100,
   }
   local selected_cursor_decor = {
-    col = 0,
-    sign_text = '▌»',
-    sign_hl_group = 'SignColumn',
+    {
+      col = 0,
+      sign_text = '▌»',
+      sign_hl_group = 'SignColumn',
+    },
+    padding_decor,
   }
   local selected_decor = {
-    col = 0,
-    sign_text = '▌ ',
-    sign_hl_group = 'SignColumn',
+    {
+      col = 0,
+      sign_text = '▌ ',
+      sign_hl_group = 'SignColumn',
+    },
+    padding_decor,
   }
   local cursor_decor = {
-    col = 0,
-    sign_text = ' »',
-    sign_hl_group = 'SignColumn',
+    {
+      col = 0,
+      sign_text = ' »',
+      sign_hl_group = 'SignColumn',
+    },
+    padding_decor,
   }
   local empty_decor = {
-    col = 0,
-    sign_text = '  ',
-    sign_hl_group = 'SignColumn',
+    {
+      col = 0,
+      sign_text = '  ',
+      sign_hl_group = 'SignColumn',
+    },
+    padding_decor,
   }
   decorators.signs = {
     name = 'signs',
     dynamic = true,
     decorate = function(ctx, item)
       if ctx.get_selected(item) and ctx.get_cursor_item() == item then
-        return { selected_cursor_decor, padding_decor }
+        return selected_cursor_decor
       elseif ctx.get_selected(item) then
-        return { selected_decor, padding_decor }
+        return selected_decor
       elseif ctx.get_cursor_item() == item then
-        return { cursor_decor, padding_decor }
+        return cursor_decor
       else
-        return { empty_decor, padding_decor }
+        return empty_decor
       end
     end,
   }
 end
-
----@type deck.Decorator
-decorators.highlights = {
-  name = 'highlights',
-  resolve = function(_, item)
-    return type(item.highlights) == 'table'
-  end,
-  decorate = function(_, item)
-    local decorations = {}
-    for _, hi in ipairs(item.highlights or {}) do
-      if hi.hl_group then
-        table.insert(decorations, {
-          col = hi[1],
-          end_col = hi[2],
-          hl_group = hi.hl_group,
-          ephemeral = true,
-        })
-      end
-    end
-    return decorations
-  end,
-}
 
 ---@type deck.Decorator
 decorators.query_matches = {
@@ -79,6 +69,10 @@ decorators.query_matches = {
     return ctx.get_config().matcher.decor
   end,
   decorate = function(ctx, item)
+    if ctx.get_matcher_query() == '' then
+      return symbols.empty
+    end
+
     item[symbols.query_matches] = item[symbols.query_matches] or { matches = {} }
     if item[symbols.query_matches].query ~= ctx.get_matcher_query() then
       item[symbols.query_matches].query = ctx.get_matcher_query()
@@ -107,6 +101,32 @@ decorators.query_matches = {
         hl_group = 'Search',
         ephemeral = true,
       })
+    end
+    return decorations
+  end,
+}
+
+---@type deck.Decorator
+decorators.highlights = {
+  name = 'highlights',
+  resolve = function(_, item)
+    return type(item.highlights) == 'table'
+  end,
+  decorate = function(_, item)
+    if #(item.highlights or {}) == 0 then
+      return symbols.empty
+    end
+
+    local decorations = {}
+    for _, hi in ipairs(item.highlights) do
+      if hi.hl_group then
+        table.insert(decorations, {
+          col = hi[1],
+          end_col = hi[2],
+          hl_group = hi.hl_group,
+          ephemeral = true,
+        })
+      end
     end
     return decorations
   end,

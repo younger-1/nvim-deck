@@ -2,6 +2,8 @@ local x = require('deck.x')
 local kit = require('deck.kit')
 local ScheduledTimer = require('deck.kit.Async.ScheduledTimer')
 
+local rendering_lines = {}
+
 ---@class deck.Buffer
 ---@field public on_render fun(callback: fun())
 ---@field private _emit_render fun()
@@ -228,23 +230,23 @@ function Buffer:_step_render()
     return
   end
 
-  local lines = {}
+  kit.clear(rendering_lines)
   while self._cursor_rendered < #items_filtered do
     self._cursor_rendered = self._cursor_rendered + 1
     local item = items_filtered[self._cursor_rendered]
     self._items_rendered[self._cursor_rendered] = item
-    table.insert(lines, item.display_text)
+    table.insert(rendering_lines, item.display_text)
 
     -- interrupt.
     c = c + 1
     if c >= config.render_batch_size then
       c = 0
 
-      vim.api.nvim_buf_set_lines(self._bufnr, self._cursor_rendered - #lines, -1, false, lines)
+      vim.api.nvim_buf_set_lines(self._bufnr, self._cursor_rendered - #rendering_lines, -1, false, rendering_lines)
       for i = self._cursor_rendered + 1, #self._items_rendered do
         self._items_rendered[i] = nil
       end
-      kit.clear(lines)
+      kit.clear(rendering_lines)
 
       local n = vim.uv.hrtime() / 1e6
       if n - s > config.render_bugdet_ms then
@@ -256,7 +258,7 @@ function Buffer:_step_render()
       end
     end
   end
-  vim.api.nvim_buf_set_lines(self._bufnr, self._cursor_rendered - #lines, -1, false, lines)
+  vim.api.nvim_buf_set_lines(self._bufnr, self._cursor_rendered - #rendering_lines, -1, false, rendering_lines)
   for i = self._cursor_rendered + 1, #self._items_rendered do
     self._items_rendered[i] = nil
   end
