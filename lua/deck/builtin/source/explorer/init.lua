@@ -796,25 +796,28 @@ return function(option)
                 state:dirty(paste_target_item.path)
 
                 local clipboard = Clipboard.instance:get()
+                local renames = vim.iter(clipboard.paths):fold({}, function(renames, path)
+                  state:dirty(path)
+
+                  local path_new = IO.join(paste_target_item.path, vim.fs.basename(path))
+                  if path == path_new then
+                    path_new = IO.join(paste_target_item.path, ('%s - copy'):format(vim.fs.basename(path)))
+                  end
+
+                  table.insert(renames, {
+                    type = 'rename',
+                    path = path,
+                    path_new = path_new,
+                    kind = vim.fn.isdirectory(path) == 1 and operation.Kind.folder or operation.Kind.file,
+                  })
+                  return renames
+                end)
+
                 if clipboard.type == 'move' then
-                  operation
-                      .rename(vim
-                        .iter(clipboard.paths)
-                        :map(function(path)
-                          state:dirty(path)
-                          return {
-                            type = 'rename',
-                            path = path,
-                            path_new = IO.join(paste_target_item.path, vim.fs.basename(path)),
-                            kind = vim.fn.isdirectory(path) == 1 and operation.Kind.folder or operation.Kind.file,
-                          } ---@as deck.x.operation.Rename
-                        end)
-                        :totable())
-                      :await()
+                  operation.rename(renames):await()
                 else
-                  for _, path in ipairs(clipboard.paths) do
-                    local target_path = IO.join(paste_target_item.path, vim.fs.basename(path))
-                    IO.cp(path, target_path, { recursive = true }):await()
+                  for _, rename in ipairs(renames) do
+                    IO.cp(rename.path, rename.path_new, { recursive = true }):await()
                   end
                 end
                 state:refresh()
