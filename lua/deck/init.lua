@@ -330,7 +330,8 @@ function deck.start(sources, start_config_specifier)
   end
 
   --- check start_config.
-  local start_config = validate.start_config(kit.merge(start_config_specifier or {}, internal.config.default_start_config or {}) --[[@as deck.StartConfig]])
+  local start_config = validate.start_config(kit.merge(start_config_specifier or {},
+    internal.config.default_start_config or {}) --[[@as deck.StartConfig]])
   start_config.name = start_config.name or source.name
 
   -- create context.
@@ -721,18 +722,16 @@ function deck.ui_select(items, opts, on_choice)
           execute = function(ctx)
             Async.run(function()
               ctx.hide()
-              Keymap.send(Keymap.to_sendable(function()
-                local item = ctx.get_cursor_item()
-                if item then
-                  on_choice(item.data.item, item.data.idx)
-                else
-                  on_choice(nil, nil)
-                end
-                view:restore()
-              end)):await()
+              local item = ctx.get_cursor_item()
+              if item then
+                on_choice(item.data.item, item.data.idx)
+              else
+                on_choice(nil, nil)
+              end
+              view:restore()
             end)
           end,
-        },
+        } --[[@as deck.Action]],
       },
     })
   end)
