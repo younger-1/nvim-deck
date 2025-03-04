@@ -235,7 +235,7 @@ function Buffer:_step_render()
     self._cursor_rendered = self._cursor_rendered + 1
     local item = items_filtered[self._cursor_rendered]
     self._items_rendered[self._cursor_rendered] = item
-    table.insert(rendering_lines, item.display_text)
+    rendering_lines[#rendering_lines + 1] = item.display_text
 
     -- interrupt.
     c = c + 1
