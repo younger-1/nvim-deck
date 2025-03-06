@@ -8,7 +8,7 @@ local home_pre_pat = '^' .. vim.pesc(home)
 ---@return deck.Item
 local function to_item(filename)
   local display_text = filename
-  if display_text:find(home_pre_pat, 1) then
+  if vim.startswith(display_text, home) then
     display_text = display_text:gsub(home_pre_pat, '~')
   end
   return {
