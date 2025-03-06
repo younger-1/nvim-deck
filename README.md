@@ -70,7 +70,8 @@ nvim-deck revolves around four core concepts:
 
 - [ripgrep](https://github.com/BurntSushi/ripgrep): grep and finding files
 - [folke/snacks.nvim](https://github.com/folke/snacks.nvim): previewing images
-- [echasnovski/mini.icons](https://github.com/echasnovski/mini.icons): file icons
+- [echasnovski/mini.icons](https://github.com/echasnovski/mini.icons): file
+  icons
 - [Nerd Fonts](https://www.nerdfonts.com): icons
 
 # Setup
