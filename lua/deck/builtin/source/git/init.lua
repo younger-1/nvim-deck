@@ -1,4 +1,5 @@
 local x = require('deck.x')
+local notify = require('deck.notify')
 local IO = require('deck.kit.IO')
 local Git = require('deck.x.Git')
 local Async = require('deck.kit.Async')
@@ -121,7 +122,6 @@ return function(option)
                   'Comment',
                 },
               },
-              branch = current_branch,
               ---@param action_ctx deck.Context
               execute = function(action_ctx)
                 git:exec_print({ 'git', 'pull', current_branch.remotename, current_branch.name }):next(function()
@@ -138,16 +138,15 @@ return function(option)
                 'Comment',
               },
             },
-            branch = current_branch,
             ---@param action_ctx deck.Context
             execute = function(action_ctx)
               git
-                :push({
-                  branch = current_branch,
-                })
-                :next(function()
-                  action_ctx.execute()
-                end)
+                  :push({
+                    branch = current_branch,
+                  })
+                  :next(function()
+                    action_ctx.execute()
+                  end)
             end,
           })
           table.insert(menu, {
@@ -158,17 +157,39 @@ return function(option)
                 'Comment',
               },
             },
-            branch = current_branch,
             ---@param action_ctx deck.Context
             execute = function(action_ctx)
               git
-                :push({
-                  branch = current_branch,
-                  force = true,
-                })
-                :next(function()
-                  action_ctx.execute()
-                end)
+                  :push({
+                    branch = current_branch,
+                    force = true,
+                  })
+                  :next(function()
+                    action_ctx.execute()
+                  end)
+            end,
+          })
+          table.insert(menu, {
+            columns = {
+              '@ open browser',
+              {
+                ('open browser `%s`'):format(current_branch.name),
+                'Comment',
+              },
+            },
+            execute = function()
+              Async.run(function()
+                for _, remote in ipairs(git:remote():await() --[=[@type deck.x.Git.Remote[]]=]) do
+                  if remote.name == current_branch.remotename then
+                    local browser_url = Git.to_browser_url(remote.fetch_url)
+                    if browser_url then
+                      vim.ui.open(('%s/tree/%s'):format(browser_url, current_branch.name))
+                      return
+                    end
+                  end
+                end
+                notify.show({ { { 'No remote url found', 'WarningMsg' } } })
+              end)
             end,
           })
         end
@@ -182,14 +203,14 @@ return function(option)
             },
             execute = function(ctx)
               git
-                :exec_print({ 'git', 'rebase', '--continue' }, {
-                  env = {
-                    GIT_EDITOR = 'true',
-                  },
-                })
-                :next(function()
-                  ctx.execute()
-                end)
+                  :exec_print({ 'git', 'rebase', '--continue' }, {
+                    env = {
+                      GIT_EDITOR = 'true',
+                    },
+                  })
+                  :next(function()
+                    ctx.execute()
+                  end)
             end,
           })
           table.insert(menu, {
