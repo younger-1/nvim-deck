@@ -331,7 +331,7 @@ return function(option)
           Async.run(function()
             local root = state:get_root().path
             -- both paths are already normalized
-            if vim.startswith(root, option.reveal) then
+            if vim.startswith(option.reveal, root) then
               local relpath = option.reveal:sub(#root + #'/' + 1)
               local paths = vim.fn.split(relpath, '/')
               local current_path = option.cwd
