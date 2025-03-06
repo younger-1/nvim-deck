@@ -7,32 +7,32 @@ local Async = require('deck.kit.Async')
 ---@field start fun(self: deck.kit.RPC.JSON.Transport)
 ---@field close fun(self: deck.kit.RPC.JSON.Transport): deck.kit.Async.AsyncTask
 
----@class deck.kit.RPC.JSON.Transport.LineDelimitedStdio: deck.kit.RPC.JSON.Transport
+---@class deck.kit.RPC.JSON.Transport.LineDelimitedPipe: deck.kit.RPC.JSON.Transport
 ---@field private _buffer deck.kit.buffer.Buffer
 ---@field private _reader uv.uv_pipe_t
 ---@field private _writer uv.uv_pipe_t
 ---@field private _on_message fun(data: table)
-local LineDelimitedStdio = {}
-LineDelimitedStdio.__index = LineDelimitedStdio
+local LineDelimitedPipe = {}
+LineDelimitedPipe.__index = LineDelimitedPipe
 
----Create new LineDelimitedStdio instance.
+---Create new LineDelimitedPipe instance.
 ---@param reader uv.uv_pipe_t
 ---@param writer uv.uv_pipe_t
-function LineDelimitedStdio.new(reader, writer)
+function LineDelimitedPipe.new(reader, writer)
   return setmetatable({
     _buffer = kit.buffer(),
     _reader = reader,
     _writer = writer,
     _on_message = nil,
-  }, LineDelimitedStdio)
+  }, LineDelimitedPipe)
 end
 
 ---Send data.
 ---@param message table
 ---@return deck.kit.Async.AsyncTask
-function LineDelimitedStdio:send(message)
+function LineDelimitedPipe:send(message)
   return Async.new(function(resolve, reject)
-    self._writer:write(message .. '\n', function(err)
+    self._writer:write(vim.json.encode(message) .. '\n', function(err)
       if err then
         return reject(err)
       else
@@ -44,12 +44,12 @@ end
 
 ---Set message callback.
 ---@param callback fun(data: table)
-function LineDelimitedStdio:on_message(callback)
+function LineDelimitedPipe:on_message(callback)
   self._on_message = callback
 end
 
 ---Start transport.
-function LineDelimitedStdio:start()
+function LineDelimitedPipe:start()
   self._reader:read_start(function(err, data)
     if err then
       return
@@ -71,7 +71,7 @@ end
 
 ---Close transport.
 ---@return deck.kit.Async.AsyncTask
-function LineDelimitedStdio:close()
+function LineDelimitedPipe:close()
   self._reader:read_stop()
 
   local p = Async.resolve()
@@ -98,7 +98,11 @@ end
 ---@field private _pending_callbacks table<string, fun(response: table)>
 ---@field private _on_request_map table<string, fun(ctx: { params: table }): table>
 ---@field private _on_notification_map table<string, (fun(ctx: { params: table }))[]>
-local RPC = {}
+local RPC = {
+  Transport = {
+    LineDelimitedPipe = LineDelimitedPipe,
+  },
+}
 RPC.__index = RPC
 
 ---Create new RPC instance.
@@ -108,6 +112,8 @@ function RPC.new(params)
     _transport = params.transport,
     _next_requet_id = 0,
     _pending_callbacks = {},
+    _on_request_map = {},
+    _on_notification_map = {},
   }, RPC)
 end
 
@@ -117,7 +123,7 @@ function RPC:start()
     if data.id then
       if data.method then
         -- request.
-        local request_callback = self._pending_callbacks[data.id]
+        local request_callback = self._on_request_map[data.method]
         if request_callback then
           Async.resolve():next(function()
             return request_callback(data)
@@ -163,12 +169,18 @@ function RPC:start()
       local notification_callbacks = self._on_notification_map[data.method]
       if notification_callbacks then
         for _, callback in ipairs(notification_callbacks) do
-          callback({ params = data.params })
+          pcall(callback, { params = data.params })
         end
       end
     end
   end)
   self._transport:start()
+end
+
+---Close RPC.
+---@return deck.kit.Async.AsyncTask
+function RPC:close()
+  return self._transport:close()
 end
 
 ---Set request callback.
@@ -191,12 +203,6 @@ function RPC:on_notification(method, callback)
   table.insert(self._on_notification_map[method], callback)
 end
 
----Close RPC.
----@return deck.kit.Async.AsyncTask
-function RPC:close()
-  return self._transport:close()
-end
-
 ---Request.
 ---@param method string
 ---@param params table
@@ -214,10 +220,7 @@ function RPC:request(method, params)
         resolve(response.result)
       end
     end
-  end)
-
-  p = p:next(function()
-    return self._transport:send({
+    self._transport:send({
       jsonrpc = '2.0',
       id = request_id,
       method = method,
