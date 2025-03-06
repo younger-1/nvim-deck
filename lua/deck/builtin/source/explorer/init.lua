@@ -803,7 +803,17 @@ return function(option)
 
                   local path_new = IO.join(paste_target_item.path, vim.fs.basename(path))
                   if path == path_new then
-                    path_new = IO.join(paste_target_item.path, ('%s - copy'):format(vim.fs.basename(path)))
+                    local index = 1
+                    while true do
+                      path_new = IO.join(paste_target_item.path, ('%s - copy%s'):format(
+                        vim.fs.basename(path),
+                        index
+                      ))
+                      if vim.fn.filereadable(path_new) == 0 and vim.fn.isdirectory(path_new) == 0 then
+                        break
+                      end
+                      index = index + 1
+                    end
                   end
 
                   table.insert(renames, {
