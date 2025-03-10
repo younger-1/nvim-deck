@@ -445,6 +445,16 @@ _No options_
 deck.start(require('deck.builtin.source.deck.history')())
 ```
 
+### deck.notify
+
+Show deck.notify history.
+
+_No options_
+
+```lua
+deck.start(require('deck.builtin.source.deck.notify')())
+```
+
 ### dirs
 
 Show dirs under specified root directory.
