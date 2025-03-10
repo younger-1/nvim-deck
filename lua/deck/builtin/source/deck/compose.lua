@@ -13,13 +13,11 @@ return function(sources)
   end
 
   local name = vim
-    .iter(sources)
-    :map(function(source)
-      return source.name
-    end)
-    :join('+')
-
-  local memo = {} ---@type table<any, deck.Item[]>
+      .iter(sources)
+      :map(function(source)
+        return source.name
+      end)
+      :join('+')
 
   local events_proxy = newproxy(true) --[[@as table]]
   getmetatable(events_proxy).__index = function(_, key)
@@ -38,44 +36,33 @@ return function(sources)
     execute = function(ctx)
       Async.run(function()
         for _, source in ipairs(sources) do
-          if not source.parse_query and memo[source] then
-            -- replay memoized items for dynamic execution.
-            for _, item in ipairs(memo[source]) do
-              ctx.item(item)
-            end
-          else
-            -- execute source.
-            Async.new(function(resolve)
-              source.execute({
-                aborted = function()
-                  return ctx.aborted()
-                end,
-                on_abort = function(callback)
-                  ctx.on_abort(callback)
-                end,
-                get_query = function()
-                  return ctx.get_query()
-                end,
-                get_config = function()
-                  return ctx.get_config()
-                end,
-                queue = function(callback)
-                  ctx.queue(callback)
-                end,
-                item = function(item)
-                  if not source.parse_query then
-                    memo[source] = memo[source] or {}
-                    table.insert(memo[source], item)
-                  end
-                  item[symbols.source] = source
-                  ctx.item(item)
-                end,
-                done = function()
-                  resolve()
-                end,
-              })
-            end):await()
-          end
+          -- execute source.
+          Async.new(function(resolve)
+            source.execute({
+              aborted = function()
+                return ctx.aborted()
+              end,
+              on_abort = function(callback)
+                ctx.on_abort(callback)
+              end,
+              get_query = function()
+                return ctx.get_query()
+              end,
+              get_config = function()
+                return ctx.get_config()
+              end,
+              queue = function(callback)
+                ctx.queue(callback)
+              end,
+              item = function(item)
+                item[symbols.source] = source
+                ctx.item(item)
+              end,
+              done = function()
+                resolve()
+              end,
+            })
+          end):await()
         end
         ctx.done()
       end)
