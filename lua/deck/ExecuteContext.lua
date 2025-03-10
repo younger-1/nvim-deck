@@ -1,3 +1,4 @@
+local kit = require('deck.kit')
 local ScheduledTimer = require('deck.kit.Async.ScheduledTimer')
 local symbols = require('deck.symbols')
 
@@ -140,6 +141,8 @@ function ExecuteContext.create(params)
     --- Abort execute context.
     abort = function()
       aborted = true
+      gather_queue_timer:stop()
+      kit.clear(gather_queue)
       for _, on_abort in ipairs(on_aborts) do
         on_abort()
       end
