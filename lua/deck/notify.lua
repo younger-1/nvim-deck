@@ -1,14 +1,16 @@
 local kit = require('deck.kit')
+local ScheduledTimer = require('deck.kit.Async.ScheduledTimer')
 
 ---@alias deck.notify.Line (string|{ [1]: string, [2]?: string })[]
 ---@alias deck.notify.Item { message: deck.notify.Line[], timeout: integer, visible_at: integer }
 
 local state = {
-  items = {},
+  items = {} --[=[@as deck.notify.Item[]]=],
+  history = {} --[=[@as deck.notify.Item[]]=],
   ns = vim.api.nvim_create_namespace('deck.notify'),
   buf = vim.api.nvim_create_buf(false, true),
   win = nil,
-  timer = vim.uv.new_timer(),
+  timer = ScheduledTimer.new(),
   memo_buf = {},
   memo_win = {},
 }
@@ -40,8 +42,6 @@ vim.api.nvim_set_decoration_provider(state.ns, {
     end
   end,
 })
-
-local notify = {}
 
 ---@param line deck.notify.Line
 ---@return string
@@ -139,11 +139,13 @@ local function render(max_width, max_height)
   state.timer:start(
     200,
     0,
-    vim.schedule_wrap(function()
+    function()
       render(max_width, max_height)
-    end)
+    end
   )
 end
+
+local notify = {}
 
 ---Show messages
 ---@param message deck.notify.Line[]
@@ -161,9 +163,24 @@ function notify.show(message, option)
       timeout = option.timeout,
       visible_at = vim.uv.now(),
     })
+    table.insert(state.history, {
+      message = message,
+      timeout = option.timeout,
+      visible_at = vim.uv.now(),
+    })
+
+    if #state.history > 100 then
+      table.remove(state.history, 1)
+    end
 
     render(math.floor(vim.o.columns * 0.4), math.floor(vim.o.lines * 0.5))
   end)
+end
+
+---Get history of messages.
+---@return deck.notify.Item[]
+function notify.get_history()
+  return state.history
 end
 
 return notify

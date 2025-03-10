@@ -90,8 +90,8 @@ function ExecuteContext.create(params)
         for _, virt_text in
           ipairs(item_specifier.display_text --[=[@as deck.VirtualText[]]=])
         do
-          if type(virt_text) ~= 'table' or type(virt_text[1]) ~= 'string' then
-            error('item.display_text must be string or deck.VirtualText[] ' .. vim.inspect(virt_text))
+          if type(virt_text) == 'string' then
+            virt_text = { virt_text, 'Normal' }
           end
           table.insert(texts, virt_text[1])
           table.insert(highlights, {
