@@ -179,7 +179,7 @@ return function(option)
           Async.run(function()
             for _, item in ipairs(ctx.get_action_items()) do
               if item.data.staged then
-                git:exec_print({ 'git', 'reset', item.data.filename }):await()
+                git:exec_print({ 'git', 'reset', '--', item.data.filename }):await()
               end
             end
             ctx.execute()
