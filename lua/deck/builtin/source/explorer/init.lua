@@ -334,7 +334,7 @@ return function(option)
     events = {
       Start = function(ctx)
         local function auto_resize()
-          local auto = state:get_config().auto_resize and vim.api.nvim_get_current_buf() == ctx.buf
+          local auto = state:get_config().auto_resize and vim.api.nvim_get_current_buf() == ctx.buf and option.mode == 'drawer'
 
           local fix_width = option.min_width or 1
           if auto then
