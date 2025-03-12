@@ -63,9 +63,10 @@ local ExecuteContext = require('deck.ExecuteContext')
 ---@field do_action fun(name: string): any
 ---@field dispose fun()
 ---@field disposed fun(): boolean
+---@field on_dispose fun(callback: fun()): fun()
+---@field on_redraw fun(callback: fun())
 ---@field on_show fun(callback: fun())
 ---@field on_hide fun(callback: fun())
----@field on_dispose fun(callback: fun()): fun()
 
 local Context = {}
 
@@ -104,12 +105,14 @@ function Context.create(id, source, start_config)
 
   local events = {
     dispose = x.create_events(),
+    redraw = x.create_events(),
     show = x.create_events(),
     hide = x.create_events(),
   }
 
   local function redraw()
     if context.is_visible() and not context.is_syncing() then
+      events.redraw.emit(nil)
       view.redraw(context)
       vim.api.nvim_buf_set_extmark(context.buf, context.ns, 0, 0, {
         id = 1,
@@ -801,6 +804,9 @@ function Context.create(id, source, start_config)
 
     ---Subscribe dispose event.
     on_dispose = events.dispose.on,
+
+    ---Subscribe update event.
+    on_redraw = events.redraw.on,
 
     ---Subscribe show event.
     on_show = events.show.on,

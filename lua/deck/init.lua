@@ -320,14 +320,14 @@ function deck.start(sources, start_config_specifier)
   sources = validate.sources(kit.to_array(sources))
 
   --- create composed source.
-  local source = sources
-  if kit.is_array(source) then
-    if #source == 1 then
-      source = source[1]
+  if kit.is_array(sources) then
+    if #sources == 1 then
+      sources = sources[1]
     else
-      source = compose(source)
+      sources = compose(sources)
     end
   end
+  local source = sources --[[@as deck.Source]]
 
   --- check start_config.
   local start_config = validate.start_config(kit.merge(start_config_specifier or {},
@@ -366,6 +366,12 @@ function deck.start(sources, start_config_specifier)
   -- start context.
   context.execute()
   context.show()
+
+  -- emit Start event.
+  if source.events and source.events.Start then
+    source.events.Start(context)
+  end
+
   vim.cmd.normal({ 'zz', bang = true })
 
   --[=[@doc

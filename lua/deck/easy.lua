@@ -81,7 +81,7 @@ function easy.setup(config)
         local buffer_path = config.get_buffer_path(vim.api.nvim_get_current_buf())
 
         local option = {
-          width = args['--width'] or 40,
+          width = tonumber(args['--width']) or 40,
           cwd = args['--cwd'] or config.get_project_root(buffer_path) or to_dir(buffer_path),
           reveal = args['--reveal'] or config.get_buffer_path(vim.api.nvim_get_current_buf()),
         }
@@ -98,6 +98,7 @@ function easy.setup(config)
           require('deck.builtin.source.explorer')({
             cwd = option.cwd,
             mode = 'drawer',
+            min_width = option.width,
             reveal = option.reveal or option.cwd,
             narrow = {
               enable = true,

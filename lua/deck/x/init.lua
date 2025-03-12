@@ -1,3 +1,5 @@
+local kit = require('deck.kit')
+
 local x = {}
 
 ---Normalize display_text.
@@ -248,11 +250,11 @@ function x.create_events()
         end
       end
     end,
-    emit = function(payload)
+    emit = kit.fast_schedule_wrap(function(payload)
       for _, callback in ipairs(callbacks) do
         callback(payload)
       end
-    end,
+    end),
   }
 end
 
