@@ -508,18 +508,21 @@ EXPLORER ~
 
 Explorer source.
 
-  -------------------------------------------------------------------------------
-  Name     Type                                     Default   Description
-  -------- ---------------------------------------- --------- -------------------
-  cwd      string                                             Target directory.
+  --------------------------------------------------------------------------------
+  Name        Type                                Default   Description
+  ----------- ----------------------------------- --------- ----------------------
+  cwd         string                                        Target directory.
 
-  mode     ‘drawer’ | ‘filer’                                 Mode of explorer.
+  mode        ‘drawer’ | ‘filer’                            Mode of explorer.
 
-  narrow   { enabled?: boolean, ignore_globs?:                Narrow finder
-           string[] }                                         options.
+  min_width   number                                        Minimum explorer
+                                                            window size.
 
-  reveal   string                                             Reveal target path.
-  -------------------------------------------------------------------------------
+  narrow      { enabled?: boolean, ignore_globs?:           Narrow finder options.
+              string[] }                                    
+
+  reveal      string                                        Reveal target path.
+  --------------------------------------------------------------------------------
 >lua
     To use explorer, you must set `start_preset` or use `require('deck.easy').setup()`.
     If you call `require('deck.easy').setup()`, then you can use explorer by `:Deck explorer` command.
@@ -1082,9 +1085,10 @@ Start deck with given sources.
     ---@field do_action fun(name: string): any
     ---@field dispose fun()
     ---@field disposed fun(): boolean
+    ---@field on_dispose fun(callback: fun()): fun()
+    ---@field on_redraw fun(callback: fun())
     ---@field on_show fun(callback: fun())
     ---@field on_hide fun(callback: fun())
-    ---@field on_dispose fun(callback: fun()): fun()
 <
 
 *deck.Decoration*
