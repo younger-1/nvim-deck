@@ -475,13 +475,12 @@ deck.start(require('deck.builtin.source.dirs')({
 
 Explorer source.
 
-| Name      | Type                                           | Default | Description                   |
-| --------- | ---------------------------------------------- | ------- | ----------------------------- |
-| cwd       | string                                         |         | Target directory.             |
-| mode      | 'drawer' \| 'filer'                            |         | Mode of explorer.             |
-| min_width | number                                         |         | Minimum explorer window size. |
-| narrow    | { enabled?: boolean, ignore_globs?: string[] } |         | Narrow finder options.        |
-| reveal    | string                                         |         | Reveal target path.           |
+| Name   | Type                                           | Default | Description            |
+| ------ | ---------------------------------------------- | ------- | ---------------------- |
+| cwd    | string                                         |         | Target directory.      |
+| mode   | 'drawer' \| 'filer'                            |         | Mode of explorer.      |
+| narrow | { enabled?: boolean, ignore_globs?: string[] } |         | Narrow finder options. |
+| reveal | string                                         |         | Reveal target path.    |
 
 ```lua
 To use explorer, you must set `start_preset` or use `require('deck.easy').setup()`.

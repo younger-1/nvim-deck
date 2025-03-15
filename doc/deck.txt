@@ -1,4 +1,4 @@
-*deck.txt*             For NVIM v0.10.0             Last change: 2025 March 14
+*deck.txt*             For NVIM v0.10.0             Last change: 2025 March 15
 
 ==============================================================================
 Table of Contents                                     *deck-table-of-contents*
@@ -508,21 +508,18 @@ EXPLORER ~
 
 Explorer source.
 
-  --------------------------------------------------------------------------------
-  Name        Type                                Default   Description
-  ----------- ----------------------------------- --------- ----------------------
-  cwd         string                                        Target directory.
+  -------------------------------------------------------------------------------
+  Name     Type                                     Default   Description
+  -------- ---------------------------------------- --------- -------------------
+  cwd      string                                             Target directory.
 
-  mode        ‘drawer’ | ‘filer’                            Mode of explorer.
+  mode     ‘drawer’ | ‘filer’                                 Mode of explorer.
 
-  min_width   number                                        Minimum explorer
-                                                            window size.
+  narrow   { enabled?: boolean, ignore_globs?:                Narrow finder
+           string[] }                                         options.
 
-  narrow      { enabled?: boolean, ignore_globs?:           Narrow finder options.
-              string[] }                                    
-
-  reveal      string                                        Reveal target path.
-  --------------------------------------------------------------------------------
+  reveal   string                                             Reveal target path.
+  -------------------------------------------------------------------------------
 >lua
     To use explorer, you must set `start_preset` or use `require('deck.easy').setup()`.
     If you call `require('deck.easy').setup()`, then you can use explorer by `:Deck explorer` command.
