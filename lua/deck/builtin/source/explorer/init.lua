@@ -668,11 +668,15 @@ return function(option)
             if item then
               local parent_item = state:get_parent_item(item.data.entry)
               if parent_item then
-                local path = vim.fn.input(('Rename: %s/'):format(parent_item.path, vim.fs.basename(item.data.filename)))
+                local path = vim.fn.input(('Rename: %s/'):format(parent_item.path), vim.fs.basename(item.data.filename))
                 if path == '' then
                   return
                 end
                 path = IO.join(parent_item.path, path)
+
+                if vim.fn.isdirectory(path) == 1 or vim.fn.filereadable(path) == 1 then
+                  return require('deck.notify').show({ { 'Already exists: ' .. path } })
+                end
 
                 operation
                     .rename({
