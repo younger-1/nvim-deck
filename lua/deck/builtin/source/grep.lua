@@ -50,11 +50,9 @@ return function(option)
 
       local command = {
         'rg',
-        '--ignore-case',
         '--column',
         '--line-number',
-        '--sort',
-        'path',
+        '--ignore-case',
       }
       if option.ignore_globs then
         for _, glob in ipairs(option.ignore_globs) do
@@ -79,7 +77,7 @@ return function(option)
             ctx.item({
               display_text = {
                 { ('%s (%s:%s): '):format(filename, lnum, col) },
-                { match, 'Comment' },
+                { match,                                       'Comment' },
               },
               data = {
                 filename = IO.join(option.root_dir, filename),
@@ -88,11 +86,6 @@ return function(option)
               },
             })
           end
-        end,
-        on_stderr = function(text)
-          notify.show({
-            { { ('[grep: stderr] %s'):format(text), 'ErrorMsg' } },
-          })
         end,
         on_exit = function()
           ctx.done()
