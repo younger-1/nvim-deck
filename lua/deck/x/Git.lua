@@ -458,7 +458,7 @@ function Git:vimdiff(params)
   return Async.run(function()
     local exists = vim.fn.filereadable(params.filename) == 1
     if not exists then
-      if not params.to_rev then
+      if not params.from_rev then
         notify.show({
           { { 'filename must be filereadable when omitting from_rev', 'ErrorMsg' } },
         })

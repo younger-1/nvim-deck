@@ -66,6 +66,7 @@ return function(option)
                 :vimdiff({
                   filename = item.data.filename,
                   filename_before = item.data.filename_before,
+                  from_rev = 'HEAD',
                 })
                 :sync(5000)
             end
