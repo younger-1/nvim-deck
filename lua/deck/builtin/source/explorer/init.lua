@@ -111,7 +111,13 @@ end
 ---@param item deck.builtin.source.explorer.Item
 ---@return boolean
 function State:is_hidden_item(item)
-  return not self._config.dotfiles and item.path:find('/.', nil, true) ~= nil
+  if self:is_expanded(item) then
+    return false
+  end
+  if self._config.dotfiles then
+    return false
+  end
+  return vim.fs.basename(item.path):find('.', 1, true) == 1
 end
 
 ---@return fun(): deck.builtin.source.explorer.Item
