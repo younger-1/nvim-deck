@@ -11,12 +11,12 @@ local function to_item(filename)
   if vim.startswith(display_text, home) then
     display_text = display_text:gsub(home_pre_pat, '~')
   end
-  return {
+  local item = {
     display_text = display_text,
-    data = {
-      filename = filename,
-    },
+    filename = filename,
   }
+  item.data = item
+  return item
 end
 
 ---@alias deck.builtin.source.files.Finder fun(root_dir: string, ignore_globs: string[], ctx: deck.ExecuteContext)
@@ -51,11 +51,11 @@ end
 ---@type deck.builtin.source.files.Finder
 local function walk(root_dir, ignore_globs, ctx)
   local ignore_glob_patterns = vim
-    .iter(ignore_globs or {})
-    :map(function(glob)
-      return vim.glob.to_lpeg(glob)
-    end)
-    :totable()
+      .iter(ignore_globs or {})
+      :map(function(glob)
+        return vim.glob.to_lpeg(glob)
+      end)
+      :totable()
 
   IO.walk(root_dir, function(err, entry)
     if err then
@@ -64,9 +64,9 @@ local function walk(root_dir, ignore_globs, ctx)
     if ctx.aborted() then
       return IO.WalkStatus.Break
     end
-    for _, ignore_glob in ipairs(ignore_glob_patterns) do
-      if ignore_glob:match(entry.path) then
-        if entry.type ~= 'file' then
+    if entry.type ~= 'file' then
+      for _, ignore_glob in ipairs(ignore_glob_patterns) do
+        if ignore_glob:match(entry.path) then
           return IO.WalkStatus.SkipDir
         end
         return
