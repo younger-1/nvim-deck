@@ -1189,7 +1189,8 @@ Start deck with given sources.
 ---@field dispose fun()
 ---@field disposed fun(): boolean
 ---@field on_dispose fun(callback: fun()): fun()
----@field on_redraw fun(callback: fun())
+---@field on_redraw_sync fun(callback: fun())
+---@field on_redraw_tick fun(callback: fun())
 ---@field on_show fun(callback: fun())
 ---@field on_hide fun(callback: fun())
 ```
@@ -1277,6 +1278,7 @@ Start deck with given sources.
 ```lua
 ---@class deck.PerformanceConfig
 ---@field public sync_timeout_ms integer
+---@field public redraw_tick_ms integer
 ---@field public gather_budget_ms integer
 ---@field public gather_batch_size integer
 ---@field public gather_interrupt_ms integer
@@ -1378,7 +1380,6 @@ Start deck with given sources.
 ---@field public is_visible fun(ctx: deck.Context): boolean
 ---@field public show fun(ctx: deck.Context)
 ---@field public hide fun(ctx: deck.Context)
----@field public redraw fun(ctx: deck.Context)
 ---@field public prompt fun(ctx: deck.Context)
 ---@field public scroll_preview fun(ctx: deck.Context, delta: integer)
 ```
