@@ -133,18 +133,31 @@ function easy.setup(config)
     end)
 
     -- Register `grep` start preset.
-    deck.register_start_preset('grep', function()
-      local pattern = vim.fn.input('grep: ')
-      deck.start(
-        require('deck.builtin.source.grep')({
-          root_dir = config.get_cwd(),
-          ignore_globs = config.ignore_globs,
-        }),
-        {
-          query = #pattern > 0 and (pattern .. '  ') or '',
-        }
-      )
-    end)
+    deck.register_start_preset({
+      name = 'grep',
+      args = {
+        ['--sort'] = {
+          required = false,
+          default = 'false',
+          complete = function()
+            return { 'true', 'false' }
+          end,
+        },
+      },
+      start = function(args)
+        local pattern = vim.fn.input('grep: ')
+        deck.start(
+          require('deck.builtin.source.grep')({
+            root_dir = config.get_cwd(),
+            ignore_globs = config.ignore_globs,
+            sort = args['--sort'] == 'true',
+          }),
+          {
+            query = #pattern > 0 and (pattern .. '  ') or '',
+          }
+        )
+      end
+    })
 
     -- Register `git` start preset.
     deck.register_start_preset('git', function()
@@ -156,6 +169,11 @@ function easy.setup(config)
     -- Register `helpgrep` start preset.
     deck.register_start_preset('helpgrep', function()
       require('deck').start(require('deck.builtin.source.helpgrep')())
+    end)
+
+    -- Register `colorschemes` start preset.
+    deck.register_start_preset('colorschemes', function()
+      require('deck').start(require('deck.builtin.source.colorschemes')())
     end)
 
     -- Register `deck.notify` start preset.

@@ -20,6 +20,7 @@ local ScheduledTimer = require('deck.kit.Async.ScheduledTimer')
 ---@field is_syncing boolean
 ---@field controller deck.ExecuteContext.Controller?
 ---@field decoration_cache table<deck.Item, deck.Decoration[]>
+---@field preview_cache { win?: integer, item?: deck.Item, cleanup?: fun() }
 ---@field disposed boolean
 
 ---@doc.type
@@ -51,12 +52,18 @@ local ScheduledTimer = require('deck.kit.Async.ScheduledTimer')
 ---@field get_select_all fun(): boolean
 ---@field set_preview_mode fun(preview_mode: boolean)
 ---@field get_preview_mode fun(): boolean
----@field get_items fun(): deck.Item[]
+---@field count_items fun(): integer
+---@field count_filtered_items fun(): integer
+---@field count_rendered_items fun(): integer
+---@field get_item fun(idx: integer): deck.Item?
+---@field get_filtered_item fun(idx: integer): deck.Item?
+---@field get_rendered_item fun(idx: integer): deck.Item?
+---@field iter_items fun(i?: integer, j?: integer): fun(): deck.Item
+---@field iter_filtered_items fun(i?: integer, j?: integer): fun(): deck.Item
+---@field iter_rendered_items fun(i?: integer, j?: integer): fun(): deck.Item
 ---@field get_cursor_item fun(): deck.Item?
----@field get_action_items fun(): deck.Item[]
----@field get_filtered_items fun(): deck.Item[]
----@field get_rendered_items fun(): deck.Item[]
 ---@field get_selected_items fun(): deck.Item[]
+---@field get_action_items fun(): deck.Item[]
 ---@field get_actions fun(): deck.Action[]
 ---@field get_decorators fun(): deck.Decorator[]
 ---@field get_previewer fun(): deck.Previewer?
@@ -104,8 +111,21 @@ function Context.create(id, source, start_config)
     is_syncing = false,
     controller = nil,
     decoration_cache = {},
+    preview_cache = {},
     disposed = false,
   }
+
+  -- update initial query.
+  do
+    local parsed = source.parse_query and source.parse_query(start_config.query or '') or {
+      dynamic_query = '',
+      matcher_query = start_config.query or '',
+    }
+    parsed.dynamic_query = parsed.dynamic_query or ''
+    parsed.matcher_query = parsed.matcher_query or ''
+    state.dynamic_query = parsed.dynamic_query
+    state.matcher_query = parsed.matcher_query
+  end
 
   local events = {
     dispose = x.create_events(),
@@ -125,6 +145,7 @@ function Context.create(id, source, start_config)
 
   local buffer = Buffer.new(tostring(id), start_config)
   buffer.on_render(redraw)
+  buffer:update_query(state.matcher_query)
 
   ---Execute source.
   local execute_source = function()
@@ -149,6 +170,7 @@ function Context.create(id, source, start_config)
       is_syncing = false,
       controller = nil,
       decoration_cache = {},
+      preview_cache = state.preview_cache,
       disposed = false,
     }
 
@@ -221,12 +243,7 @@ function Context.create(id, source, start_config)
         vim.api.nvim_buf_clear_namespace(context.buf, context.ns, toprow, botrow + 1)
 
         local decorators = context.get_decorators()
-        for row = toprow, botrow do
-          local item = buffer:get_rendered_items()[row + 1]
-          if not item then
-            -- If `items[row + 1]` is nil, then `items[row + 2]` is also nil.
-            break
-          end
+        for item, idx in buffer:iter_rendered_items(toprow + 1, botrow + 1) do
           -- create cache.
           if not state.decoration_cache[item] then
             state.decoration_cache[item] = {}
@@ -246,13 +263,13 @@ function Context.create(id, source, start_config)
             if decorator.dynamic then
               if not decorator.resolve or decorator.resolve(context, item) then
                 for _, decoration in ipairs(kit.to_array(decorator.decorate(context, item))) do
-                  apply_decoration(row, decoration)
+                  apply_decoration(idx - 1, decoration)
                 end
               end
             end
           end
           for _, decoration in ipairs(state.decoration_cache[item]) do
-            apply_decoration(row, decoration)
+            apply_decoration(idx - 1, decoration)
           end
         end
       end,
@@ -294,15 +311,16 @@ function Context.create(id, source, start_config)
 
       buffer:start_filtering()
       state.redraw_timer:stop()
-      state.redraw_timer:start(start_config.performance.redraw_tick_ms, start_config.performance.redraw_tick_ms, function()
-        if dirty or buffer:is_filtering() then
-          dirty = false
-          events.redraw_tick.emit(nil)
-          if vim.api.nvim_get_mode().mode == 'c' then
-            vim.api.nvim__redraw({ flush = true })
+      state.redraw_timer:start(start_config.performance.redraw_tick_ms, start_config.performance.redraw_tick_ms,
+        function()
+          if dirty or buffer:is_filtering() then
+            dirty = false
+            events.redraw_tick.emit(nil)
+            if vim.api.nvim_get_mode().mode == 'c' then
+              vim.api.nvim__redraw({ flush = true })
+            end
           end
-        end
-      end)
+        end)
 
       local to_show = not context.is_visible()
       view.show(context)
@@ -374,7 +392,31 @@ function Context.create(id, source, start_config)
 
     ---Scroll preview window.
     scroll_preview = function(delta)
-      view.scroll_preview(context, delta)
+      local preview_win = state.preview_cache.win
+      if preview_win and vim.api.nvim_win_is_valid(preview_win) then
+        vim.api.nvim_win_call(state.preview_cache.win, function()
+          local topline = vim.fn.getwininfo(preview_win)[1].topline
+          topline = math.max(1, topline + delta)
+          topline = math.min(
+            vim.api.nvim_buf_line_count(vim.api.nvim_win_get_buf(preview_win)) -
+            vim.api.nvim_win_get_height(preview_win) + 1, topline)
+          vim.cmd.normal({
+            ('%szt'):format(topline),
+            bang = true,
+            mods = {
+              keepmarks = true,
+              keepjumps = true,
+              keepalt = true,
+              noautocmd = true,
+            },
+          })
+        end)
+        vim.api.nvim__redraw({
+          flush = true,
+          valid = true,
+          win = preview_win,
+        })
+      end
     end,
 
     ---Return status state.
@@ -394,7 +436,7 @@ function Context.create(id, source, start_config)
 
     ---Return cursor position state.
     get_cursor = function()
-      return math.min(state.cursor, #buffer:get_rendered_items() + 1)
+      return math.min(state.cursor, buffer:count_rendered_items() + 1)
     end,
 
     ---Set cursor row.
@@ -487,7 +529,7 @@ function Context.create(id, source, start_config)
       end
 
       state.select_all = select_all
-      for _, item in ipairs(context.get_items()) do
+      for item in buffer:iter_items() do
         context.set_selected(item, state.select_all)
       end
     end,
@@ -512,14 +554,11 @@ function Context.create(id, source, start_config)
       return state.preview_mode
     end,
 
-    ---Get items.
-    get_items = function()
-      return buffer:get_items()
-    end,
-
     ---Get cursor item.
     get_cursor_item = function()
-      return buffer:get_rendered_items()[state.cursor]
+      for item in buffer:iter_rendered_items(state.cursor, state.cursor) do
+        return item
+      end
     end,
 
     ---Get action items.
@@ -535,20 +574,46 @@ function Context.create(id, source, start_config)
       return {}
     end,
 
-    ---Get filter items.
-    get_filtered_items = function()
-      return buffer:get_filtered_items()
+    count_items = function()
+      return buffer:count_items()
     end,
 
-    ---Get rendered items.
-    get_rendered_items = function()
-      return buffer:get_rendered_items()
+    count_filtered_items = function()
+      return buffer:count_filtered_items()
+    end,
+
+    count_rendered_items = function()
+      return buffer:count_rendered_items()
+    end,
+
+    get_item = function(idx)
+      return buffer:get_item(idx)
+    end,
+
+    get_filtered_item = function(idx)
+      return buffer:get_filtered_item(idx)
+    end,
+
+    get_rendered_item = function(idx)
+      return buffer:get_rendered_item(idx)
+    end,
+
+    iter_items = function(i, j)
+      return buffer:iter_items(i, j)
+    end,
+
+    iter_filtered_items = function(i, j)
+      return buffer:iter_filtered_items(i, j)
+    end,
+
+    iter_rendered_items = function(i, j)
+      return buffer:iter_rendered_items(i, j)
     end,
 
     ---Get select items.
     get_selected_items = function()
       local items = {}
-      for _, item in ipairs(context.get_rendered_items()) do
+      for item in buffer:iter_rendered_items() do
         if state.select_map[item] then
           table.insert(items, item)
         end
@@ -719,8 +784,7 @@ function Context.create(id, source, start_config)
       state.is_syncing = true
       local restore = saveview()
       vim.wait(start_config.performance.sync_timeout_ms, function()
-        local cursors = buffer:get_cursors()
-        if vim.o.lines <= math.min(cursors.filtered, cursors.rendered) then
+        if vim.o.lines <= buffer:count_rendered_items() then
           return true
         end
         if context.get_status() == Context.Status.Success then
@@ -836,6 +900,44 @@ function Context.create(id, source, start_config)
   end, {
     pattern = ('<buffer=%s>'):format(context.buf),
   }))
+
+  -- manage preview.
+  do
+    local function cleanup()
+      if state.preview_cache.cleanup then
+        state.preview_cache.cleanup()
+        state.preview_cache.cleanup = nil
+      end
+      if state.preview_cache.win and vim.api.nvim_win_is_valid(state.preview_cache.win) then
+        pcall(vim.api.nvim_win_hide, state.preview_cache.win)
+        state.preview_cache.win = nil
+      end
+      state.preview_cache.item = nil
+    end
+    events.hide.on(cleanup)
+    events.redraw_tick.on(function()
+      if context.is_visible() and context.get_preview_mode() then
+        local previewer = context.get_previewer()
+        if previewer then
+          local item = context.get_cursor_item()
+          if item then
+            if state.preview_cache.item ~= item then
+              cleanup()
+              state.preview_cache.item = item
+              state.preview_cache.cleanup = previewer.preview(context, item, {
+                open_preview_win = function()
+                  state.preview_cache.win = view.open_preview_win(context)
+                  return state.preview_cache.win
+                end
+              })
+            end
+            return
+          end
+        end
+      end
+      cleanup()
+    end)
+  end
 
   -- explicitly show.
   do

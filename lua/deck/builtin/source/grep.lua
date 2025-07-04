@@ -24,17 +24,26 @@ local System = require('deck.kit.System')
   type = "string[]?"
   default = "[]"
   desc = "Ignore glob patterns."
+
+  [[options]]
+  name = "sort"
+  type = "boolean?"
+  default = "false"
+  desc = "Sort results by filename and line number."
 ]=]
 ---@class deck.builtin.source.grep.Option
 ---@field root_dir string
 ---@field ignore_globs? string[]
+---@field sort? boolean
 ---@param option deck.builtin.source.grep.Option
 return function(option)
   local function parse_query(query)
-    local dynamic_query, matcher_query = unpack(vim.split(query, '  '))
+    local sep = query:find('  ') or #query
+    local dynamic_query = query:sub(1, sep)
+    local matcher_query = query:sub(sep + 2)
     return {
-      dynamic_query = (dynamic_query or ''):gsub('^%s+', ''):gsub('%s+$', ''),
-      matcher_query = (matcher_query or ''):gsub('^%s+', ''):gsub('%s+$', ''),
+      dynamic_query = dynamic_query:gsub('^%s+', ''):gsub('%s+$', ''),
+      matcher_query = matcher_query:gsub('^%s+', ''):gsub('%s+$', ''),
     }
   end
 
@@ -59,6 +68,9 @@ return function(option)
           table.insert(command, '--glob')
           table.insert(command, '!' .. glob)
         end
+      end
+      if option.sort then
+        table.insert(command, '--sort-files')
       end
       table.insert(command, query)
 

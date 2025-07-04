@@ -1,5 +1,6 @@
 ---@class deck.kit.Async.ScheduledTimer
 ---@field private _timer uv.uv_timer_t
+---@field private _start_time integer
 ---@field private _running boolean
 ---@field private _revision integer
 local ScheduledTimer = {}
@@ -9,6 +10,14 @@ ScheduledTimer.__index = ScheduledTimer
 function ScheduledTimer.new()
   return setmetatable({
     _timer = assert(vim.uv.new_timer()),
+    _schedule_fn = function(callback)
+      if vim.in_fast_event() then
+        vim.schedule(callback)
+      else
+        callback()
+      end
+    end,
+    _start_time = 0,
     _running = false,
     _revision = 0,
   }, ScheduledTimer)
@@ -18,6 +27,18 @@ end
 ---@return boolean
 function ScheduledTimer:is_running()
   return self._running
+end
+
+---Get recent start time.
+---@return integer
+function ScheduledTimer:start_time()
+  return self._start_time
+end
+
+---Set schedule function.
+---@param schedule_fn fun(callback: fun()): nil
+function ScheduledTimer:set_schedule_fn(schedule_fn)
+  self._schedule_fn = schedule_fn
 end
 
 ---Start timer.
@@ -34,11 +55,7 @@ function ScheduledTimer:start(ms, repeat_ms, callback)
     if revision ~= self._revision then
       return
     end
-    if vim.in_fast_event() then
-      vim.schedule(tick)
-    else
-      tick()
-    end
+    self._schedule_fn(tick)
   end
 
   tick = function()
@@ -56,12 +73,13 @@ function ScheduledTimer:start(ms, repeat_ms, callback)
     end
   end
 
+  self._start_time = vim.uv.hrtime() / 1e6
+  self._timer:stop()
   if ms == 0 then
     on_tick()
-    return
+  else
+    self._timer:start(ms, 0, on_tick)
   end
-  self._timer:stop()
-  self._timer:start(ms, 0, on_tick)
 end
 
 ---Stop timer.
