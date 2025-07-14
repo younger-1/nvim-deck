@@ -1,4 +1,4 @@
-*deck.txt*              For NVIM v0.10.0             Last change: 2025 July 04
+*deck.txt*              For NVIM v0.10.0             Last change: 2025 July 14
 
 ==============================================================================
 Table of Contents                                     *deck-table-of-contents*
@@ -417,7 +417,7 @@ PREVIEWER ~
         return item.data.filename and vim.fn.filereadable(item.data.filename) == 1
       end,
       preview = function(_, item, env)
-        vim.api.nvim_win_call(env.open_preview_win(), function()
+        vim.api.nvim_win_call(env.open_preview_win() --[[@as integer]], function()
           vim.fn.termopen(('bat --color=always %s'):format(item.data.filename))
         end)
       end
