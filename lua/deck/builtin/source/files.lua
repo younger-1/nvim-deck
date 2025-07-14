@@ -1,15 +1,6 @@
 local IO = require('deck.kit.IO')
 local System = require('deck.kit.System')
 
-local filename_mt = {
-  __index = function(self, key)
-    if key == 'filename' then
-      return IO.join(self.root_dir, self.display_text)
-    end
-    return rawget(self, key)
-  end,
-}
-
 ---@alias deck.builtin.source.files.Finder fun(root_dir: string, ignore_globs: string[], ctx: deck.ExecuteContext)
 
 ---@type deck.builtin.source.files.Finder
@@ -21,6 +12,16 @@ local function ripgrep(root_dir, ignore_globs, ctx)
   end
 
   root_dir = vim.fs.normalize(root_dir)
+
+  ---The metatable for `item.data.filename`.
+  local filename_mt = {
+    __index = function(self, key)
+      if key == 'filename' then
+        return IO.join(self.root_dir, self.display_text)
+      end
+      return rawget(self, key)
+    end,
+  }
 
   ---@param text string
   ---@return deck.Item
