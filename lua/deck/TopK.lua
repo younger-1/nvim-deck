@@ -21,6 +21,10 @@ end
 ---@param score integer
 ---@return deck.Item?
 function TopK:add(item, score)
+  if score < self._min_score then
+    return item
+  end
+
   local low, high = 1, #self._entries + 1
   while low < high do
     local mid = math.floor((low + high) / 2)
