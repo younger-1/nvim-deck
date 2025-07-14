@@ -1307,6 +1307,7 @@ Start deck with given sources.
 ---@field public render_batch_size integer
 ---@field public render_interrupt_ms integer
 ---@field public render_delay_ms integer
+---@field public topk_size integer
 ```
 
 ```vimdoc
