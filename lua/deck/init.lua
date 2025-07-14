@@ -150,6 +150,7 @@ local Context = require('deck.Context')
 ---@field public render_batch_size integer
 ---@field public render_interrupt_ms integer
 ---@field public render_delay_ms integer
+---@field public topk_size integer
 
 ---@doc.type
 ---@class deck.StartConfigSpecifier
@@ -238,6 +239,7 @@ local internal = {
         render_batch_size = 2000,
         render_interrupt_ms = 8,
         render_delay_ms = 280,
+        topk_size = 100,
       },
       dedup = true,
       query = '',

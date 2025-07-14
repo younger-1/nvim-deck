@@ -41,7 +41,7 @@ function Buffer.new(name, start_config)
     _start_ms = vim.uv.hrtime() / 1e6,
     _aborted = false,
     _query = '',
-    _topk = TopK.new(20),
+    _topk = TopK.new(start_config.performance.topk_size),
     _topk_revision = 0,
     _topk_rendered_count = 0,
     _topk_rendered_revision = 0,
