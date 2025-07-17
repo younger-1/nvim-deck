@@ -290,15 +290,14 @@ function default.match(input, text)
     return 1
   end
 
-  local total_score = 0
+  local total_score = 1
 
   -- check filters.
   for _, filter in ipairs(filters) do
     local match = true
-    local filter_query = filter.query
     if filter.prefix or filter.suffix then
       if match then
-        local prefix_match, prefix_strict = prefix_icase(filter_query, text)
+        local prefix_match, prefix_strict = prefix_icase(filter.query, text)
         if filter.prefix and not prefix_match then
           match = false
         end
@@ -307,7 +306,7 @@ function default.match(input, text)
         end
       end
       if match then
-        local suffix_match, suffix_strict = suffix_icase(filter_query, text)
+        local suffix_match, suffix_strict = suffix_icase(filter.query, text)
         if filter.suffix and not suffix_match then
           match = false
         end
@@ -316,7 +315,7 @@ function default.match(input, text)
         end
       end
     else
-      match = not not find_icase(filter_query, text)
+      match = find_icase(filter.query, text) ~= nil
     end
     if filter.negate then
       if match then
