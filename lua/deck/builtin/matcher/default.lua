@@ -183,9 +183,10 @@ end
 ---@return integer[]
 local function parse_semantic_indexes(text, char_map)
   local T = #text
+  local is_semantic_index = Character.is_semantic_index
   local semantic_indexes = kit.clear(cache.semantic_indexes)
   for ti = 1, T do
-    if char_map[text:byte(ti)] and Character.is_semantic_index(text, ti) then
+    if char_map[text:byte(ti)] and is_semantic_index(text, ti) then
       semantic_indexes[#semantic_indexes + 1] = ti
     end
   end
