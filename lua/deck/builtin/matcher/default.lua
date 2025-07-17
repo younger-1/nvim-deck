@@ -232,7 +232,7 @@ local function compute(
     end
 
     -- memo
-    local idx = ((qi - 1) * S + si - 1) * 2 + 1
+    local idx = ((qi - 1) * S + si - 1) * 3 + 1
     if score_memo[idx + 0] == run_id then
       return score_memo[idx + 1], score_memo[idx + 2]
     end
