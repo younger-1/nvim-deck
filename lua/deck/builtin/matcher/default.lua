@@ -182,20 +182,15 @@ end
 ---@param char_map table<integer, boolean>
 ---@return integer[]
 local function parse_semantic_indexes(text, char_map)
+  local T = #text
   local semantic_indexes = kit.clear(cache.semantic_indexes)
-  local semantic_index = Character.get_next_semantic_index(text, 0)
-  while semantic_index <= #text do
-    if char_map[text:byte(semantic_index)] then
-      semantic_indexes[#cache.semantic_indexes + 1] = semantic_index
+  for ti = 1, T do
+    if char_map[text:byte(ti)] and Character.is_semantic_index(text, ti) then
+      semantic_indexes[#semantic_indexes + 1] = ti
     end
-    semantic_index = Character.get_next_semantic_index(text, semantic_index)
   end
   return semantic_indexes
 end
-
-_G.run = 0
-_G.cut1 = 0
-_G.cut2 = 0
 
 ---Find best match with dynamic programming.
 ---@param query string
@@ -209,8 +204,6 @@ local function compute(
     semantic_indexes,
     with_ranges
 )
-  _G.run = _G.run + 1
-
   local Q = #query
   local T = #text
   local S = #semantic_indexes
@@ -228,12 +221,10 @@ local function compute(
     return k
   end
 
-  local good_score = 0
   local function dfs(qi, si, part_score, part_chunks)
     -- match
     if qi > Q then
       local score = part_score - part_chunks * chunk_penalty
-      good_score = math.max(good_score, score)
       if with_ranges then
         return score, {}
       end
@@ -247,7 +238,7 @@ local function compute(
     end
 
     -- compute.
-    local best_score = good_score
+    local best_score = 0
     local best_range_s
     local best_range_e
     local best_ranges --[[@as { [1]: integer, [2]: integer }[]?]]
@@ -256,20 +247,17 @@ local function compute(
       local M = longest(qi, ti)
       local mi = 1
       while mi <= M do
-        local possible_score = mi + part_score - (part_chunks + 1) * chunk_penalty
-        if possible_score > good_score then
-          local inner_score, inner_ranges = dfs(
-            qi + mi,
-            si + 1,
-            part_score + mi,
-            part_chunks + 1
-          )
-          if inner_score > best_score then
-            best_score = inner_score
-            best_range_s = ti
-            best_range_e = ti + mi
-            best_ranges = inner_ranges
-          end
+        local inner_score, inner_ranges = dfs(
+          qi + mi,
+          si + 1,
+          part_score + mi,
+          part_chunks + 1
+        )
+        if inner_score > best_score then
+          best_score = inner_score
+          best_range_s = ti
+          best_range_e = ti + mi
+          best_ranges = inner_ranges
         end
         mi = mi + 1
       end
