@@ -5,6 +5,12 @@ local TopK = require('deck.TopK')
 
 local rendering_lines = {}
 
+---Create current time in milliseconds.
+---@return integer
+local function now_ms()
+  return vim.uv.hrtime() / 1e6
+end
+
 ---@class deck.Buffer
 ---@field public on_render fun(callback: fun())
 ---@field private _emit_render fun()
@@ -38,7 +44,7 @@ function Buffer.new(name, start_config)
     _emit_render = render.emit,
     _bufnr = x.create_deck_buf(name),
     _done = false,
-    _start_ms = vim.uv.hrtime() / 1e6,
+    _start_ms = now_ms(),
     _aborted = false,
     _query = '',
     _topk = TopK.new(start_config.performance.topk_size),
@@ -67,7 +73,7 @@ function Buffer:stream_start()
   kit.clear(self._items)
   kit.clear(self._items_filtered)
   self._done = false
-  self._start_ms = vim.uv.hrtime() / 1e6
+  self._start_ms = now_ms()
   self._topk:clear()
   self._topk_revision = 0
   self._topk_rendered_count = 0
@@ -209,7 +215,7 @@ function Buffer:update_query(query)
   self._topk_revision = self._topk_revision + 1
   self._cursor_filtered = 0
   self._cursor_rendered = 0
-  self._start_ms = vim.uv.hrtime() / 1e6
+  self._start_ms = now_ms()
   self:start_filtering()
 end
 
@@ -228,7 +234,7 @@ end
 ---Start filtering.
 function Buffer:start_filtering()
   self._aborted = false
-  self._start_ms = vim.uv.hrtime() / 1e6
+  self._start_ms = now_ms()
   self._timer_filter:start(0, 0, function()
     self:_step_filter()
   end)
@@ -254,8 +260,7 @@ function Buffer:_step_filter()
   if self._query == '' then
     self._cursor_filtered = #self._items
   else
-    local s = vim.uv.hrtime() / 1e6
-    local c = 0
+    local checker = self:_interrupt_checker(config.filter_batch_size, config.filter_bugdet_ms)
     for i = self._cursor_filtered + 1, #self._items do
       local item = self._items[i]
       local score = self._start_config.matcher.match(self._query, item.filter_text or item.display_text)
@@ -271,16 +276,11 @@ function Buffer:_step_filter()
       self._cursor_filtered = i
 
       -- interrupt.
-      c = c + 1
-      if c >= config.filter_batch_size then
-        c = 0
-        local n = vim.uv.hrtime() / 1e6
-        if n - s > config.filter_bugdet_ms then
-          self._timer_filter:start(config.filter_interrupt_ms, 0, function()
-            self:_step_filter()
-          end)
-          return
-        end
+      if checker() then
+        self._timer_filter:start(config.filter_interrupt_ms, 0, function()
+          self:_step_filter()
+        end)
+        return
       end
     end
   end
@@ -299,11 +299,6 @@ function Buffer:_step_render()
     return
   end
 
-  local config = self._start_config.performance
-  local items_filtered_count = self:count_filtered_items()
-  local s = vim.uv.hrtime() / 1e6
-  local c = 0
-
   -- get max win height.
   local max_count = 0
   for _, win in ipairs(vim.api.nvim_list_wins()) do
@@ -313,9 +308,13 @@ function Buffer:_step_render()
   end
   max_count = max_count == 0 and vim.o.lines or max_count
 
+
+  local config = self._start_config.performance
+  local items_filtered_count = self:count_filtered_items()
+
   -- check render condition.
   local should_render = false
-  should_render = should_render or (s - self._start_ms) > config.render_delay_ms
+  should_render = should_render or (now_ms() - self._start_ms) > config.render_delay_ms
   should_render = should_render or (items_filtered_count - self._cursor_rendered) > max_count
   should_render = should_render or (self._done and not self._timer_filter:is_running())
   if not should_render then
@@ -349,7 +348,7 @@ function Buffer:_step_render()
     local diff = new_topk_count - self._topk_rendered_count
     if diff > 0 then
       for _ = 1, diff do
-        table.insert(self._items_rendered, {})
+        table.insert(self._items_rendered, 1, {})
       end
     elseif diff < 0 then
       for _ = 1, -diff do
@@ -365,6 +364,7 @@ function Buffer:_step_render()
   end
 
   -- rendering.
+  local checker = self:_interrupt_checker(config.render_batch_size, config.render_bugdet_ms)
   kit.clear(rendering_lines)
   for item, i in self:iter_filtered_items(self._cursor_rendered + 1) do
     self._cursor_rendered = i
@@ -372,26 +372,19 @@ function Buffer:_step_render()
     rendering_lines[#rendering_lines + 1] = item.display_text
 
     -- interrupt.
-    c = c + 1
-    if c  >= config.render_batch_size then
-      c = 0
+    if checker() then
       vim.api.nvim_buf_set_lines(self._bufnr, self._cursor_rendered - #rendering_lines, -1, false, rendering_lines)
-      kit.clear(rendering_lines)
+      pcall(vim.api.nvim_win_set_cursor, 0, cursor)
+      self._emit_render()
 
-      local n = vim.uv.hrtime() / 1e6
-      if n - s > config.render_bugdet_ms then
-        pcall(vim.api.nvim_win_set_cursor, 0, cursor)
-        self._timer_render:start(config.render_interrupt_ms, 0, function()
-          self:_step_render()
-        end)
-        self._emit_render()
-        return
-      end
+      self._timer_render:start(config.render_interrupt_ms, 0, function()
+        self:_step_render()
+      end)
+      return
     end
   end
   vim.api.nvim_buf_set_lines(self._bufnr, self._cursor_rendered - #rendering_lines, -1, false, rendering_lines)
   pcall(vim.api.nvim_win_set_cursor, 0, cursor)
-
   self._emit_render()
 
   -- continue rendering timer.
@@ -410,6 +403,25 @@ end
 ---@return boolean
 function Buffer:_is_aborted()
   return self._aborted or not vim.api.nvim_buf_is_valid(self._bufnr)
+end
+
+---Create interrupt checker.
+---@param batch_size integer
+---@param budget_ms integer
+---@return fun(): boolean
+function Buffer:_interrupt_checker(batch_size, budget_ms)
+  local start_ms = now_ms()
+  local count = 0
+  return function()
+    count = count + 1
+    if count >= batch_size then
+      count = 0
+      if now_ms() - start_ms > budget_ms then
+        return true
+      end
+    end
+    return false
+  end
 end
 
 return Buffer

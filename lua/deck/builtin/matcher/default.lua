@@ -3,6 +3,7 @@ local Character = require('deck.kit.App.Character')
 
 local Config = {
   strict_bonus = 0.001,
+  capital_penalty = 0.001,
   chunk_penalty = 0.01,
 }
 
@@ -212,6 +213,8 @@ local function compute(
   local run_id = kit.unique_id()
   local score_memo = cache.score_memo
   local match_icase = Character.match_icase
+  local is_upper = Character.is_upper
+  local is_wordlike = Character.is_wordlike
   local chunk_penalty = Config.chunk_penalty
 
   local function longest(qi, ti)
@@ -232,6 +235,11 @@ local function compute(
       return score
     end
 
+    -- no match
+    if si > S then
+      return -1 / 0, nil
+    end
+
     -- memo
     local idx = ((qi - 1) * S + si - 1) * 3 + 1
     if score_memo[idx + 0] == run_id then
@@ -239,12 +247,13 @@ local function compute(
     end
 
     -- compute.
-    local best_score = 0
+    local best_score = -1 / 0
     local best_range_s
     local best_range_e
     local best_ranges --[[@as { [1]: integer, [2]: integer }[]?]]
     while si <= S do
       local ti = semantic_indexes[si]
+
       local M = longest(qi, ti)
       local mi = 1
       while mi <= M do
@@ -255,6 +264,9 @@ local function compute(
           part_chunks + 1
         )
         if inner_score > best_score then
+          if is_upper(text:byte(ti)) and is_wordlike(text:byte(ti - 1)) then
+            inner_score = inner_score - Config.capital_penalty
+          end
           best_score = inner_score
           best_range_s = ti
           best_range_e = ti + mi

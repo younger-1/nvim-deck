@@ -49,6 +49,7 @@ local Context = require('deck.Context')
 ---@field public display_text string|(deck.VirtualText[])
 ---@field public highlights? deck.Highlight[]
 ---@field public filter_text? string
+---@field public score_bonus? integer
 ---@field public dedup_id? string
 ---@field public data? table
 

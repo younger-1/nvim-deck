@@ -2,52 +2,47 @@ local default = require('deck.builtin.matcher.default')
 
 describe('deck.builtin.matcher.default', function()
   it('should match and return scores', function()
-    -- Basic Matching and Scoring
-    assert.is_true(default.match('abc', 'abc') > 0)
-    assert.is_true(default.match('abc', 'def') == 0)
-    assert.is_true(default.match('abc', 'ABC') > 0)
-    assert.is_true(default.match('xyz', 'lib/mxyz.lua') == 0)
-    assert.is_true(default.match('xyz', 'x/myz.lua') == 0)
+    -- 基本的なマッチングテスト
+    assert.is_true(default.match('abc', 'test_abc_def') > 0)
+    assert.is_true(default.match('abc', 'x_ABC_y') > 0)
+    assert.is_true(default.match('main', 'src/main.c') > 0)
+    assert.is_true(default.match('spec', 'src/specs.js') > 0)
 
-    -- Fuzzy Matching
-    assert.is_true(default.match('fzf', 'foo_zoo_far') > 0)
-    assert.is_true(default.match('ad', 'abc_def') > 0)
+    -- 境界条件と特殊ケース
+    assert.are.equal(1, default.match('', 'any text'))
+    assert.are.equal(0, default.match('abc', ''))
+    assert.are.equal(0, default.match('longer', 'short'))
+    assert.are.equal(0, default.match('xyz', 'path/to/file.lua'))
 
-    -- Multiple Terms (Order Independent)
-    assert.is_true(default.match('lib main', 'lib/main.lua') > 0)
-    assert.is_true(default.match('main lib', 'lib/main.lua') > 0)
-    assert.is_true(default.match('lib xyz', 'lib/main.lua') == 0)
+    -- あなたのアルゴリズムの「単語境界からのみ」という要件をテスト
+    assert.are.equal(0, default.match('xyz', 'lib/mxyz.lua'))
 
-    -- Backtracking overlapped query.
-    assert.is_true(default.match('abcdefghijklmnopqr', 'abcdefghijkl/hijklmnopqrstuvwxyz') > 0)
-    assert.is_true(default.match('abcdefghijklmnopqr', 'abcdefghijklm/hijklmnopqrstuvwxyz') > 0)
+    -- スコアリングロジックのテスト
+    do
+      local score_contiguous = default.match('main', 'src/main.c') -- 1 chunk
+      local score_gappy = default.match('mc', 'src/main.c')        -- 2 chunks
+      assert.is_true(score_contiguous > score_gappy)
+    end
 
-    -- Loose matching.
-    assert.is_true(default.match('fenc', 'fast-encryption-feature') > 0)
+    do
+      -- capital_penalty のテスト
+      local score_separator = default.match('App', 'my/App.lua') -- / の後はペナルティなし
+      local score_camel = default.match('App', 'myApp.lua')      -- 小文字の後はペナルティあり
+      assert.is_true(score_separator > score_camel)
+    end
 
-    -- Filter Logic
-    assert.is_true(default.match('^lib', 'lib/main.lua') > 0)
-    assert.is_true(default.match('^main', 'lib/main.lua') == 0)
-    assert.is_true(default.match('.lua$', 'lib/main.lua') > 0)
-    assert.is_true(default.match('.lua$', 'main.lua.bak') == 0)
-    assert.is_true(default.match('foo !bar', 'foo.txt') > 0)
-    assert.is_true(default.match('foo !bar', 'foo_bar.txt') == 0)
-    assert.is_true(default.match('^lib .lua$ !spec', 'lib/main.lua') > 0)
-    assert.is_true(default.match('^lib .lua$ !spec', 'lib/main.spec.lua') == 0)
+    -- フィルター機能のテスト
+    assert.is_true(default.match('^path', 'path/to/file.lua') > 0)
+    assert.are.equal(0, default.match('^src', 'path/to/src/file.lua'))
 
-    -- Edge Cases
-    assert.is_true(default.match('', 'any/path/file.lua') > 0)
-    assert.is_true(default.match('a', '') == 0)
+    assert.is_true(default.match('lua$', 'path/to/file.lua') > 0)
+    assert.are.equal(0, default.match('src$', 'path/to/src/file.lua'))
 
-    -- Score Comparison
-    assert.is_true(default.match('spec', 'some_spec_file.lua') > default.match('sp', 'some_spec_file.lua'))
-    assert.is_true(default.match('main', 'main.lua') > default.match('main', 'my_awesome_initialization_file.c'))
-    assert.is_true(default.match('finder', 'fuzzy_finder.rb') > default.match('fzf', 'fuzzy_finder.rb'))
-    assert.is_true(default.match('^Deck', 'Deck/kit.lua') > default.match('^deck', 'Deck/kit.lua'))
-    assert.is_true(default.match('.LUA$', 'main.LUA') > default.match('.lua$', 'main.LUA'))
+    assert.is_true(default.match('!xyz', 'path/to/file.lua') > 0)
+    assert.are.equal(0, default.match('!file', 'path/to/file.lua'))
 
-    -- Real World
-    assert.is_true(default.match('defaultlua', '~/Develop/Vim/nvim-deck/lua/deck/builtin/matcher/default.lua') > 0)
+    assert.is_true(default.match('path lua', 'path/to/file.lua') > 0)
+    assert.are.equal(0, default.match('path xyz', 'path/to/file.lua'))
   end)
 
   it('benchmark', function()

@@ -35,7 +35,8 @@ return function(sources)
     name = name,
     execute = function(ctx)
       Async.run(function()
-        for _, source in ipairs(sources) do
+        local total = #sources
+        for i, source in ipairs(sources) do
           -- execute source.
           Async.new(function(resolve)
             source.execute({
@@ -56,6 +57,7 @@ return function(sources)
               end,
               item = function(item)
                 item[symbols.source] = source
+                item.score_bonus = (item.score_bonus or 0) + 1 - (i / total)
                 ctx.item(item)
               end,
               done = function()
