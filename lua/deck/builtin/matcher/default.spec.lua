@@ -2,36 +2,31 @@ local default = require('deck.builtin.matcher.default')
 
 describe('deck.builtin.matcher.default', function()
   it('should match and return scores', function()
-    -- 基本的なマッチングテスト
     assert.is_true(default.match('abc', 'test_abc_def') > 0)
     assert.is_true(default.match('abc', 'x_ABC_y') > 0)
     assert.is_true(default.match('main', 'src/main.c') > 0)
     assert.is_true(default.match('spec', 'src/specs.js') > 0)
 
-    -- 境界条件と特殊ケース
     assert.are.equal(1, default.match('', 'any text'))
     assert.are.equal(0, default.match('abc', ''))
     assert.are.equal(0, default.match('longer', 'short'))
     assert.are.equal(0, default.match('xyz', 'path/to/file.lua'))
-
-    -- あなたのアルゴリズムの「単語境界からのみ」という要件をテスト
     assert.are.equal(0, default.match('xyz', 'lib/mxyz.lua'))
 
-    -- スコアリングロジックのテスト
+    assert.is_truthy(default.match('ab', 'a_b_c') > default.match('ac', 'a_b_c'))
+
     do
-      local score_contiguous = default.match('main', 'src/main.c') -- 1 chunk
-      local score_gappy = default.match('mc', 'src/main.c')        -- 2 chunks
+      local score_contiguous = default.match('main', 'src/main.c')
+      local score_gappy = default.match('mc', 'src/main.c')
       assert.is_true(score_contiguous > score_gappy)
     end
 
     do
-      -- capital_penalty のテスト
-      local score_separator = default.match('App', 'my/App.lua') -- / の後はペナルティなし
-      local score_camel = default.match('App', 'myApp.lua')      -- 小文字の後はペナルティあり
+      local score_separator = default.match('App', 'my/App.lua')
+      local score_camel = default.match('App', 'myApp.lua')
       assert.is_true(score_separator > score_camel)
     end
 
-    -- フィルター機能のテスト
     assert.is_true(default.match('^path', 'path/to/file.lua') > 0)
     assert.are.equal(0, default.match('^src', 'path/to/src/file.lua'))
 

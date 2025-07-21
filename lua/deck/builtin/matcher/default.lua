@@ -2,9 +2,9 @@ local kit = require('deck.kit')
 local Character = require('deck.kit.App.Character')
 
 local Config = {
-  strict_bonus = 0.001,
-  capital_penalty = 0.001,
-  chunk_penalty = 0.01,
+  strict_bonus   = 0.001,
+  score_adjuster = 0.001,
+  chunk_penalty  = 0.01,
 }
 
 local cache = {
@@ -19,13 +19,13 @@ local chars = {
 
 ---Parse a query string into parts.
 ---@type table|(fun(query: string): { query: string, char_map: table<integer, boolean> }[], { negate?: true, prefix?: true, suffix?: true, query: string }[])
-local parse_query = setmetatable({}, {
+local parse_query = setmetatable({
   cache_query = {},
   cache_parsed = {
     fuzzies = {},
     filters = {},
   },
-
+}, {
   __call = function(self, query)
     if self.cache_query == query then
       return self.cache_parsed.fuzzies, self.cache_parsed.filters
@@ -215,6 +215,7 @@ local function compute(
   local match_icase = Character.match_icase
   local is_upper = Character.is_upper
   local is_wordlike = Character.is_wordlike
+  local score_adjuster = Config.score_adjuster
   local chunk_penalty = Config.chunk_penalty
 
   local function longest(qi, ti)
@@ -225,7 +226,7 @@ local function compute(
     return k
   end
 
-  local function dfs(qi, si, part_score, part_chunks)
+  local function dfs(qi, si, prev_ti, part_score, part_chunks)
     -- match
     if qi > Q then
       local score = part_score - part_chunks * chunk_penalty
@@ -260,13 +261,15 @@ local function compute(
         local inner_score, inner_ranges = dfs(
           qi + mi,
           si + 1,
+          ti + mi - 1,
           part_score + mi,
           part_chunks + 1
         )
         if inner_score > best_score then
           if is_upper(text:byte(ti)) and is_wordlike(text:byte(ti - 1)) then
-            inner_score = inner_score - Config.capital_penalty
+            inner_score = inner_score - score_adjuster
           end
+          inner_score = inner_score - (score_adjuster * math.max(0, (ti - prev_ti)))
           best_score = inner_score
           best_range_s = ti
           best_range_e = ti + mi
@@ -287,7 +290,7 @@ local function compute(
 
     return best_score, best_ranges
   end
-  return dfs(1, 1, 0, -1)
+  return dfs(1, 1, math.huge, 0, -1)
 end
 
 local default = {}
