@@ -308,7 +308,6 @@ function Buffer:_step_render()
   end
   max_count = max_count == 0 and vim.o.lines or max_count
 
-
   local config = self._start_config.performance
   local items_filtered_count = self:count_filtered_items()
 
@@ -329,6 +328,7 @@ function Buffer:_step_render()
     table.remove(self._items_rendered, i)
   end
 
+  -- store cursor position.
   local cursor
   if vim.api.nvim_win_get_buf(0) == self._bufnr then
     cursor = vim.api.nvim_win_get_cursor(0)
