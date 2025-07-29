@@ -13,10 +13,7 @@ end
 
 ---@return deck.View
 return function()
-  local spinner = {
-    idx = 1,
-    frame = { '.', '..', '...', '....' },
-  }
+  local spinner = require('deck.x.spinner').create()
 
   local state = {
     win = nil, --[[@type integer?]]
@@ -63,16 +60,17 @@ return function()
 
       -- update statusline.
       table.insert(state.disposes, ctx.on_redraw_tick(function()
-        spinner.idx = spinner.idx + 1
         local is_running = (ctx.get_status() ~= Context.Status.Success or ctx.is_filtering())
         vim.api.nvim_set_option_value('statusline', ('[%s] %s/%s%s'):format(
-          ctx.name,
-          ctx.count_filtered_items(),
-          ctx.count_items(),
-          is_running and (' %s'):format(spinner.frame[spinner.idx % #spinner.frame + 1]) or ''
-        ), {
-          win = state.win,
-        })
+            ctx.name,
+            ctx.count_filtered_items(),
+            ctx.count_items(),
+            is_running and (' %s'):format(spinner.get()) or ''
+          ),
+          {
+            win = state.win,
+          }
+        )
       end))
     end,
 
