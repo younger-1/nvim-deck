@@ -46,10 +46,12 @@ return function(option)
         preview = function(_, item)
           for _, win in ipairs(vim.api.nvim_list_wins()) do
             if vim.api.nvim_win_get_buf(win) == item.data.bufnr then
-              local cursor = vim.api.nvim_win_get_cursor(win)
+              local prev_cursor = vim.api.nvim_win_get_cursor(win)
               vim.api.nvim_win_set_cursor(win, { item.data.lnum, 0 })
               return function()
-                vim.api.nvim_win_set_cursor(win, cursor)
+                if prev_cursor[1] == item.data.lnum then
+                  vim.api.nvim_win_set_cursor(win, prev_cursor)
+                end
               end
             end
           end
