@@ -2,9 +2,10 @@ local kit = require('deck.kit')
 local Character = require('deck.kit.App.Character')
 
 local Config = {
-  strict_bonus   = 0.001,
+  strict_bonus = 0.001,
   score_adjuster = 0.001,
-  chunk_penalty  = 0.01,
+  chunk_penalty = 0.01,
+  max_semantic_indexes = 200,
 }
 
 local cache = {
@@ -65,21 +66,33 @@ local parse_query = setmetatable({
       local negate = false
       local prefix = false
       local suffix = false
-      if q:sub(1, 1) == '!' then
-        negate = true
+      local equals = false
+      if q:sub(1, 1) == '=' then
+        equals = true
         q = q:sub(2)
-      end
-      if q:sub(1, 1) == '^' then
-        prefix = true
-        q = q:sub(2)
-      end
-      if q:sub(-1) == '$' then
-        suffix = true
-        q = q:sub(1, -2)
+      else
+        if q:sub(1, 1) == '!' then
+          negate = true
+          q = q:sub(2)
+        end
+        if q:sub(1, 1) == '^' then
+          prefix = true
+          q = q:sub(2)
+        end
+        if q:sub(-1) == '$' then
+          suffix = true
+          q = q:sub(1, -2)
+        end
       end
       if q ~= '' then
-        if negate or prefix or suffix then
-          filters[#filters + 1] = { negate = negate, prefix = prefix, suffix = suffix, query = q }
+        if negate or prefix or suffix or equals then
+          filters[#filters + 1] = {
+            negate = negate,
+            prefix = prefix,
+            suffix = suffix,
+            equals = equals,
+            query = q
+          }
         else
           local char_map = {}
           for i = 1, #q do
@@ -183,10 +196,11 @@ end
 ---@param char_map table<integer, boolean>
 ---@return integer[]
 local function parse_semantic_indexes(text, char_map)
-  local T = #text
   local is_semantic_index = Character.is_semantic_index
+
+  local M = math.min(#text, Config.max_semantic_indexes)
   local semantic_indexes = kit.clear(cache.semantic_indexes)
-  for ti = 1, T do
+  for ti = 1, M do
     if char_map[text:byte(ti)] and is_semantic_index(text, ti) then
       semantic_indexes[#semantic_indexes + 1] = ti
     end
@@ -218,9 +232,14 @@ local function compute(
   local score_adjuster = Config.score_adjuster
   local chunk_penalty = Config.chunk_penalty
 
-  local function longest(qi, ti)
+  local function match(qi, ti)
     local k = 0
-    while qi + k <= Q and ti + k <= T and match_icase(query:byte(qi + k), text:byte(ti + k)) do
+    while qi + k <= Q and ti + k <= T do
+      local q_char = query:byte(qi + k)
+      local t_char = text:byte(ti + k)
+      if not match_icase(q_char, t_char) then
+        break
+      end
       k = k + 1
     end
     return k
@@ -255,7 +274,7 @@ local function compute(
     while si <= S do
       local ti = semantic_indexes[si]
 
-      local M = longest(qi, ti)
+      local M = match(qi, ti)
       local mi = 1
       while mi <= M do
         local inner_score, inner_ranges = dfs(
@@ -375,6 +394,11 @@ function default.decor(input, text)
       end
       if filter.suffix and suffix_icase(filter.query, text) then
         matches[#matches + 1] = { #text - #filter.query, #text - 1 }
+      end
+    elseif not filter.negate then
+      local s, e = find_icase(filter.query, text)
+      if s and e then
+        matches[#matches + 1] = { s - 1, e }
       end
     end
   end
