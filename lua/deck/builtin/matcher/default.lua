@@ -4,7 +4,6 @@ local Character = require('deck.kit.App.Character')
 local Config = {
   strict_bonus = 0.001,
   score_adjuster = 0.001,
-  chunk_penalty = 0.01,
   max_semantic_indexes = 200,
 }
 
@@ -12,6 +11,128 @@ local cache = {
   score_memo = {},
   semantic_indexes = {},
 }
+
+---Get semantic indexes for the text.
+---@param text string
+---@param char_map table<integer, boolean>
+---@return integer[]
+local function parse_semantic_indexes(text, char_map)
+  local is_semantic_index = Character.is_semantic_index
+
+  local M = math.min(#text, Config.max_semantic_indexes)
+  local semantic_indexes = kit.clear(cache.semantic_indexes)
+  for ti = 1, M do
+    if char_map[text:byte(ti)] and is_semantic_index(text, ti) then
+      semantic_indexes[#semantic_indexes + 1] = ti
+    end
+  end
+  return semantic_indexes
+end
+
+---Find best match with dynamic programming.
+---@param query string
+---@param text string
+---@param semantic_indexes integer[]
+---@param with_ranges boolean
+---@return integer, { [1]: integer, [2]: integer }[]?
+local function compute(
+    query,
+    text,
+    semantic_indexes,
+    with_ranges
+)
+  local Q = #query
+  local T = #text
+  local S = #semantic_indexes
+
+  local run_id = kit.unique_id()
+  local score_memo = cache.score_memo
+  local match_icase = Character.match_icase
+  local is_upper = Character.is_upper
+  local is_wordlike = Character.is_wordlike
+  local score_adjuster = Config.score_adjuster
+
+  local function dfs(qi, si, prev_ti, part_score, part_chunks)
+    -- match
+    if qi > Q then
+      local score = part_score - part_chunks * score_adjuster
+      if with_ranges then
+        return score, {}
+      end
+      return score
+    end
+
+    -- no match
+    if si > S then
+      return -1 / 0, nil
+    end
+
+    -- memo
+    local idx = ((qi - 1) * S + si - 1) * 3 + 1
+    if score_memo[idx + 0] == run_id then
+      return score_memo[idx + 1], score_memo[idx + 2]
+    end
+
+    -- compute.
+    local best_score = -1 / 0
+    local best_range_s
+    local best_range_e
+    local best_ranges --[[@as { [1]: integer, [2]: integer }[]?]]
+    while si <= S do
+      local ti = semantic_indexes[si]
+
+      local mi = 0
+      while ti + mi <= T and qi + mi <= Q do
+        local t_char = text:byte(ti + mi)
+        local q_char = query:byte(qi + mi)
+        if not match_icase(t_char, q_char) then
+          break
+        end
+        mi = mi + 1
+
+        local inner_score, inner_ranges = dfs(
+          qi + mi,
+          si + 1,
+          ti + mi,
+          part_score + mi + ((t_char == q_char) and score_adjuster or 0),
+          part_chunks + 1
+        )
+
+        -- custom
+        do
+          -- capital boundaries are treated weakly
+          if is_upper(text:byte(ti)) and is_wordlike(text:byte(ti - 1)) then
+            inner_score = inner_score - score_adjuster
+          end
+
+          -- whole penalty
+          if ti - prev_ti > 0 then
+            inner_score = inner_score - (score_adjuster * math.max(0, (ti - prev_ti)))
+          end
+        end
+
+        if inner_score > best_score then
+          best_score = inner_score
+          best_range_s = ti
+          best_range_e = ti + mi
+          best_ranges = inner_ranges
+        end
+      end
+      si = si + 1
+    end
+
+    if best_ranges then
+      best_ranges[#best_ranges + 1] = { best_range_s, best_range_e }
+    end
+
+    score_memo[idx + 0] = run_id
+    score_memo[idx + 1] = best_score
+    score_memo[idx + 2] = best_ranges
+
+    return best_score, best_ranges
+  end
+  return dfs(1, 1, math.huge, 0, -1)
+end
 
 local chars = {
   [' '] = string.byte(' '),
@@ -191,126 +312,6 @@ local function find_icase(query, text)
   return nil
 end
 
----Get semantic indexes for the text.
----@param text string
----@param char_map table<integer, boolean>
----@return integer[]
-local function parse_semantic_indexes(text, char_map)
-  local is_semantic_index = Character.is_semantic_index
-
-  local M = math.min(#text, Config.max_semantic_indexes)
-  local semantic_indexes = kit.clear(cache.semantic_indexes)
-  for ti = 1, M do
-    if char_map[text:byte(ti)] and is_semantic_index(text, ti) then
-      semantic_indexes[#semantic_indexes + 1] = ti
-    end
-  end
-  return semantic_indexes
-end
-
----Find best match with dynamic programming.
----@param query string
----@param text string
----@param semantic_indexes integer[]
----@param with_ranges boolean
----@return integer, { [1]: integer, [2]: integer }[]?
-local function compute(
-    query,
-    text,
-    semantic_indexes,
-    with_ranges
-)
-  local Q = #query
-  local T = #text
-  local S = #semantic_indexes
-
-  local run_id = kit.unique_id()
-  local score_memo = cache.score_memo
-  local match_icase = Character.match_icase
-  local is_upper = Character.is_upper
-  local is_wordlike = Character.is_wordlike
-  local score_adjuster = Config.score_adjuster
-  local chunk_penalty = Config.chunk_penalty
-
-  local function match(qi, ti)
-    local k = 0
-    while qi + k <= Q and ti + k <= T do
-      local q_char = query:byte(qi + k)
-      local t_char = text:byte(ti + k)
-      if not match_icase(q_char, t_char) then
-        break
-      end
-      k = k + 1
-    end
-    return k
-  end
-
-  local function dfs(qi, si, prev_ti, part_score, part_chunks)
-    -- match
-    if qi > Q then
-      local score = part_score - part_chunks * chunk_penalty
-      if with_ranges then
-        return score, {}
-      end
-      return score
-    end
-
-    -- no match
-    if si > S then
-      return -1 / 0, nil
-    end
-
-    -- memo
-    local idx = ((qi - 1) * S + si - 1) * 3 + 1
-    if score_memo[idx + 0] == run_id then
-      return score_memo[idx + 1], score_memo[idx + 2]
-    end
-
-    -- compute.
-    local best_score = -1 / 0
-    local best_range_s
-    local best_range_e
-    local best_ranges --[[@as { [1]: integer, [2]: integer }[]?]]
-    while si <= S do
-      local ti = semantic_indexes[si]
-
-      local M = match(qi, ti)
-      local mi = 1
-      while mi <= M do
-        local inner_score, inner_ranges = dfs(
-          qi + mi,
-          si + 1,
-          ti + mi - 1,
-          part_score + mi,
-          part_chunks + 1
-        )
-        if inner_score > best_score then
-          if is_upper(text:byte(ti)) and is_wordlike(text:byte(ti - 1)) then
-            inner_score = inner_score - score_adjuster
-          end
-          inner_score = inner_score - (score_adjuster * math.max(0, (ti - prev_ti)))
-          best_score = inner_score
-          best_range_s = ti
-          best_range_e = ti + mi
-          best_ranges = inner_ranges
-        end
-        mi = mi + 1
-      end
-      si = si + 1
-    end
-
-    if best_ranges then
-      best_ranges[#best_ranges + 1] = { best_range_s, best_range_e }
-    end
-
-    score_memo[idx + 0] = run_id
-    score_memo[idx + 1] = best_score
-    score_memo[idx + 2] = best_ranges
-
-    return best_score, best_ranges
-  end
-  return dfs(1, 1, math.huge, 0, -1)
-end
 
 local default = {}
 
