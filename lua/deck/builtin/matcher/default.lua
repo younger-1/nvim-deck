@@ -82,6 +82,7 @@ local function compute(
       local ti = semantic_indexes[si]
 
       local mi = 0
+      local strict_bonus = 0
       while ti + mi <= T and qi + mi <= Q do
         local t_char = text:byte(ti + mi)
         local q_char = query:byte(qi + mi)
@@ -89,12 +90,13 @@ local function compute(
           break
         end
         mi = mi + 1
+        strict_bonus = strict_bonus + (t_char == q_char and score_adjuster * 0.1 or 0)
 
         local inner_score, inner_ranges = dfs(
           qi + mi,
           si + 1,
           ti + mi,
-          part_score + mi + ((t_char == q_char) and score_adjuster or 0),
+          part_score + mi + strict_bonus,
           part_chunks + 1
         )
 
