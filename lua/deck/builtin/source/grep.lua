@@ -59,6 +59,7 @@ return function(option)
 
       local command = {
         'rg',
+        '--hidden',
         '--column',
         '--line-number',
         '--ignore-case',

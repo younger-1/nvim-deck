@@ -111,6 +111,15 @@ do
   action.open_vsplit = create_open_action('open_vsplit', { split = 'vertical' })
   --[=[@doc
     category = "action"
+    name = "open_tabnew"
+    desc = """
+      Open `item.data.filename` or `item.data.bufnr`.\n
+      Open at the new tabpage.
+    """
+  ]=]
+  action.open_tabnew = create_open_action('open_tabnew', { split = 'tab' })
+  --[=[@doc
+    category = "action"
     name = "open_keep"
     desc = """
       Open `item.data.filename` or `item.data.bufnr`.\n
@@ -140,13 +149,14 @@ do
   action.open_vsplit_keep = create_open_action('open_vsplit_keep', { split = 'vertical', keep = true })
   --[=[@doc
     category = "action"
-    name = "open_tabnew"
+    name = "open_tabnew_keep"
     desc = """
       Open `item.data.filename` or `item.data.bufnr`.\n
       Open at the new tabpage.
+      But keep the deck window and cursor.
     """
   ]=]
-  action.open_tabnew = create_open_action('open_tabnew', { split = 'tab' })
+  action.open_tabnew_keep = create_open_action('open_tabnew_keep', { split = 'tab', keep = true })
 end
 
 --[=[@doc
