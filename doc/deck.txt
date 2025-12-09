@@ -1,4 +1,4 @@
-*deck.txt*            For NVIM v0.10.0           Last change: 2025 November 04
+*deck.txt*            For NVIM v0.10.0           Last change: 2025 December 09
 
 ==============================================================================
 Table of Contents                                     *deck-table-of-contents*
@@ -801,6 +801,9 @@ ACTIONS                                                *deck-built-in-actions*
 - `open_tabnew`
     - Open `item.data.filename` or `item.data.bufnr`.
         Open at the new tabpage.
+- `open_tabnew_keep`
+    - Open `item.data.filename` or `item.data.bufnr`.
+        Open at the new tabpage. But keep the deck window and cursor.
 - `open_vsplit`
     - Open `item.data.filename` or `item.data.bufnr`.
         Open at the recently normal window with vsplit.

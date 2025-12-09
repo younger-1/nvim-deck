@@ -769,6 +769,11 @@ deck.start(require('deck.builtin.source.recent_files')({
 
     Open at the new tabpage.
 
+- `open_tabnew_keep`
+  - Open `item.data.filename` or `item.data.bufnr`.
+
+    Open at the new tabpage. But keep the deck window and cursor.
+
 - `open_vsplit`
   - Open `item.data.filename` or `item.data.bufnr`.
 
