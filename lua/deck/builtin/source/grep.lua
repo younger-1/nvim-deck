@@ -63,6 +63,8 @@ return function(option)
         '--column',
         '--line-number',
         '--ignore-case',
+        '--field-match-separator',
+        '\t'
       }
       if option.ignore_globs then
         for _, glob in ipairs(option.ignore_globs) do
@@ -82,10 +84,10 @@ return function(option)
           ignore_empty = true,
         }),
         on_stdout = function(text)
-          local filename = text:match('^[^:]+')
-          local lnum = tonumber(text:match(':(%d+):'))
-          local col = tonumber(text:match(':%d+:(%d+):'))
-          local match = text:match(':%d+:%d+:(.*)$')
+          local filename = text:match('^[^\t]+')
+          local lnum = tonumber(text:match('\t(%d+)\t'))
+          local col = tonumber(text:match('\t%d+\t(%d+)\t'))
+          local match = text:match('\t%d+\t%d+\t(.*)$')
           if filename and match then
             ctx.item({
               display_text = {
