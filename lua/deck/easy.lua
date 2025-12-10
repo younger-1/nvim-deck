@@ -178,7 +178,9 @@ function easy.setup(config)
 
     -- Register `deck.notify` start preset.
     deck.register_start_preset('deck.notify', function()
-      deck.start(require('deck.builtin.source.deck.notify')())
+      deck.start(require('deck.builtin.source.deck.notify')(), {
+        dedup = false,
+      })
     end)
 
     -- Register `deck.history` start preset.

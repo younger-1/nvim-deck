@@ -315,7 +315,7 @@ action.yank = {
     end
     vim.fn.setreg(vim.v.register, table.concat(contents, '\n'), 'V')
 
-    notify.show({
+    notify.add_message('default', {
       { { ('Yanked %d items.'):format(#contents), 'Normal' } },
     })
   end,
@@ -494,7 +494,7 @@ action.substitute = {
         })
         filename_buf[item.data.filename] = vim.api.nvim_get_current_buf()
         if vim.api.nvim_get_option_value('modified', { buf = 0 }) then
-          notify.show({
+          notify.add_message('default', {
             { { ('Skip. File "%s" is modified.'):format(item.data.filename), 'ErrorMsg' } },
           })
         end
@@ -546,7 +546,7 @@ action.substitute = {
         callback = function()
           local line_count = vim.api.nvim_buf_line_count(buf)
           if line_count ~= #substitute_targets then
-            notify.show({
+            notify.add_message('default', {
               {
                 {
                   ('Line count was changed: %d -> %d'):format(line_count, #substitute_targets),

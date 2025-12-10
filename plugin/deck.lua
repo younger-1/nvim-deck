@@ -1,4 +1,5 @@
 local deck = require('deck')
+local notify = require('deck.notify')
 local Command = require('deck.kit.App.Command')
 
 -- The `Deck` command.
@@ -12,7 +13,7 @@ do
             preset.start(arguments)
           end)
           if not ok then
-            require('deck.notify').show({
+            notify.add_message('default', {
               { { msg, 'ErrorMsg' } }
             })
           end

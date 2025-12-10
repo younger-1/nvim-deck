@@ -1,4 +1,3 @@
-local notify = require('deck.notify')
 local IO = require('deck.kit.IO')
 local System = require('deck.kit.System')
 

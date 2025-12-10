@@ -13,10 +13,24 @@ return function()
   return {
     name = 'deck.notify',
     execute = function(ctx)
-      for _, item in ipairs(notify.get_history()) do
-        for _, line in ipairs(item.message) do
+      local entries = notify.get_history()
+      local current_lane = entries[1] and entries[1].lane
+      for _, item in ipairs(entries) do
+        -- add separator.
+        if item.lane ~= current_lane then
           ctx.item({
-            display_text = line,
+            display_text = '',
+          })
+          current_lane = item.lane
+        end
+
+        if item.type == 'lane' then
+          ctx.item({
+            display_text = { { '[Lane]', 'Title' }, { ' ' }, { item.lane.name } },
+          })
+        elseif item.type == 'item' then
+          ctx.item({
+            display_text = item.line,
           })
         end
       end

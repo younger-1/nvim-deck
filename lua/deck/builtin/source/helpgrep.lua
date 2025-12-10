@@ -91,7 +91,7 @@ return function()
             })
           end,
           on_stderr = function(text)
-            notify.show({
+            notify.add('default', {
               { { ('[helpgrep: stderr] %s'):format(text), 'ErrorMsg' } },
             })
           end,

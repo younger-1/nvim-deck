@@ -465,7 +465,7 @@ function Git:vimdiff(params)
     local exists = vim.fn.filereadable(params.filename) == 1
     if not exists then
       if not params.from_rev then
-        notify.show({
+        notify.add_message('default', {
           { { 'filename must be filereadable when omitting from_rev', 'ErrorMsg' } },
         })
         return
@@ -554,7 +554,7 @@ function Git:commit(params, callbacks)
         if params.amend then
           local log = self:log({ count = 1 }):await()[1] ---@type deck.x.Git.Log
           if not log then
-            notify.show({
+            notify.add_message('default', {
               { { 'Not found commit log', 'ErrorMsg' } },
             })
             return
@@ -628,7 +628,7 @@ function Git:commit(params, callbacks)
               IO.rm(vim.fs.joinpath(self.cwd, '.git', 'DECK_COMMIT_EDITMSG'), { recursive = false }):await()
               callbacks.commit()
             else
-              notify.show({
+              notify.add_message('default', {
                 { { 'Canceled', 'ModeMsg' } },
               })
             end
@@ -664,7 +664,7 @@ function Git:push(params)
     else
       local remotes = self:remote():await() --[=[@as deck.x.Git.Remote[]]=]
       if #remotes == 0 then
-        notify.show({
+        notify.add_message('default', {
           { { 'No remote found', 'ErrorMsg' } },
         })
         return
@@ -714,29 +714,26 @@ end
 ---@return deck.kit.Async.AsyncTask
 function Git:exec_print(command, option)
   return Async.run(function()
-    notify.show({
-      {
-        {
-          ('$ %s'):format(table.concat(
-            vim
-            .iter(command)
-            :filter(function(c)
-              return c
-            end)
-            :map(function(c)
-              c = tostring(c):gsub('\n', '\\n')
-              if c ~= vim.fn.escape(c, ' "') then
-                return ('"%s"'):format(vim.fn.escape(c, '"'))
-              else
-                return c
-              end
-            end)
-            :totable(),
-            ' '
-          )),
-          'ModeMsg',
-        },
-      },
+    local command_str = ('$ %s'):format(table.concat(
+      vim
+      .iter(command)
+      :filter(function(c)
+        return c
+      end)
+      :map(function(c)
+        c = tostring(c):gsub('\n', '\\n')
+        if c ~= vim.fn.escape(c, ' "') then
+          return ('"%s"'):format(vim.fn.escape(c, '"'))
+        else
+          return c
+        end
+      end)
+      :totable(),
+      ' '
+    ))
+    local lane_id = notify.create_lane_name(command_str)
+    notify.add_message(lane_id, {
+      { { command_str, 'ModeMsg', } },
     })
     Async.new(function(resolve)
       local close --@type fun():void
@@ -744,28 +741,29 @@ function Git:exec_print(command, option)
         cwd = self.cwd,
         env = kit.merge(option and option.env or {}, {
           DISPLAY = ':0',
-          SSH_ASKPASS = vim.fs.joinpath(get_plugin_root_dir(), 'bin', 'askpass.sh' ),
-          GIT_ASKPASS = vim.fs.joinpath(get_plugin_root_dir(), 'bin', 'askpass.sh' ),
-          GIT_SSH_ASKPASS = vim.fs.joinpath(get_plugin_root_dir(), 'bin', 'askpass.sh' ),
+          SSH_ASKPASS = vim.fs.joinpath(get_plugin_root_dir(), 'bin', 'askpass.sh'),
+          GIT_ASKPASS = vim.fs.joinpath(get_plugin_root_dir(), 'bin', 'askpass.sh'),
+          GIT_SSH_ASKPASS = vim.fs.joinpath(get_plugin_root_dir(), 'bin', 'askpass.sh'),
         }),
         buffering = option and option.buffering or System.LineBuffering.new({
           ignore_empty = false,
         }),
         on_stdout = kit.fast_schedule_wrap(function(text)
           if text ~= '' then
-            notify.show({
+            notify.add_message(lane_id, {
               { { text, 'Normal' } },
             })
           end
         end),
         on_stderr = kit.fast_schedule_wrap(function(text)
           if text ~= '' then
-            notify.show({
+            notify.add_message(lane_id, {
               { { text, 'WarningMsg' } },
             })
           end
         end),
         on_exit = kit.fast_schedule_wrap(function()
+          notify.done(lane_id)
           close()
           resolve()
         end),
@@ -787,9 +785,9 @@ function Git:exec(command, option)
       cwd = self.cwd,
       env = kit.merge(option and option.env or {}, {
         DISPLAY = ':0',
-        SSH_ASKPASS = vim.fs.joinpath(get_plugin_root_dir(), 'bin', 'askpass.sh' ),
-        GIT_ASKPASS = vim.fs.joinpath(get_plugin_root_dir(), 'bin', 'askpass.sh' ),
-        GIT_SSH_ASKPASS = vim.fs.joinpath(get_plugin_root_dir(), 'bin', 'askpass.sh' ),
+        SSH_ASKPASS = vim.fs.joinpath(get_plugin_root_dir(), 'bin', 'askpass.sh'),
+        GIT_ASKPASS = vim.fs.joinpath(get_plugin_root_dir(), 'bin', 'askpass.sh'),
+        GIT_SSH_ASKPASS = vim.fs.joinpath(get_plugin_root_dir(), 'bin', 'askpass.sh'),
       }),
       buffering = option and option.buffering or System.LineBuffering.new({
         ignore_empty = false,

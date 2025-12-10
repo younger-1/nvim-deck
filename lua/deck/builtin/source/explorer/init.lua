@@ -615,7 +615,7 @@ return function(option)
               path = IO.join(parent_item.path, path)
 
               if vim.fn.isdirectory(path) == 1 or vim.fn.filereadable(path) == 1 then
-                return require('deck.notify').show({ { 'Already exists: ' .. path } })
+                return notify.add_message('default', { { 'Already exists: ' .. path } })
               end
 
               if path:sub(-1, -1) == '/' then
@@ -691,7 +691,7 @@ return function(option)
                 path = IO.join(parent_item.path, path)
 
                 if vim.fn.isdirectory(path) == 1 or vim.fn.filereadable(path) == 1 then
-                  return require('deck.notify').show({ { 'Already exists: ' .. path } })
+                  return notify.add_message('default', { { 'Already exists: ' .. path } })
                 end
 
                 operation
@@ -737,7 +737,7 @@ return function(option)
             table.insert(paths, item.data.filename)
           end
           Clipboard.instance:set({ type = 'copy', paths = paths })
-          notify.show(kit.concat(
+          notify.add_message('default', kit.concat(
             {
               { 'Save clipboard to copy:' },
             },
@@ -768,7 +768,7 @@ return function(option)
             table.insert(paths, item.data.filename)
           end
           Clipboard.instance:set({ type = 'move', paths = paths })
-          notify.show(kit.concat(
+          notify.add_message('default', kit.concat(
             {
               { 'Save clipboard to move:' },
             },

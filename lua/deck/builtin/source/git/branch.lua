@@ -86,7 +86,7 @@ return function(option)
                 end
               end
             end
-            notify.show({ { { 'No remote url found', 'WarningMsg' } } })
+            notify.add_message('default', { { { 'No remote url found', 'WarningMsg' } } })
           end)
         end,
       },

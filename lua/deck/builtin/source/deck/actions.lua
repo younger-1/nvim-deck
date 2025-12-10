@@ -53,7 +53,7 @@ return function(option)
         execute = function(next_ctx)
           local prev_ctx = option.context
           if #next_ctx.get_action_items() ~= 1 then
-            notify.show({
+            notify.add_message('default', {
               { { 'Only one action can be executed at a time.', 'ErrorMsg' } },
             })
             return
