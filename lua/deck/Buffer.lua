@@ -2,6 +2,7 @@ local x = require('deck.x')
 local kit = require('deck.kit')
 local ScheduledTimer = require('deck.kit.Async.ScheduledTimer')
 local TopK = require('deck.TopK')
+local symbols = require('deck.symbols')
 
 local rendering_lines = {}
 
@@ -263,14 +264,19 @@ function Buffer:_step_filter()
     local checker = self:_interrupt_checker(config.filter_batch_size, config.filter_bugdet_ms)
     for i = self._cursor_filtered + 1, #self._items do
       local item = self._items[i]
-      local score = self._start_config.matcher.match(self._query, item.filter_text or item.display_text)
-      if score > 0 then
-        local not_added_item = self._topk:add(item, score)
-        if not_added_item then
-          self._items_filtered[#self._items_filtered + 1] = not_added_item
-        end
-        if not_added_item ~= item then
-          self._topk_revision = self._topk_revision + 1
+      if not item[symbols.query_unmatch] or not vim.startswith(self._query, item[symbols.query_unmatch] or '') then
+        local score = self._start_config.matcher.match(self._query, item.filter_text or item.display_text)
+        if score > 0 then
+          local not_added_item = self._topk:add(item, score)
+          if not_added_item then
+            self._items_filtered[#self._items_filtered + 1] = not_added_item
+          end
+          if not_added_item ~= item then
+            self._topk_revision = self._topk_revision + 1
+          end
+          item[symbols.query_unmatch] = nil
+        else
+          item[symbols.query_unmatch] = self._query
         end
       end
       self._cursor_filtered = i
