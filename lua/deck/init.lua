@@ -120,7 +120,7 @@ local Context = require('deck.Context')
 ---@alias deck.PreviewerResolveFunction fun(ctx: deck.Context, item: deck.Item): any
 
 ---@doc.type
----@alias deck.PreviewerPreviewFunction fun(ctx: deck.Context, item: deck.Item, env: { open_preview_win: fun(): integer? }): nil|fun()
+---@alias deck.PreviewerPreviewFunction fun(ctx: deck.Context, item: deck.Item, env: { cleanup: fun(), open_preview_win: fun(): integer? }): nil|fun()
 
 ---@doc.type
 ---@class deck.StartPreset

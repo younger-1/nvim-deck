@@ -173,13 +173,15 @@ return function(option)
         end,
         preview = function(_, item, env)
           Async.run(function()
-            x.open_preview_buffer(env.open_preview_win() --[[@as integer]], {
-              contents = git
+            local contents = git
                 :get_unified_diff({
                   from_rev = item.data.hash_parents[1],
                   to_rev = item.data.hash,
                 })
-                :sync(5000),
+                :sync(5000)
+            env.cleanup()
+            x.open_preview_buffer(env.open_preview_win() --[[@as integer]], {
+              contents = contents,
               filetype = 'diff',
             })
           end)

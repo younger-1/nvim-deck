@@ -73,14 +73,16 @@ return function(option)
       {
         name = 'git.changeset.unified_diff',
         preview = function(_, item, env)
+          local contents = git
+              :get_unified_diff({
+                from_rev = option.from_rev,
+                to_rev = option.to_rev,
+                filename = item.data.filename,
+              })
+              :sync(5000)
+          env.cleanup()
           x.open_preview_buffer(env.open_preview_win() --[[@as integer]], {
-            contents = git
-                :get_unified_diff({
-                  from_rev = option.from_rev,
-                  to_rev = option.to_rev,
-                  filename = item.data.filename,
-                })
-                :sync(5000),
+            contents = contents,
             filename = item.data.filename,
             filetype = 'diff',
           })

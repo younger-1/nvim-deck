@@ -63,12 +63,12 @@ return function(option)
           for _, item in ipairs(ctx.get_action_items()) do
             if item.data.type ~= 'untracked' or item.data.type ~= 'ignored' then
               git
-                :vimdiff({
-                  filename = item.data.filename,
-                  filename_before = item.data.filename_before,
-                  from_rev = 'HEAD',
-                })
-                :sync(5000)
+                  :vimdiff({
+                    filename = item.data.filename,
+                    filename_before = item.data.filename_before,
+                    from_rev = 'HEAD',
+                  })
+                  :sync(5000)
             end
           end
         end,
@@ -216,11 +216,11 @@ return function(option)
         end,
         execute = function(ctx)
           local status_items = vim
-            .iter(ctx.get_action_items())
-            :map(function(item)
-              return item.data
-            end)
-            :totable()
+              .iter(ctx.get_action_items())
+              :map(function(item)
+                return item.data
+              end)
+              :totable()
           git:commit({ items = status_items }, {
             close = function()
               ctx.show()
@@ -242,11 +242,11 @@ return function(option)
         end,
         execute = function(ctx)
           local status_items = vim
-            .iter(ctx.get_action_items())
-            :map(function(item)
-              return item.data
-            end)
-            :totable()
+              .iter(ctx.get_action_items())
+              :map(function(item)
+                return item.data
+              end)
+              :totable()
           git:commit({ items = status_items, amend = true }, {
             close = function()
               ctx.show()
@@ -268,13 +268,15 @@ return function(option)
           end
         end,
         preview = function(_, item, env)
-          x.open_preview_buffer(env.open_preview_win() --[[@as integer]], {
-            contents = git
+          local contents = git
               :get_unified_diff({
                 from_rev = 'HEAD',
                 filename = item.data.filename,
               })
-              :sync(5000),
+              :sync(5000)
+          env.cleanup()
+          x.open_preview_buffer(env.open_preview_win() --[[@as integer]], {
+            contents = contents,
             filename = item.data.filename,
             filetype = 'diff',
           })

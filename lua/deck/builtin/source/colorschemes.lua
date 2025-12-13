@@ -24,7 +24,8 @@ return function()
     previewers = {
       {
         name = 'colorscheme',
-        preview = function(_, item)
+        preview = function(_, item, env)
+          env.cleanup()
           local current = vim.api.nvim_exec2('colorscheme', { output = true }).output
           vim.cmd.colorscheme(item.data.colorscheme)
           return function()

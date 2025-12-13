@@ -18,6 +18,7 @@ previewer.snacks_image = {
     return image.supports(item.data.filename)
   end,
   preview = function(_, item, env)
+    env.cleanup()
     local win = env.open_preview_win()
     if win then
       local buf = vim.api.nvim_win_get_buf(win)
@@ -36,6 +37,7 @@ previewer.filename = {
     return item.data.filename ~= nil and vim.fn.filereadable(item.data.filename) == 1
   end,
   preview = function(_, item, env)
+    env.cleanup()
     x.open_preview_buffer(env.open_preview_win() --[[@as integer]], {
       contents = vim.split(assert(io.open(item.data.filename, 'r')):read('*a'), '\n'),
       filename = item.data.filename,
@@ -55,6 +57,7 @@ previewer.bufnr = {
     return item.data.bufnr
   end,
   preview = function(_, item, env)
+    env.cleanup()
     x.open_preview_buffer(env.open_preview_win() --[[@as integer]], {
       contents = vim.api.nvim_buf_get_lines(item.data.bufnr, 0, -1, false),
       filetype = vim.api.nvim_get_option_value('filetype', { buf = item.data.bufnr }),

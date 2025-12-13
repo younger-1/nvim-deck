@@ -922,14 +922,14 @@ function Context.create(id, source, start_config)
           local item = context.get_cursor_item()
           if item then
             if state.preview_cache.item ~= item then
-              cleanup()
-              state.preview_cache.item = item
               state.preview_cache.cleanup = previewer.preview(context, item, {
+                cleanup = cleanup,
                 open_preview_win = function()
                   state.preview_cache.win = view.open_preview_win(context)
                   return state.preview_cache.win
                 end
               })
+              state.preview_cache.item = item
             end
             return
           end
