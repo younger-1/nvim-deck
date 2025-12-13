@@ -90,7 +90,9 @@ local function compute(
           break
         end
         mi = mi + 1
-        strict_bonus = strict_bonus + (t_char == q_char and score_adjuster * 0.1 or 0)
+        if Character.is_upper(q_char) then
+          strict_bonus = strict_bonus + (t_char == q_char and score_adjuster * 0.1 or 0)
+        end
 
         local inner_score, inner_ranges = dfs(
           qi + mi,
