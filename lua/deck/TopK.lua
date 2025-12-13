@@ -21,31 +21,56 @@ end
 ---@param score integer
 ---@return deck.Item?
 function TopK:add(item, score)
-  if score < self._min_score then
+  local entries = self._entries
+  local entry_count = #entries
+
+  -- Early exit if score is too low
+  if entry_count >= self._size and score < self._min_score then
     return item
   end
 
-  local low, high = 1, #self._entries + 1
+  -- Binary search to find insertion position
+  local low, high = 1, entry_count + 1
   while low < high do
-    local mid = math.floor((low + high) / 2)
-    if self._entries[mid].score < score then
+    local mid = low + math.floor((high - low) * 0.5)
+    if entries[mid].score < score then
       high = mid
     else
       low = mid + 1
     end
   end
+
   local pos = low
+
+  -- Check if position is beyond size limit
   if pos > self._size then
     return item
   end
 
-  table.insert(self._entries, pos, { item = item, score = score })
-  if #self._entries > self._size then
-    local removed = table.remove(self._entries, self._size + 1)
-    self._min_score = self._entries[self._size].score
+  -- Create new entry object
+  local new_entry = { item = item, score = score }
+
+  -- Optimized insertion: avoid table.insert overhead for common cases
+  if pos > entry_count then
+    entries[entry_count + 1] = new_entry
+  else
+    for i = entry_count, pos, -1 do
+      entries[i + 1] = entries[i]
+    end
+    entries[pos] = new_entry
+  end
+
+  entry_count = entry_count + 1
+
+  -- Handle size overflow
+  if entry_count > self._size then
+    local removed = entries[self._size + 1]
+    entries[self._size + 1] = nil
+    self._min_score = entries[self._size].score
     return removed.item
   else
-    self._min_score = self._entries[#self._entries].score
+    -- Update min_score - avoid accessing array length again
+    self._min_score = entries[entry_count].score
     return nil
   end
 end
