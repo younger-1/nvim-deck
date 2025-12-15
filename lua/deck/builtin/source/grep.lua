@@ -58,9 +58,6 @@ return function(option)
 
       local command = {
         'rg',
-        '--hidden',
-        '--glob',
-        '!.git/',
         '--column',
         '--line-number',
         '--ignore-case',
