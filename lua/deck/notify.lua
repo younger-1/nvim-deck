@@ -1,4 +1,6 @@
 local FloatingWindow = require('deck.kit.Vim.FloatingWindow')
+local kit = require('deck.kit')
+local spinner = require('deck.x.spinner')
 
 local Config = {
   ns = vim.api.nvim_create_namespace('deck_notify'),
@@ -165,8 +167,8 @@ end
 local state = {
   ---@type deck.notify.Lane[]
   lanes = { Lane.new('default', true), },
-  ---@type table<string, integer>
-  win_ids = {},
+  ---@type table<string, { id: integer, spinner: deck.x.spinner.Spinner }>
+  win_state = {},
   ---@type integer
   unique_id = 0,
   ---@type boolean
@@ -205,9 +207,9 @@ local function show()
       end
     end
     if not active then
-      if state.win_ids[lane.name] and vim.api.nvim_win_is_valid(state.win_ids[lane.name]) then
-        vim.api.nvim_win_close(state.win_ids[lane.name], true)
-        state.win_ids[lane.name] = nil
+      if state.win_state[lane.name] and vim.api.nvim_win_is_valid(state.win_state[lane.name].id) then
+        vim.api.nvim_win_close(state.win_state[lane.name].id, true)
+        state.win_state[lane.name] = nil
       end
     end
   end
@@ -228,7 +230,7 @@ local function show()
     local border_size = FloatingWindow.get_border_size(border)
 
     -- show or move window.
-    local win_config = {
+    local base_win_config = {
       relative = 'editor',
       width = width,
       height = height,
@@ -238,19 +240,26 @@ local function show()
       border = border,
       title = lane.name,
       title_pos = 'right',
-      footer = lane:is_done() and '✓' or '',
+      footer = '',
+      footer_pos = 'right',
     }
-    local win_id = state.win_ids[lane.name]
-    if not win_id or not vim.api.nvim_win_is_valid(win_id) then
-      state.win_ids[lane.name] = vim.api.nvim_open_win(lane.buf, false, win_config)
+    local win_state = state.win_state[lane.name]
+    if not win_state or not vim.api.nvim_win_is_valid(win_state.id) then
+      state.win_state[lane.name] = {
+        id = vim.api.nvim_open_win(lane.buf, false, base_win_config),
+        spinner = spinner.create(),
+      }
+      vim.api.nvim_set_option_value('winhighlight', 'FloatFooter:Normal', { win = state.win_state[lane.name].id })
     else
-      vim.api.nvim_win_set_config(win_id, win_config)
+      vim.api.nvim_win_set_config(win_state.id, kit.merge({
+        footer = lane:is_done() and '✓' or win_state.spinner.get()
+      }, base_win_config))
     end
-    win_id = state.win_ids[lane.name]
+    win_state = state.win_state[lane.name]
 
     -- set cursor.
-    vim.api.nvim_win_call(win_id, function()
-      vim.api.nvim_win_set_cursor(win_id, { vim.api.nvim_buf_line_count(lane.buf), 0 })
+    vim.api.nvim_win_call(win_state.id, function()
+      vim.api.nvim_win_set_cursor(win_state.id, { vim.api.nvim_buf_line_count(lane.buf), 0 })
       vim.cmd('normal! zb')
     end)
 
@@ -260,7 +269,7 @@ local function show()
 
   -- next tick.
   state.showing = false
-  vim.defer_fn(show, 200)
+  vim.defer_fn(show, 64)
 end
 
 ---Add a message to a lane.

@@ -13,7 +13,7 @@ function spinner.create(config)
   config = config or {
     interval_ms = 64,
     frames = {
-      '. ',
+      '.',
       '..',
       '...',
       '....',
