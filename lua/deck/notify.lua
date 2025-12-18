@@ -1,11 +1,12 @@
 local FloatingWindow = require('deck.kit.Vim.FloatingWindow')
+local ScheduledTimer = require('deck.kit.Async.ScheduledTimer')
 local kit = require('deck.kit')
 local spinner = require('deck.x.spinner')
 
 local Config = {
   ns = vim.api.nvim_create_namespace('deck_notify'),
-  min_width = math.floor(vim.o.columns * 0.3),
-  max_width = math.floor(vim.o.columns * 0.6),
+  min_width = math.floor(vim.o.columns * 0.25),
+  max_width = math.floor(vim.o.columns * 0.5),
   max_height = math.floor(vim.o.lines * 0.6),
   show_duration = 5000,
 }
@@ -63,6 +64,7 @@ end
 ---@field public name string
 ---@field public default boolean
 ---@field public created_at integer
+---@field public updated_at integer
 ---@field public finished_at? integer
 ---@field public items deck.notify.Item[]
 local Lane = {}
@@ -73,19 +75,18 @@ Lane.__index = Lane
 ---@param default? boolean
 function Lane.new(name, default)
   local self = setmetatable({}, Lane)
-  self.buf = vim.api.nvim_create_buf(false, false)
-  vim.api.nvim_set_option_value('buftype', 'nofile', { buf = self.buf })
-  vim.api.nvim_set_option_value('bufhidden', 'hide', { buf = self.buf })
+  self.buf = vim.api.nvim_create_buf(false, true)
   self.name = name
   self.default = default or false
-  self.created_at = vim.uv.now()
+  self.created_at = default and -1 or vim.uv.now()
+  self.updated_at = self.created_at
   self.finished_at = nil
   self.items = {}
   return self
 end
 
 ---Mark the task as done.
-function Lane:done()
+function Lane:mark_as_done()
   self.finished_at = vim.uv.now()
   for _, win in pairs(vim.api.nvim_list_wins()) do
     if vim.api.nvim_win_get_buf(win) == self.buf then
@@ -93,7 +94,23 @@ function Lane:done()
       return
     end
   end
-  vim.api.nvim_buf_delete(self.buf, { force = true })
+
+  local timer = ScheduledTimer.new()
+  timer:start(200, 200, function()
+    if not self:is_active() then
+      local shown = false;
+      for _, win in pairs(vim.api.nvim_list_wins()) do
+        if vim.api.nvim_win_get_buf(win) == self.buf then
+          shown = true
+          break
+        end
+      end
+      if not shown then
+        timer:stop()
+        vim.api.nvim_buf_delete(self.buf, { force = true })
+      end
+    end
+  end)
 end
 
 ---Check if the lane is done.
@@ -107,27 +124,32 @@ end
 
 ---Check if the lane is done.
 ---@return boolean
-function Lane:is_dead()
+function Lane:is_active()
+  local now = vim.uv.now()
   if self.default then
-    return false
+    return now - self.updated_at < Config.show_duration
   end
-  return self.finished_at ~= nil and (vim.uv.now() - self.finished_at) >= Config.show_duration
+  if not self.finished_at then
+    return true
+  end
+  return (now - self.finished_at) < Config.show_duration
 end
 
 ---Add a message to the lane.
 ---@param line deck.notify.Line
 function Lane:add_line(line)
+  self.updated_at = vim.uv.now()
+  if self.finished_at then
+    self.finished_at = self.updated_at
+  end
+
   local item = {
     line = line,
     plain_text = to_plain_text(line),
     decorations = to_decoration(line),
-    created_at = vim.uv.now(),
+    created_at = self.updated_at,
   } --[[@as deck.notify.Item]]
   table.insert(self.items, item)
-
-  if self.finished_at then
-    self.finished_at = item.created_at
-  end
 
   -- append message.
   vim.api.nvim_buf_set_lines(self.buf, -1, -1, false, { item.plain_text })
@@ -169,6 +191,8 @@ local state = {
   lanes = { Lane.new('default', true), },
   ---@type table<string, { id: integer, spinner: deck.x.spinner.Spinner }>
   win_state = {},
+  ---@type table<string, integer>
+  shown_revisions = {},
   ---@type integer
   unique_id = 0,
   ---@type boolean
@@ -184,29 +208,11 @@ local function show()
   end
   state.showing = true
 
-  local now = vim.uv.now()
-
   local active_lanes = {}
   for _, lane in ipairs(state.lanes) do
-    -- filter active items.
-    local items = vim.iter(lane.items):filter(function(item)
-      return item.created_at + Config.show_duration > now
-    end):totable()
-
-    local active = false
-    if lane.default then
-      if #items > 0 then
-        -- keep showing if there are active items.
-        table.insert(active_lanes, lane)
-        active = true
-      end
+    if lane:is_active() then
+      table.insert(active_lanes, lane)
     else
-      if not lane:is_dead() then
-        table.insert(active_lanes, lane)
-        active = true
-      end
-    end
-    if not active then
       if state.win_state[lane.name] and vim.api.nvim_win_is_valid(state.win_state[lane.name].id) then
         vim.api.nvim_win_close(state.win_state[lane.name].id, true)
         state.win_state[lane.name] = nil
@@ -214,16 +220,29 @@ local function show()
     end
   end
 
+  -- check for finish.
   if #active_lanes == 0 then
     state.showing = false
     return
   end
 
-  active_lanes = vim.iter(active_lanes):rev():totable() --[=[@as deck.notify.Lane[]]=]
+  -- check for changes.
+  local changed = false
+  for _, lane in ipairs(active_lanes) do
+    if state.shown_revisions[lane.name] ~= lane.updated_at then
+      state.shown_revisions[lane.name] = lane.updated_at
+      changed = true
+    end
+  end
+  if not changed then
+    state.showing = false
+    vim.defer_fn(show, 64)
+    return
+  end
 
   -- show lanes.
   local offset_height = 0
-  for _, lane in ipairs(active_lanes) do
+  for _, lane in ipairs(vim.iter(active_lanes):rev():totable() --[=[@as deck.notify.Lane[]]=]) do
     local width = math.max(1, math.max(math.min(lane:get_max_width(), Config.max_width), Config.min_width))
     local height = math.max(1, math.min(lane:get_height(), Config.max_height))
     local border = vim.o.winborder or 'rounded'
@@ -305,12 +324,12 @@ end
 
 ---Mark a lane as done.
 ---@param name string
-function notify.done(name)
+function notify.mark_as_done(name)
   local lane = vim.iter(state.lanes):find(function(l)
     return l.name == name
   end)
   if lane then
-    lane:done()
+    lane:mark_as_done()
   end
 end
 
