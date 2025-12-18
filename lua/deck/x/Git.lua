@@ -763,7 +763,7 @@ function Git:exec_print(command, option)
           end
         end),
         on_exit = kit.fast_schedule_wrap(function()
-          notify.done(lane_id)
+          notify.mark_as_done(lane_id)
           close()
           resolve()
         end),
